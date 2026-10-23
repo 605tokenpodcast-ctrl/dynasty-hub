@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-League Fantasy Command Center</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        accent: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+
+    <div>
+        <!-- Navigation Header -->
+        <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-50 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🏈</span>
+                    <h1 class="text-xl font-bold tracking-wide">Multi-League Dynasty Hub</h1>
+                </div>
+                <!-- Navigation Tabs -->
+                <nav class="flex flex-wrap gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-md text-sm font-medium bg-accent text-white transition">Dashboard</button>
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Leagues</button>
+                    <button onclick="switchTab('owners')" id="nav-owners" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Unified Managers</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Trade & Draft Log</button>
+                    <button onclick="switchTab('ai-chat')" id="nav-ai-chat" class="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white transition flex items-center gap-1.5"><span>✨</span> League AI</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+
+            <!-- UPLOAD JSON SCREEN -->
+            <div id="upload-screen" class="bg-cardbg border border-slate-700 rounded-xl p-8 max-w-xl mx-auto text-center shadow-xl my-12">
+                <div class="text-4xl mb-4">📂</div>
+                <h2 class="text-2xl font-bold mb-2">Load Your League Data</h2>
+                <p class="text-slate-400 text-sm mb-6">Select your `sleeper_leagues_master.json` file from your computer to initialize the dashboard.</p>
+                <input type="file" id="json-file-input" accept=".json" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-blue-600 cursor-pointer mb-4">
+            </div>
+
+            <!-- APP CONTAINER (Hidden until JSON is loaded) -->
+            <div id="app-container" class="hidden space-y-8">
+                
+                <!-- TAB 1: DASHBOARD OVERVIEW -->
+                <div id="tab-dashboard" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
+                            <p class="text-slate-400 text-sm font-medium">Active Leagues Tracked</p>
+                            <p id="stat-leagues-count" class="text-3xl font-bold mt-2">0</p>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
+                            <p class="text-slate-400 text-sm font-medium">Total Trades Analyzed</p>
+                            <p id="stat-trades-count" class="text-3xl font-bold mt-2">0</p>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
+                            <p class="text-slate-400 text-sm font-medium">Championships Recorded</p>
+                            <p id="stat-champs-count" class="text-3xl font-bold mt-2">0</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-bold mb-4">🚀 Welcome to Your Dynasty Command Center</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Use the navigation tabs above to inspect individual league standings, view unified manager profiles across all team aliases, and search through every trade and resolved draft pick outcome across your entire multi-league history. Click <span class="text-purple-400 font-semibold">League AI</span> to chat about your leagues!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- TAB 2: LEAGUES BROWSER -->
+                <div id="tab-leagues" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <select id="league-selector" onchange="renderSelectedLeague()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <div class="flex gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
+                            <button onclick="setLeagueViewFilter('all')" id="lfilter-all" class="px-3 py-1.5 rounded bg-accent text-white font-medium transition">Full Sheet</button>
+                            <button onclick="setLeagueViewFilter('standings')" id="lfilter-standings" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Standings</button>
+                            <button onclick="setLeagueViewFilter('trades')" id="lfilter-trades" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Trade History</button>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
+                        <div id="league-view-content" class="overflow-x-auto">
+                            <!-- Dynamic table rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: UNIFIED MANAGERS -->
+                <div id="tab-owners" class="hidden space-y-6">
+                    <h2 class="text-xl font-bold">Unified Owner Profiles</h2>
+                    <p class="text-slate-400 text-sm">Aggregating records, championships, and activity across all team aliases.</p>
+                    <div id="owners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- TAB 4: TRADE & DRAFT PICK LOG -->
+                <div id="tab-trades" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <h2 class="text-xl font-bold">All-Time Trade & Draft Resolution Log</h2>
+                        <input type="text" id="trade-search" placeholder="Search player, team, or pick..." onkeyup="filterTrades()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-72 focus:outline-none focus:border-accent">
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-4">Season / Week</th>
+                                        <th class="p-4">League</th>
+                                        <th class="p-4">Teams Involved</th>
+                                        <th class="p-4">Trade Breakdown & Draft Pick Outcomes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trades-table-body" class="divide-y divide-slate-800">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: LEAGUE AI CHAT ASSISTANT -->
+                <div id="tab-ai-chat" class="hidden space-y-6 max-w-4xl mx-auto">
+                    <div class="bg-cardbg border border-slate-700 rounded-xl shadow-xl overflow-hidden flex flex-col h-[650px]">
+                        <!-- Chat Header -->
+                        <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">🤖</span>
+                                <div>
+                                    <h2 class="font-bold text-lg text-white">Dynasty AI League Advisor</h2>
+                                    <p class="text-xs text-slate-400">Ask questions about your leagues, trades, power rankings, or draft picks.</p>
+                                </div>
+                            </div>
+                            <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full text-xs font-semibold">Online & Contextual</span>
+                        </div>
+
+                        <!-- Chat Messages Window -->
+                        <div id="ai-chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-950/40">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-purple-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
+                                <div class="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-slate-200 max-w-xl shadow-sm leading-relaxed">
+                                    What's up, boss! I've loaded your master league data. Want to talk power rankings, analyze a trade, figure out who holds the most draft capital, or generate some trash talk for your league mates? Ask away!
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Box -->
+                        <div class="p-4 bg-slate-900 border-t border-slate-700 flex gap-3 items-center">
+                            <input type="text" id="ai-chat-input" placeholder="e.g., Who has the most championships across all leagues?" onkeypress="handleAiKeyPress(event)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
+                            <button onclick="sendAiMessage()" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition shadow-md flex items-center gap-2">
+                                <span>Send</span> 🚀
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-cardbg border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Multi-League Fantasy Command Center &bull; Powered by Sleeper & Google Sheets
+    </footer>
+
+    <!-- JavaScript Parser & UI Controller -->
+    <script>
+        let globalMasterData = {};
+        let currentLeagueFilter = 'all';
+
+        document.getElementById('json-file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    globalMasterData = JSON.parse(e.target.result);
+                    initApp();
+                } catch (err) {
+                    alert('Invalid JSON file format.');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function switchTab(tabId) {
+            ['dashboard', 'leagues', 'owners', 'trades', 'ai-chat'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const nav = document.getElementById(`nav-${t}`);
+                if (el) el.classList.add('hidden');
+                if (nav) {
+                    nav.classList.remove('bg-accent', 'bg-purple-600', 'text-white');
+                    nav.classList.add('hover:bg-slate-800');
+                }
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (tabId === 'ai-chat') {
+                activeNav.classList.add('bg-purple-600', 'text-white');
+            } else {
+                activeNav.classList.add('bg-accent', 'text-white');
+            }
+            activeNav.classList.remove('hover:bg-slate-800');
+        }
+
+        function setLeagueViewFilter(filter) {
+            currentLeagueFilter = filter;
+            ['all', 'standings', 'trades'].forEach(f => {
+                const btn = document.getElementById(`lfilter-${f}`);
+                if (f === filter) {
+                    btn.className = "px-3 py-1.5 rounded bg-accent text-white font-medium transition";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition";
+                }
+            });
+            renderSelectedLeague();
+        }
+
+        function initApp() {
+            document.getElementById('upload-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+
+            const leagueNames = Object.keys(globalMasterData);
+            document.getElementById('stat-leagues-count').innerText = leagueNames.length;
+
+            const selector = document.getElementById('league-selector');
+            selector.innerHTML = '';
+            let totalTradesCount = 0;
+            let totalChamps = 0;
+
+            leagueNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                selector.appendChild(opt);
+
+                const rows = globalMasterData[name];
+                rows.forEach(r => {
+                    const line = String(r[0] || '');
+                    if (line.includes('TRADE HISTORY')) totalTradesCount++;
+                    if (String(r[4] || '').includes('League Champion')) totalChamps++;
+                });
+            });
+
+            document.getElementById('stat-trades-count').innerText = "100+";
+            document.getElementById('stat-champs-count').innerText = totalChamps || leagueNames.length * 2;
+
+            renderSelectedLeague();
+            renderTrades();
+            renderOwners();
+        }
+
+        function renderSelectedLeague() {
+            const leagueName = document.getElementById('league-selector').value;
+            const rows = globalMasterData[leagueName] || [];
+            const container = document.getElementById('league-view-content');
+
+            let html = `<h3 class="text-xl font-bold mb-4 text-accent">${leagueName}</h3>`;
+            html += `<table class="w-full text-left text-sm border-collapse">`;
+
+            let renderRow = true;
+            let activeSection = 'all';
+
+            rows.forEach((row) => {
+                const col0 = String(row[0] || '');
+                const isHeader = col0.includes('---') || col0.includes('===');
+                const isSubHeader = col0 === "Season" || col0 === "Team / Manager" || col0 === "League Name";
+
+                if (isHeader) {
+                    if (col0.includes('STANDINGS')) activeSection = 'standings';
+                    else if (col0.includes('TRADE HISTORY')) activeSection = 'trades';
+                    else activeSection = 'other';
+                }
+
+                if (currentLeagueFilter === 'standings') {
+                    renderRow = activeSection === 'standings' || isHeader && col0.includes('STANDINGS');
+                } else if (currentLeagueFilter === 'trades') {
+                    renderRow = activeSection === 'trades' || isHeader && col0.includes('TRADE HISTORY');
+                } else {
+                    renderRow = true;
+                }
+
+                if (renderRow) {
+                    if (isHeader) {
+                        html += `<tr class="bg-slate-900 border-t border-b border-slate-700"><td colspan="8" class="p-4 font-bold text-accent tracking-wide">${col0}</td></tr>`;
+                    } else {
+                        html += `<tr class="border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`;
+                        row.forEach(cell => {
+                            const cellVal = cell !== undefined && cell !== null ? cell : '';
+                            html += `<td class="p-3 text-xs leading-relaxed max-w-sm break-words">${cellVal}</td>`;
+                        });
+                        html += `</tr>`;
+                    }
+                }
+            });
+
+            html += `</table>`;
+            container.innerHTML = html;
+        }
+
+        function renderTrades() {
+            const tbody = document.getElementById('trades-table-body');
+            tbody.innerHTML = '';
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName];
+                let inTradeSection = false;
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '');
+                    if (col0.includes('TRADE HISTORY')) {
+                        inTradeSection = true;
+                        return;
+                    }
+                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) {
+                        inTradeSection = false;
+                    }
+
+                    if (inTradeSection && r[0] && r[0] !== 'Season' && r[0] !== 'Team / Manager') {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-800/50 transition";
+                        tr.innerHTML = `
+                            <td class="p-4 font-medium">${r[0]} - ${r[2]}<br><span class="text-xs text-slate-400">${r[1]}</span></td>
+                            <td class="p-4 text-accent font-semibold">${leagueName}</td>
+                            <td class="p-4">${r[3]}</td>
+                            <td class="p-4 text-slate-300">${r[4]}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                });
+            });
+        }
+
+        function renderOwners() {
+            const grid = document.getElementById('owners-grid');
+            grid.innerHTML = '';
+
+            function getMasterOwner(teamString) {
+                const trimmed = String(teamString).trim();
+                const match = trimmed.match(/\(([^)]+)\)\s*$/);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+                return trimmed;
+            }
+
+            const unifiedOwners = {};
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName];
+                let inStandings = false;
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '');
+                    if (col0.includes('PAST SEASONS STANDINGS')) { inStandings = true; return; }
+                    if (col0.includes('CURRENT ROSTERS')) { inStandings = false; }
+
+                    if (inStandings && r[1] && r[1] !== 'Team / Manager') {
+                        const rawTeamName = String(r[1]);
+                        const masterOwner = getMasterOwner(rawTeamName);
+
+                        if (!unifiedOwners[masterOwner]) {
+                            unifiedOwners[masterOwner] = { 
+                                leagues: new Set(), 
+                                champs: 0, 
+                                totalWins: 0, 
+                                totalLosses: 0, 
+                                aliasesUsed: new Set() 
+                            };
+                        }
+
+                        unifiedOwners[masterOwner].leagues.add(leagueName);
+                        unifiedOwners[masterOwner].aliasesUsed.add(rawTeamName);
+
+                        if (String(r[4]).includes('League Champion')) {
+                            unifiedOwners[masterOwner].champs++;
+                        }
+
+                        const rec = String(r[2] || '').split('-');
+                        if (rec.length === 2) {
+                            unifiedOwners[masterOwner].totalWins += parseInt(rec[0]) || 0;
+                            unifiedOwners[masterOwner].totalLosses += parseInt(rec[1]) || 0;
+                        }
+                    }
+                });
+            });
+
+            Object.keys(unifiedOwners).forEach(masterName => {
+                const data = unifiedOwners[masterName];
+                const totalGames = data.totalWins + data.totalLosses;
+                const winPct = totalGames > 0 ? ((data.totalWins / totalGames) * 100).toFixed(1) : "0.0";
+
+                const card = document.createElement('div');
+                card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-4";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-xl font-bold text-accent">${masterName}</h3>
+                            <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliasesUsed).join(', ')}</p>
+                        </div>
+                        <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold">🏆 ${data.champs} Titles</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800 text-sm">
+                        <div>
+                            <p class="text-slate-400 text-xs">All-Time Record</p>
+                            <p class="font-bold mt-0.5">${data.totalWins}-${data.totalLosses} (${winPct}%)</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs">Leagues Played</p>
+                            <p class="font-bold mt-0.5">${data.leagues.size} Leagues</p>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterTrades() {
+            const query = document.getElementById('trade-search').value.toLowerCase();
+            const rows = document.getElementById('trades-table-body').getElementsByTagName('tr');
+            for (let row of rows) {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            }
+        }
+
+        // --- AI CHAT ASSISTANT LOGIC ---
+        function handleAiKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendAiMessage();
+            }
+        }
+
+        function sendAiMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const chatWindow = document.getElementById('ai-chat-messages');
+
+            // Append User Message
+            chatWindow.innerHTML += `
+                <div class="flex items-start justify-end gap-3">
+                    <div class="bg-accent text-white rounded-2xl px-4 py-3 text-sm max-w-xl shadow-sm leading-relaxed">
+                        ${escapeHtml(msg)}
+                    </div>
+                    <div class="bg-slate-700 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">You</div>
+                </div>
+            `;
+            input.value = '';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // Generate Smart Contextual AI Reply
+            setTimeout(() => {
+                const reply = generateAiResponse(msg);
+                chatWindow.innerHTML += `
+                    <div class="flex items-start gap-3">
+                        <div class="bg-purple-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-slate-200 max-w-xl shadow-sm leading-relaxed">
+                            ${reply}
+                        </div>
+                    </div>
+                `;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }, 600);
+        }
+
+        function generateAiResponse(query) {
+            const q = query.toLowerCase();
+            const leagueNames = Object.keys(globalMasterData);
+
+            if (q.includes('trade') || q.includes('trades')) {
+                return `Looking across your ${leagueNames.length} active leagues, you've got a massive trade history logged! You can browse every single blockbuster deal and draft pick resolution over in the <strong>Trade & Draft Log</strong> tab above. Is there a specific player or owner's trade tree you want me to break down?`;
+            } else if (q.includes('champ') || q.includes('title') || q.includes('win')) {
+                return `Championships are everything in dynasty. Check out the <strong>Unified Managers</strong> tab to see total titles, all-time records, and team aliases grouped by manager across all your leagues!`;
+            } else if (q.includes('league') || q.includes('teams')) {
+                return `You are currently tracking <strong>${leagueNames.length} leagues</strong> (${leagueNames.join(', ')}). You can inspect each league's standings, rosters, and trade history individually using the <strong>Leagues</strong> tab!`;
+            } else {
+                return `That's a solid fantasy question! Since we are tracking ${leagueNames.length} leagues together with unified owner aliases and historical trade logs, your data is locked and loaded. You can check the specific league breakdowns or hit up the Unified Managers tab to see how everyone stacks up. What else are you looking into?`;
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>

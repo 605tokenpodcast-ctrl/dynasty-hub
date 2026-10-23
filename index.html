@@ -282,25 +282,6 @@
                     if (col0.includes('PAST SEASONS STANDINGS') || col0.includes('STANDINGS')) { inStandings = true; }
                     if (col0.includes('CURRENT ROSTERS') || col0.includes('TRADE HISTORY')) { inStandings = false; }
 
-                    // Check any cell in the row for team/manager string if standings section is active
-                    if (inStandings) {
-                        r.forEach(cell => {
-                            const cellStr = String(cell || '');
-                            if (cellStr.toLowerCase().includes('smokers') || cellStr.toLowerCase().includes('anthonyz')) {
-                                const master = getMasterOwner(cellStr);
-                                if (String(r[4] || '').includes('League Champion') || cellStr.includes('Champion')) {
-                                    if (!champions[master]) {
-                                        champions[master] = { titles: 0, leagues: new Set(), aliases: new Set() };
-                                    }
-                                    champions[master].titles++;
-                                    champions[master].leagues.add(leagueName);
-                                    champions[master].aliases.add(cellStr);
-                                }
-                            }
-                        });
-                    }
-
-                    // Standard standings check
                     if (inStandings && r[1] && r[1] !== 'Team / Manager') {
                         if (String(r[4] || '').includes('League Champion')) {
                             const rawTeam = String(r[1]);

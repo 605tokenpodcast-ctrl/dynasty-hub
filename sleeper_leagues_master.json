@@ -199,6 +199,141 @@
       ""
     ],
     [
+      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Season",
+      "Date",
+      "Week",
+      "Teams Involved",
+      "Trade Breakdown",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Bend over and goff (Dontiddy) & Thielen mythelf (DerrickFish)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Bend over and goff (Dontiddy) & Thielen mythelf (DerrickFish)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Purdy ButtHole (Tstruck97) & Lamb is damned (BigDEddie)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Bend over and goff (Dontiddy) & Lamb is damned (BigDEddie)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Bend over and goff (Dontiddy) & Lamb is damned (BigDEddie)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Bend over and goff (Dontiddy) & JayLeno (JayLeno)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Bend over and goff (Dontiddy) & Purdy ButtHole (Tstruck97)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 2",
+      "Bend over and goff (Dontiddy) & Maye like em young (Wade55720)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 2",
+      "Bend over and goff (Dontiddy) & Maye like em young (Wade55720)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 5",
+      "Bend over and goff (Dontiddy) & Lamb is damned (BigDEddie)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 6",
+      "Bend over and goff (Dontiddy) & Hawk Tua in a Kupp (tokenwhiteguy)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
       "--- CURRENT ROSTERS & DRAFT PICKS ---",
       "",
       "",
@@ -334,7 +469,7 @@
       ""
     ],
     [
-      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "--- BOX SCORES & BENCH BLUNDERS ---",
       "",
       "",
       "",
@@ -343,110 +478,713 @@
       ""
     ],
     [
-      "Season",
-      "Date",
       "Week",
-      "Teams Involved",
-      "Trade Breakdown",
+      "Team / Manager",
+      "Total Score",
+      "Top Starter",
+      "Top Bench",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Bend over and goff (Dontiddy) & Thielen mythelf (DerrickFish)",
-      "Completed trade involving 2 assets.",
+      "Bend over and goff (Dontiddy)",
+      "141.00",
+      "D'Andre Swift (32.4)",
+      "Trevor Lawrence (26.1)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Bend over and goff (Dontiddy) & Thielen mythelf (DerrickFish)",
-      "Completed trade involving 2 assets.",
+      "Purdy ButtHole (Tstruck97)",
+      "160.76",
+      "Derrick Henry (35.3)",
+      "Juwan Johnson (14.4)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Purdy ButtHole (Tstruck97) & Lamb is damned (BigDEddie)",
-      "Completed trade involving 1 assets.",
+      "Young jeffren (Kolbilly)",
+      "218.90",
+      "Ashton Jeanty (32.7)",
+      "Devaughn Vele (19.9)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Bend over and goff (Dontiddy) & Lamb is damned (BigDEddie)",
-      "Completed trade involving 1 assets.",
+      "C.otton picker (lilfishy)",
+      "190.56",
+      "Kenneth Walker III (40.1)",
+      "Antonio Williams (16.4)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Bend over and goff (Dontiddy) & Lamb is damned (BigDEddie)",
-      "Completed trade involving 1 assets.",
+      "Thielen mythelf (DerrickFish)",
+      "131.56",
+      "Jonathan Taylor (25.1)",
+      "Isaiah Likely (27.8)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Bend over and goff (Dontiddy) & JayLeno (JayLeno)",
-      "Completed trade involving 1 assets.",
+      "QueenFish (QueenFish)",
+      "144.16",
+      "Caleb Williams (38.26)",
+      "Patrick Mahomes (23.66)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Bend over and goff (Dontiddy) & Purdy ButtHole (Tstruck97)",
-      "Completed trade involving 1 assets.",
+      "Jackin Goff (lilfishy2011)",
+      "97.60",
+      "Stefon Diggs (15.5)",
+      "Jayden Daniels (17.66)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
+      "Week 1",
+      "justastandin (justastandin)",
+      "117.92",
+      "Zay Flowers (33.5)",
+      "Deebo Samuel Sr. (18.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Hawk Tua in a Kupp (tokenwhiteguy)",
+      "111.56",
+      "DJ Moore (24.5)",
+      "Brock Purdy (22.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Maye like em young (Wade55720)",
+      "112.92",
+      "Nico Collins (21.2)",
+      "Jalen Coker (39.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Lamb is damned (BigDEddie)",
+      "118.64",
+      "Bryce Young (37.94)",
+      "C.J. Stroud (16.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "JayLeno (JayLeno)",
+      "181.98",
+      "Christian Watson (38.7)",
+      "Cam Ward (11.7)",
+      "",
+      ""
+    ],
+    [
       "Week 2",
-      "Bend over and goff (Dontiddy) & Maye like em young (Wade55720)",
-      "Completed trade involving 1 assets.",
+      "Bend over and goff (Dontiddy)",
+      "125.10",
+      "Davante Adams (41.0)",
+      "Jake Ferguson (20.3)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 2",
-      "Bend over and goff (Dontiddy) & Maye like em young (Wade55720)",
-      "Completed trade involving 1 assets.",
+      "Purdy ButtHole (Tstruck97)",
+      "153.80",
+      "Ja'Marr Chase (26.5)",
+      "Rachaad White (14.3)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
+      "Week 2",
+      "Young jeffren (Kolbilly)",
+      "175.68",
+      "Jaxon Smith-Njigba (48.5)",
+      "Tyler Shough (22.38)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "C.otton picker (lilfishy)",
+      "179.82",
+      "Josh Allen (43.32)",
+      "Keon Coleman (12.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Thielen mythelf (DerrickFish)",
+      "117.38",
+      "Jonathan Taylor (29.2)",
+      "Matthew Stafford (28.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "QueenFish (QueenFish)",
+      "127.68",
+      "Patrick Mahomes (29.98)",
+      "Terrance Ferguson (17.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Jackin Goff (lilfishy2011)",
+      "133.76",
+      "Dak Prescott (29.76)",
+      "Dalton Schultz (26.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "justastandin (justastandin)",
+      "88.56",
+      "Jalen Hurts (18.16)",
+      "Jonah Coleman (14.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Hawk Tua in a Kupp (tokenwhiteguy)",
+      "119.08",
+      "Tre Tucker (27.9)",
+      "Jared Goff (29.78)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Maye like em young (Wade55720)",
+      "125.22",
+      "CeeDee Lamb (35.3)",
+      "Rashod Bateman (21.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Lamb is damned (BigDEddie)",
+      "95.08",
+      "Bryce Young (25.08)",
+      "C.J. Stroud (17.02)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "JayLeno (JayLeno)",
+      "88.00",
+      "Christian Watson (14.1)",
+      "Cam Ward (21.02)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Bend over and goff (Dontiddy)",
+      "150.78",
+      "Bijan Robinson (36.8)",
+      "Michael Wilson (25.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Purdy ButtHole (Tstruck97)",
+      "153.84",
+      "George Kittle (26.2)",
+      "Jordan Addison (23.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Young jeffren (Kolbilly)",
+      "130.56",
+      "Jaxon Smith-Njigba (35.36)",
+      "Sam Darnold (29.66)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "C.otton picker (lilfishy)",
+      "122.16",
+      "Kenneth Walker III (21.3)",
+      "Michael Penix Jr. (17.04)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Thielen mythelf (DerrickFish)",
+      "89.64",
+      "Justin Herbert (13.74)",
+      "Matthew Stafford (26.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "QueenFish (QueenFish)",
+      "168.54",
+      "Jahmyr Gibbs (41.4)",
+      "Terry McLaurin (19.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Jackin Goff (lilfishy2011)",
+      "77.94",
+      "Kyren Williams (21.8)",
+      "Jakobi Meyers (19.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "justastandin (justastandin)",
+      "86.32",
+      "Deebo Samuel Sr. (19.9)",
+      "Zay Flowers (15.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Hawk Tua in a Kupp (tokenwhiteguy)",
+      "148.08",
+      "Brock Purdy (35.78)",
+      "Joe Burrow (22.58)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Maye like em young (Wade55720)",
+      "112.06",
+      "CeeDee Lamb (21.7)",
+      "Geno Smith (27.04)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Lamb is damned (BigDEddie)",
+      "90.14",
+      "Luther Burden III (19.8)",
+      "Jeremiyah Love (21.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "JayLeno (JayLeno)",
+      "106.18",
+      "Christian Watson (22.6)",
+      "Baker Mayfield (14.78)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Bend over and goff (Dontiddy)",
+      "143.08",
+      "Bijan Robinson (33.7)",
+      "RJ Harvey (19.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Purdy ButtHole (Tstruck97)",
+      "159.28",
+      "Javonte Williams (31.3)",
+      "Rhamondre Stevenson (18.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Young jeffren (Kolbilly)",
+      "116.94",
+      "Chris Olave (21.1)",
+      "Aaron Rodgers (25.96)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "C.otton picker (lilfishy)",
+      "139.62",
+      "Kenneth Walker III (32.4)",
+      "Keon Coleman (23.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Thielen mythelf (DerrickFish)",
+      "103.58",
+      "Jonathan Taylor (22.7)",
+      "T.J. Hockenson (24.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "QueenFish (QueenFish)",
+      "145.60",
+      "Tee Higgins (26.7)",
+      "Romeo Doubs (23.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Jackin Goff (lilfishy2011)",
+      "143.00",
+      "Tetairoa McMillan (45.2)",
+      "Tucker Kraft (16.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "justastandin (justastandin)",
+      "137.22",
+      "Zay Flowers (27.3)",
+      "Brian Robinson Jr. (25.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Hawk Tua in a Kupp (tokenwhiteguy)",
+      "129.02",
+      "Brock Purdy (24.12)",
+      "Joe Burrow (30.72)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Maye like em young (Wade55720)",
+      "197.66",
+      "CeeDee Lamb (41.3)",
+      "Michael Mayer (16.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Lamb is damned (BigDEddie)",
+      "71.58",
+      "Kyle Monangai (28.0)",
+      "Bryce Young (21.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "JayLeno (JayLeno)",
+      "67.18",
+      "Jordan Love (14.08)",
+      "Cam Ward (16.58)",
+      "",
+      ""
+    ],
+    [
       "Week 5",
-      "Bend over and goff (Dontiddy) & Lamb is damned (BigDEddie)",
-      "Completed trade involving 1 assets.",
+      "Bend over and goff (Dontiddy)",
+      "219.92",
+      "Jaylen Warren (48.8)",
+      "Davante Adams (22.1)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
+      "Week 5",
+      "Purdy ButtHole (Tstruck97)",
+      "142.20",
+      "Aaron Rodgers (26.5)",
+      "Daniel Jones (12.08)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Young jeffren (Kolbilly)",
+      "129.10",
+      "Jason Myers (23.0)",
+      "MarShawn Lloyd (16.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "C.otton picker (lilfishy)",
+      "133.50",
+      "Josh Allen (33.5)",
+      "Michael Penix Jr. (14.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Thielen mythelf (DerrickFish)",
+      "155.42",
+      "Parker Washington (36.4)",
+      "Germie Bernard (14.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "QueenFish (QueenFish)",
+      "161.58",
+      "Jahmyr Gibbs (37.7)",
+      "J.K. Dobbins (15.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Jackin Goff (lilfishy2011)",
+      "105.84",
+      "Kyren Williams (19.6)",
+      "Jayden Daniels (32.26)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "justastandin (justastandin)",
+      "110.00",
+      "Aaron Jones Sr. (18.7)",
+      "GB (20.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Hawk Tua in a Kupp (tokenwhiteguy)",
+      "106.76",
+      "Mike Evans (26.3)",
+      "Jared Goff (28.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Maye like em young (Wade55720)",
+      "161.96",
+      "Drake Maye (40.46)",
+      "Kyle Pitts Sr. (15.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Lamb is damned (BigDEddie)",
+      "79.64",
+      "C.J. Stroud (20.94)",
+      "Zachariah Branch (3.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "JayLeno (JayLeno)",
+      "140.38",
+      "Christian Watson (41.8)",
+      "DEN (15.0)",
+      "",
+      ""
+    ],
+    [
       "Week 6",
-      "Bend over and goff (Dontiddy) & Hawk Tua in a Kupp (tokenwhiteguy)",
-      "Completed trade involving 1 assets.",
+      "Bend over and goff (Dontiddy)",
+      "115.14",
+      "Trevor Lawrence (28.34)",
+      "Bryce Young (19.84)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Purdy ButtHole (Tstruck97)",
+      "112.82",
+      "Bhayshul Tuten (24.7)",
+      "Chuba Hubbard (19.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Young jeffren (Kolbilly)",
+      "117.02",
+      "Jaxon Smith-Njigba (25.4)",
+      "Tyler Shough (26.96)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "C.otton picker (lilfishy)",
+      "122.80",
+      "Kenneth Walker III (27.9)",
+      "Michael Penix Jr. (24.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Thielen mythelf (DerrickFish)",
+      "115.48",
+      "Isaiah Likely (23.9)",
+      "Germie Bernard (25.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "QueenFish (QueenFish)",
+      "121.78",
+      "James Cook III (24.3)",
+      "Caleb Williams (16.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Jackin Goff (lilfishy2011)",
+      "101.02",
+      "Stefon Diggs (16.4)",
+      "Omar Cooper Jr. (25.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "justastandin (justastandin)",
+      "84.30",
+      "Carnell Tate (19.0)",
+      "GB (9.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Hawk Tua in a Kupp (tokenwhiteguy)",
+      "113.16",
+      "DK Metcalf (20.3)",
+      "Tre Tucker (30.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Maye like em young (Wade55720)",
+      "128.40",
+      "Christian McCaffrey (30.7)",
+      "Kyle Pitts Sr. (23.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Lamb is damned (BigDEddie)",
+      "82.08",
+      "C.J. Stroud (25.98)",
+      "Ted Hurst III (7.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "JayLeno (JayLeno)",
+      "57.44",
+      "Jordan Love (21.24)",
+      "DEN (14.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Bend over and goff (Dontiddy)",
+      "38.90",
+      "Colston Loveland (19.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "C.otton picker (lilfishy)",
+      "7.80",
+      "A.J. Brown (7.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Jackin Goff (lilfishy2011)",
+      "2.00",
+      "NE (2.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "justastandin (justastandin)",
+      "14.10",
+      "Hunter Henry (14.1)",
+      "Eli Raridon (14.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Maye like em young (Wade55720)",
+      "30.94",
+      "Drake Maye (30.94)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Lamb is damned (BigDEddie)",
+      "36.10",
+      "Luther Burden III (25.2)",
+      "None (0)",
       "",
       ""
     ],
@@ -1416,6 +2154,69 @@
       ""
     ],
     [
+      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Season",
+      "Date",
+      "Week",
+      "Teams Involved",
+      "Trade Breakdown",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Smokers Haven (SmokersHaven) & Let Go Team (rprichards1973)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "FloridaBills (FloridaBills) & Let Go Team (rprichards1973)",
+      "Completed trade involving 0 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Team Tacos (tokenwhiteguy) & Honolulu Blues (pboger)",
+      "Completed trade involving 0 assets.",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
       "--- CURRENT ROSTERS & DRAFT PICKS ---",
       "",
       "",
@@ -1533,7 +2334,7 @@
       ""
     ],
     [
-      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "--- BOX SCORES & BENCH BLUNDERS ---",
       "",
       "",
       "",
@@ -1542,38 +2343,596 @@
       ""
     ],
     [
-      "Season",
-      "Date",
       "Week",
-      "Teams Involved",
-      "Trade Breakdown",
+      "Team / Manager",
+      "Total Score",
+      "Top Starter",
+      "Top Bench",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Smokers Haven (SmokersHaven) & Let Go Team (rprichards1973)",
-      "Completed trade involving 2 assets.",
+      "Kronik (Kronik)",
+      "103.26",
+      "David Montgomery (27.4)",
+      "Jaxson Dart (32.6)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "FloridaBills (FloridaBills) & Let Go Team (rprichards1973)",
-      "Completed trade involving 0 assets.",
+      "Smokers Haven (SmokersHaven)",
+      "174.46",
+      "Jahmyr Gibbs (31.1)",
+      "Malik Willis (17.7)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Team Tacos (tokenwhiteguy) & Honolulu Blues (pboger)",
-      "Completed trade involving 0 assets.",
+      "FloridaBills (FloridaBills)",
+      "133.96",
+      "Josh Allen (39.66)",
+      "Bryce Young (38.44)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "lilfishy (lilfishy)",
+      "162.96",
+      "Caleb Williams (41.26)",
+      "Christian Watson (29.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Suck it up (Finsup73)",
+      "88.36",
+      "Joe Burrow (17.16)",
+      "Evan McPherson (19.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Team Tacos (tokenwhiteguy)",
+      "133.46",
+      "Kenneth Walker III (32.6)",
+      "Dallas Goedert (21.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Princess VanEps (DerrickFish)",
+      "110.62",
+      "Derrick Henry (34.8)",
+      "Brock Purdy (28.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Honolulu Blues (pboger)",
+      "144.44",
+      "Amon-Ra St. Brown (23.7)",
+      "Antonio Williams (14.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "WiCkEd KlOwNs (wckdklwn)",
+      "128.60",
+      "Trevor Lawrence (34.1)",
+      "Patrick Mahomes (26.66)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Let Go Team (rprichards1973)",
+      "97.00",
+      "Tyler Shough (31.2)",
+      "C.J. Stroud (20.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Kronik (Kronik)",
+      "62.80",
+      "Jonathan Taylor (27.2)",
+      "Jake Ferguson (18.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Smokers Haven (SmokersHaven)",
+      "142.44",
+      "Jaxon Smith-Njigba (38.0)",
+      "Omarion Hampton (16.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "FloridaBills (FloridaBills)",
+      "182.22",
+      "Josh Allen (46.82)",
+      "Bryce Young (30.08)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "lilfishy (lilfishy)",
+      "137.88",
+      "Matthew Stafford (35.98)",
+      "Kirk Cousins (27.22)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Suck it up (Finsup73)",
+      "80.58",
+      "Joe Burrow (20.18)",
+      "Daniel Jones (14.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Team Tacos (tokenwhiteguy)",
+      "91.70",
+      "Kenneth Walker III (20.8)",
+      "Jonah Coleman (13.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Princess VanEps (DerrickFish)",
+      "145.88",
+      "Brock Purdy (32.48)",
+      "Dak Prescott (37.76)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Honolulu Blues (pboger)",
+      "131.68",
+      "Jared Goff (37.78)",
+      "LV (12.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "WiCkEd KlOwNs (wckdklwn)",
+      "99.08",
+      "Patrick Mahomes (34.98)",
+      "Tre Tucker (20.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Let Go Team (rprichards1973)",
+      "121.98",
+      "Tyler Shough (24.38)",
+      "Cam Ward (20.02)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Kronik (Kronik)",
+      "82.28",
+      "Jordan Love (23.48)",
+      "MIN (17.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Smokers Haven (SmokersHaven)",
+      "161.02",
+      "Jahmyr Gibbs (37.9)",
+      "Brock Bowers (22.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "FloridaBills (FloridaBills)",
+      "165.56",
+      "Ja'Marr Chase (20.3)",
+      "Jeremiyah Love (19.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "lilfishy (lilfishy)",
+      "124.70",
+      "Matthew Stafford (26.9)",
+      "Kirk Cousins (28.22)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Suck it up (Finsup73)",
+      "89.28",
+      "Joe Burrow (28.58)",
+      "Kenyon Sadiq (20.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Team Tacos (tokenwhiteguy)",
+      "114.54",
+      "Lamar Jackson (24.44)",
+      "Sam Darnold (37.66)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Princess VanEps (DerrickFish)",
+      "155.78",
+      "Brock Purdy (39.28)",
+      "Dak Prescott (20.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Honolulu Blues (pboger)",
+      "114.46",
+      "Jared Goff (23.36)",
+      "Geno Smith (32.04)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "WiCkEd KlOwNs (wckdklwn)",
+      "78.34",
+      "Patrick Mahomes (20.94)",
+      "Bo Nix (29.14)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Let Go Team (rprichards1973)",
+      "91.10",
+      "Tyler Shough (32.8)",
+      "LAC (14.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Kronik (Kronik)",
+      "130.78",
+      "Jonathan Taylor (22.2)",
+      "Justin Herbert (13.56)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Smokers Haven (SmokersHaven)",
+      "146.96",
+      "Drake Maye (33.16)",
+      "Malik Nabers (20.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "FloridaBills (FloridaBills)",
+      "152.62",
+      "CeeDee Lamb (32.8)",
+      "Bryce Young (25.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "lilfishy (lilfishy)",
+      "99.88",
+      "Zay Flowers (21.8)",
+      "Kirk Cousins (27.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Suck it up (Finsup73)",
+      "117.52",
+      "Tetairoa McMillan (38.2)",
+      "Carnell Tate (17.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Team Tacos (tokenwhiteguy)",
+      "135.08",
+      "Kenneth Walker III (30.4)",
+      "Sam Darnold (18.32)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Princess VanEps (DerrickFish)",
+      "109.32",
+      "Brock Purdy (23.62)",
+      "Dak Prescott (20.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Honolulu Blues (pboger)",
+      "158.68",
+      "Javonte Williams (28.8)",
+      "Emanuel Wilson (25.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "WiCkEd KlOwNs (wckdklwn)",
+      "76.70",
+      "Patrick Mahomes (21.0)",
+      "Tyquan Thornton (25.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Let Go Team (rprichards1973)",
+      "116.64",
+      "Sam LaPorta (18.4)",
+      "Kyle Monangai (27.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Kronik (Kronik)",
+      "98.68",
+      "Jordan Love (29.28)",
+      "Isaiah Likely (26.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Smokers Haven (SmokersHaven)",
+      "203.36",
+      "Drake Maye (47.46)",
+      "Jayden Daniels (32.26)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "FloridaBills (FloridaBills)",
+      "151.50",
+      "Josh Allen (33.5)",
+      "Kyler Murray (20.26)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "lilfishy (lilfishy)",
+      "160.72",
+      "Matthew Stafford (33.32)",
+      "Kirk Cousins (15.72)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Suck it up (Finsup73)",
+      "117.60",
+      "Joe Burrow (32.6)",
+      "DeMario Douglas (20.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Team Tacos (tokenwhiteguy)",
+      "139.28",
+      "Bucky Irving (30.5)",
+      "Jameson Williams (17.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Princess VanEps (DerrickFish)",
+      "86.44",
+      "Derrick Henry (20.5)",
+      "Brock Purdy (21.16)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Honolulu Blues (pboger)",
+      "137.04",
+      "Jared Goff (34.94)",
+      "Rhamondre Stevenson (16.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "WiCkEd KlOwNs (wckdklwn)",
+      "90.14",
+      "Trevor Lawrence (26.74)",
+      "Pat Freiermuth (19.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Let Go Team (rprichards1973)",
+      "155.98",
+      "Jaylen Warren (33.8)",
+      "C.J. Stroud (22.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Kronik (Kronik)",
+      "127.84",
+      "Jordan Love (23.24)",
+      "Germie Bernard (20.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Smokers Haven (SmokersHaven)",
+      "129.10",
+      "Drake Maye (29.8)",
+      "Jayden Daniels (25.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "FloridaBills (FloridaBills)",
+      "120.80",
+      "Christian McCaffrey (26.2)",
+      "Bryce Young (23.84)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "lilfishy (lilfishy)",
+      "92.38",
+      "D'Andre Swift (21.0)",
+      "Kirk Cousins (23.52)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Suck it up (Finsup73)",
+      "111.96",
+      "Matthew Golden (19.4)",
+      "DeMario Douglas (16.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Team Tacos (tokenwhiteguy)",
+      "125.10",
+      "Michael Penix Jr. (29.1)",
+      "Emeka Egbuka (14.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Princess VanEps (DerrickFish)",
+      "83.46",
+      "Brock Purdy (19.36)",
+      "Omar Cooper Jr. (19.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Honolulu Blues (pboger)",
+      "87.28",
+      "Chuba Hubbard (18.6)",
+      "Geno Smith (14.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "WiCkEd KlOwNs (wckdklwn)",
+      "109.98",
+      "Tre Tucker (24.2)",
+      "Trevor Lawrence (36.34)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Let Go Team (rprichards1973)",
+      "112.66",
+      "Tyler Shough (32.96)",
+      "C.J. Stroud (29.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Smokers Haven (SmokersHaven)",
+      "32.44",
+      "Drake Maye (32.44)",
+      "Luther Burden III (21.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "FloridaBills (FloridaBills)",
+      "4.00",
+      "CHI (4.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "lilfishy (lilfishy)",
+      "19.00",
+      "D'Andre Swift (17.0)",
+      "Caleb Williams (26.12)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Suck it up (Finsup73)",
+      "14.40",
+      "Hunter Henry (10.6)",
+      "TreVeyon Henderson (3.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Princess VanEps (DerrickFish)",
+      "6.30",
+      "A.J. Brown (6.3)",
+      "None (0)",
       "",
       ""
     ],
@@ -2435,6 +3794,78 @@
       ""
     ],
     [
+      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Season",
+      "Date",
+      "Week",
+      "Teams Involved",
+      "Trade Breakdown",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Smokers Haven  (SmokersHaven) & Hail to the Leaf (tokenwhiteguy)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "commish (JayLeno) & Waiver Wire Warriors  (KillerCards)",
+      "Completed trade involving 1 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "commish (JayLeno) & Burntcooks (Burntcooks)",
+      "Completed trade involving 3 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "commish (JayLeno) & Thielen Mythelf (DerrickFish)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
       "--- CURRENT ROSTERS & DRAFT PICKS ---",
       "",
       "",
@@ -2570,7 +4001,7 @@
       ""
     ],
     [
-      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "--- BOX SCORES & BENCH BLUNDERS ---",
       "",
       "",
       "",
@@ -2579,47 +4010,722 @@
       ""
     ],
     [
-      "Season",
-      "Date",
       "Week",
-      "Teams Involved",
-      "Trade Breakdown",
+      "Team / Manager",
+      "Total Score",
+      "Top Starter",
+      "Top Bench",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Smokers Haven  (SmokersHaven) & Hail to the Leaf (tokenwhiteguy)",
-      "Completed trade involving 1 assets.",
+      "commish (JayLeno)",
+      "128.98",
+      "Amon-Ra St. Brown (23.7)",
+      "C.J. Stroud (18.46)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "commish (JayLeno) & Waiver Wire Warriors  (KillerCards)",
-      "Completed trade involving 1 assets.",
+      "Burntcooks (Burntcooks)",
+      "108.96",
+      "Kenneth Walker III (32.6)",
+      "Jared Goff (19.44)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "commish (JayLeno) & Burntcooks (Burntcooks)",
-      "Completed trade involving 3 assets.",
+      "jarvisevans (jarvisevans)",
+      "94.90",
+      "Chris Olave (23.2)",
+      "Jalen Coker (29.8)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "commish (JayLeno) & Thielen Mythelf (DerrickFish)",
-      "Completed trade involving 2 assets.",
+      "Waiver Wire Warriors  (KillerCards)",
+      "113.46",
+      "Lamar Jackson (25.96)",
+      "Brock Purdy (26.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "lilfishy (lilfishy)",
+      "131.66",
+      "Caleb Williams (41.26)",
+      "Tyler Shough (25.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "181.52",
+      "Jalen Hurts (30.72)",
+      "DJ Moore (18.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "InsideInsightt (InsideInsightt)",
+      "130.26",
+      "Josh Allen (38.66)",
+      "Jaxson Dart (31.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Smokers Haven  (SmokersHaven)",
+      "130.00",
+      "Derrick Henry (34.8)",
+      "Christian Watson (29.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Vanilla Gorilla (Kronik)",
+      "65.26",
+      "Jayden Daniels (21.66)",
+      "Trevor Lawrence (34.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Hail to the Leaf (tokenwhiteguy)",
+      "131.60",
+      "Ashton Jeanty (29.7)",
+      "Isaiah Likely (22.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Thielen Mythelf (DerrickFish)",
+      "115.96",
+      "David Montgomery (27.4)",
+      "Dalton Kincaid (15.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Downs Syndrome (Miksimus80)",
+      "92.00",
+      "D'Andre Swift (31.9)",
+      "Bryce Young (36.44)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "commish (JayLeno)",
+      "121.20",
+      "Amon-Ra St. Brown (30.7)",
+      "C.J. Stroud (17.02)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Burntcooks (Burntcooks)",
+      "132.18",
+      "Jared Goff (35.78)",
+      "Rachaad White (11.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "jarvisevans (jarvisevans)",
+      "133.88",
+      "Patrick Mahomes (34.98)",
+      "Malik Willis (14.48)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Waiver Wire Warriors  (KillerCards)",
+      "125.20",
+      "Davante Adams (35.5)",
+      "Brock Purdy (32.48)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "lilfishy (lilfishy)",
+      "133.12",
+      "Jaxon Smith-Njigba (38.0)",
+      "Tyler Shough (23.38)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "123.46",
+      "Jonathan Taylor (27.2)",
+      "Jake Ferguson (18.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "InsideInsightt (InsideInsightt)",
+      "151.12",
+      "Josh Allen (45.82)",
+      "Matthew Stafford (33.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Smokers Haven  (SmokersHaven)",
+      "126.66",
+      "Dak Prescott (37.76)",
+      "LV (23.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Vanilla Gorilla (Kronik)",
+      "95.04",
+      "Christian McCaffrey (20.6)",
+      "Tre Tucker (20.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Hail to the Leaf (tokenwhiteguy)",
+      "76.22",
+      "Kirk Cousins (25.22)",
+      "Cam Ward (20.02)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Thielen Mythelf (DerrickFish)",
+      "93.98",
+      "Joe Burrow (20.18)",
+      "Geno Smith (16.58)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Downs Syndrome (Miksimus80)",
+      "73.18",
+      "Bryce Young (30.08)",
+      "Daniel Jones (12.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "commish (JayLeno)",
+      "96.78",
+      "Jordan Love (20.48)",
+      "C.J. Stroud (13.68)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Burntcooks (Burntcooks)",
+      "139.86",
+      "Jared Goff (23.36)",
+      "Sam Darnold (32.66)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "jarvisevans (jarvisevans)",
+      "105.44",
+      "Drake London (23.9)",
+      "DEN (17.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Waiver Wire Warriors  (KillerCards)",
+      "122.94",
+      "Lamar Jackson (24.44)",
+      "Brock Purdy (39.28)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "lilfishy (lilfishy)",
+      "143.76",
+      "Jaxon Smith-Njigba (30.36)",
+      "Luther Burden III (16.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "133.72",
+      "Jahmyr Gibbs (37.9)",
+      "Jacoby Brissett (29.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "InsideInsightt (InsideInsightt)",
+      "75.46",
+      "CeeDee Lamb (16.7)",
+      "Matthew Stafford (21.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Smokers Haven  (SmokersHaven)",
+      "137.04",
+      "Garrett Wilson (21.7)",
+      "Jaylen Warren (19.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Vanilla Gorilla (Kronik)",
+      "109.28",
+      "Trevor Lawrence (24.78)",
+      "Juwan Johnson (18.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Hail to the Leaf (tokenwhiteguy)",
+      "129.72",
+      "Kirk Cousins (27.22)",
+      "Harold Fannin Jr. (20.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Thielen Mythelf (DerrickFish)",
+      "109.48",
+      "Joe Burrow (27.58)",
+      "Geno Smith (31.04)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Downs Syndrome (Miksimus80)",
+      "113.64",
+      "Kenyon Sadiq (20.0)",
+      "Aaron Rodgers (27.68)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "commish (JayLeno)",
+      "128.58",
+      "Javonte Williams (28.8)",
+      "C.J. Stroud (27.08)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Burntcooks (Burntcooks)",
+      "183.58",
+      "Kenneth Walker III (30.4)",
+      "Kyle Monangai (27.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "jarvisevans (jarvisevans)",
+      "94.30",
+      "Patrick Mahomes (21.0)",
+      "Jaylin Noel (10.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Waiver Wire Warriors  (KillerCards)",
+      "113.08",
+      "Kyren Williams (31.7)",
+      "Brock Purdy (23.62)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "lilfishy (lilfishy)",
+      "121.94",
+      "Chuba Hubbard (25.4)",
+      "Drake Maye (28.16)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "98.14",
+      "Bijan Robinson (27.2)",
+      "Jalen Hurts (16.52)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "InsideInsightt (InsideInsightt)",
+      "165.62",
+      "Tetairoa McMillan (37.2)",
+      "Brian Robinson Jr. (25.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Smokers Haven  (SmokersHaven)",
+      "82.50",
+      "Dak Prescott (20.1)",
+      "Emanuel Wilson (24.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Vanilla Gorilla (Kronik)",
+      "87.58",
+      "Trevor Lawrence (15.08)",
+      "T.J. Hockenson (18.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Hail to the Leaf (tokenwhiteguy)",
+      "143.60",
+      "Kirk Cousins (25.6)",
+      "Ollie Gordon II (17.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Thielen Mythelf (DerrickFish)",
+      "89.42",
+      "Joe Burrow (22.72)",
+      "Geno Smith (10.76)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Downs Syndrome (Miksimus80)",
+      "78.86",
+      "Bryce Young (25.46)",
+      "Aaron Rodgers (25.96)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "commish (JayLeno)",
+      "125.58",
+      "Jordan Love (28.28)",
+      "C.J. Stroud (21.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Burntcooks (Burntcooks)",
+      "132.34",
+      "Jared Goff (33.94)",
+      "Pat Freiermuth (19.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "jarvisevans (jarvisevans)",
+      "97.30",
+      "DEN (20.0)",
+      "Malik Willis (16.88)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Waiver Wire Warriors  (KillerCards)",
+      "151.86",
+      "Puka Nacua (29.2)",
+      "Matthew Golden (17.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "lilfishy (lilfishy)",
+      "123.34",
+      "Parker Washington (27.4)",
+      "Drake Maye (47.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "122.32",
+      "Jahmyr Gibbs (35.2)",
+      "Jacoby Brissett (29.78)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "InsideInsightt (InsideInsightt)",
+      "131.30",
+      "Josh Allen (31.5)",
+      "Matthew Stafford (33.32)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Smokers Haven  (SmokersHaven)",
+      "185.84",
+      "Jaylen Warren (33.8)",
+      "Jameis Winston (30.74)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Vanilla Gorilla (Kronik)",
+      "114.54",
+      "George Pickens (23.5)",
+      "Jayden Daniels (32.26)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Hail to the Leaf (tokenwhiteguy)",
+      "146.20",
+      "Isaiah Likely (26.9)",
+      "Tyler Huntley (28.04)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Thielen Mythelf (DerrickFish)",
+      "122.40",
+      "Joe Burrow (32.6)",
+      "Geno Smith (10.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Downs Syndrome (Miksimus80)",
+      "70.60",
+      "DeMario Douglas (20.5)",
+      "Aaron Rodgers (28.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "commish (JayLeno)",
+      "105.54",
+      "Jordan Love (21.24)",
+      "C.J. Stroud (27.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Burntcooks (Burntcooks)",
+      "110.62",
+      "Kenneth Walker III (26.9)",
+      "Colston Loveland (15.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "jarvisevans (jarvisevans)",
+      "105.28",
+      "Tyler Bass (17.0)",
+      "TEN (26.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Waiver Wire Warriors  (KillerCards)",
+      "114.96",
+      "Matthew Golden (19.4)",
+      "Keenan Allen (12.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "lilfishy (lilfishy)",
+      "136.50",
+      "Drake Maye (29.8)",
+      "Tyler Shough (32.96)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "68.42",
+      "Jonathan Taylor (19.1)",
+      "NO (16.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "InsideInsightt (InsideInsightt)",
+      "99.90",
+      "Josh Allen (22.3)",
+      "Matthew Stafford (19.88)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Smokers Haven  (SmokersHaven)",
+      "83.02",
+      "CLE (15.0)",
+      "Kyle Pitts Sr. (20.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Vanilla Gorilla (Kronik)",
+      "148.44",
+      "Trevor Lawrence (34.34)",
+      "Jayden Daniels (25.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Hail to the Leaf (tokenwhiteguy)",
+      "115.72",
+      "Malik Nabers (22.5)",
+      "Michael Penix Jr. (27.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Thielen Mythelf (DerrickFish)",
+      "77.38",
+      "KC (21.0)",
+      "Omar Cooper Jr. (19.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Downs Syndrome (Miksimus80)",
+      "88.94",
+      "Bryce Young (23.84)",
+      "Aaron Rodgers (19.02)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "commish (JayLeno)",
+      "8.90",
+      "Rome Odunze (8.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "jarvisevans (jarvisevans)",
+      "3.00",
+      "NE (3.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "lilfishy (lilfishy)",
+      "72.14",
+      "Drake Maye (30.44)",
+      "Caleb Williams (26.12)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Love Hurts \ud83c\udfb6 (michaelpacheco)",
+      "15.00",
+      "Cairo Santos (15.0)",
+      "A.J. Brown (6.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "InsideInsightt (InsideInsightt)",
+      "10.60",
+      "Hunter Henry (10.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Vanilla Gorilla (Kronik)",
+      "3.30",
+      "TreVeyon Henderson (3.3)",
+      "Andy Borregales (7.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Downs Syndrome (Miksimus80)",
+      "20.80",
+      "D'Andre Swift (17.0)",
+      "CHI (7.0)",
       "",
       ""
     ],
@@ -3607,6 +5713,78 @@
       ""
     ],
     [
+      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Season",
+      "Date",
+      "Week",
+      "Teams Involved",
+      "Trade Breakdown",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "SeasonHerosPlayoffZeros (KillerCards) & Vanilla Gorillas (Kronik)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "Kirk Touches His Cousins (Dontiddy) & lilfishy (lilfishy)",
+      "Completed trade involving 0 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 1",
+      "SeasonHerosPlayoffZeros (KillerCards) & JayLeno (JayLeno)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "2026",
+      "Live Sync",
+      "Week 6",
+      "Kirk Touches His Cousins (Dontiddy) & Vanilla Gorillas (Kronik)",
+      "Completed trade involving 2 assets.",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
       "--- CURRENT ROSTERS & DRAFT PICKS ---",
       "",
       "",
@@ -3742,7 +5920,7 @@
       ""
     ],
     [
-      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "--- BOX SCORES & BENCH BLUNDERS ---",
       "",
       "",
       "",
@@ -3751,47 +5929,722 @@
       ""
     ],
     [
-      "Season",
-      "Date",
       "Week",
-      "Teams Involved",
-      "Trade Breakdown",
+      "Team / Manager",
+      "Total Score",
+      "Top Starter",
+      "Top Bench",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "SeasonHerosPlayoffZeros (KillerCards) & Vanilla Gorillas (Kronik)",
-      "Completed trade involving 2 assets.",
+      "Thielen Mythelf (DerrickFish)",
+      "142.15",
+      "Jahmyr Gibbs (34.6)",
+      "Dalton Kincaid (20.0)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "Kirk Touches His Cousins (Dontiddy) & lilfishy (lilfishy)",
-      "Completed trade involving 0 assets.",
+      "Smokers Haven (SmokersHaven)",
+      "93.50",
+      "Lamar Jackson (30.2)",
+      "Ashton Jeanty (34.7)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
       "Week 1",
-      "SeasonHerosPlayoffZeros (KillerCards) & JayLeno (JayLeno)",
-      "Completed trade involving 2 assets.",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "172.70",
+      "Chris Olave (30.2)",
+      "Cam Ward (15.1)",
       "",
       ""
     ],
     [
-      "2026",
-      "Live Sync",
+      "Week 1",
+      "White Bowser (Wade55720)",
+      "158.60",
+      "Josh Allen (43.0)",
+      "Jalen Coker (36.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "HouseGordon (HouseGordon)",
+      "130.80",
+      "Jaxon Smith-Njigba (29.2)",
+      "Tyler Shough (38.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "216.80",
+      "Kenneth Walker III (37.1)",
+      "Kyle Monangai (23.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "QueenFish (QueenFish)",
+      "124.25",
+      "Caleb Williams (43.95)",
+      "Patrick Mahomes (28.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "jarvisevans (jarvisevans)",
+      "128.45",
+      "Jalen Hurts (33.75)",
+      "Deshaun Watson (19.05)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "JayLeno (JayLeno)",
+      "126.70",
+      "Bijan Robinson (29.3)",
+      "Dallas Goedert (24.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "lilfishy (lilfishy)",
+      "113.55",
+      "Trevor Lawrence (36.55)",
+      "C.J. Stroud (21.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Vanilla Gorillas (Kronik)",
+      "167.70",
+      "Derrick Henry (37.3)",
+      "Isaiah Likely (26.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Jerry Jones for President (tuckberg22)",
+      "110.75",
+      "SEA (24.0)",
+      "Kirk Cousins (23.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Thielen Mythelf (DerrickFish)",
+      "156.45",
+      "Brock Purdy (35.35)",
+      "Matthew Stafford (39.25)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Smokers Haven (SmokersHaven)",
+      "155.55",
+      "DeVonta Smith (29.7)",
+      "Dak Prescott (40.55)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "116.45",
+      "Bryce Young (32.95)",
+      "Cam Ward (21.85)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "White Bowser (Wade55720)",
+      "197.70",
+      "Josh Allen (49.3)",
+      "CAR (30.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "HouseGordon (HouseGordon)",
+      "163.80",
+      "Jaxon Smith-Njigba (45.5)",
+      "Tyler Shough (25.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "131.05",
+      "Kenneth Walker III (25.8)",
+      "Darren Waller (18.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "QueenFish (QueenFish)",
+      "140.40",
+      "Davante Adams (41.5)",
+      "Patrick Mahomes (38.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "jarvisevans (jarvisevans)",
+      "143.60",
+      "Jalen Hurts (24.8)",
+      "Deshaun Watson (27.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "JayLeno (JayLeno)",
+      "75.40",
+      "GB (17.0)",
+      "Jonah Coleman (14.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "lilfishy (lilfishy)",
+      "85.15",
+      "MIN (24.0)",
+      "Travis Kelce (27.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Vanilla Gorillas (Kronik)",
+      "83.70",
+      "Derrick Henry (17.7)",
+      "Jared Goff (39.05)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Jerry Jones for President (tuckberg22)",
+      "118.70",
+      "Ja'Marr Chase (26.5)",
+      "Kirk Cousins (30.75)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Thielen Mythelf (DerrickFish)",
+      "135.35",
+      "Brock Purdy (43.25)",
+      "Aaron Rodgers (32.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Smokers Haven (SmokersHaven)",
+      "145.10",
+      "Lamar Jackson (26.3)",
+      "Dak Prescott (23.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "131.75",
+      "Jaylen Warren (22.6)",
+      "Michael Penix Jr. (19.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "White Bowser (Wade55720)",
+      "143.00",
+      "Brock Bowers (29.6)",
+      "Jordan Love (25.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "HouseGordon (HouseGordon)",
+      "163.65",
+      "Jaxon Smith-Njigba (37.5)",
+      "Sam Darnold (41.45)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "169.20",
+      "Joe Burrow (30.4)",
+      "CHI (20.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "QueenFish (QueenFish)",
+      "116.10",
+      "Patrick Mahomes (23.4)",
+      "Evan McPherson (13.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "jarvisevans (jarvisevans)",
+      "120.65",
+      "Christian McCaffrey (21.6)",
+      "Deshaun Watson (25.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "JayLeno (JayLeno)",
+      "120.15",
+      "Bijan Robinson (37.3)",
+      "Carnell Tate (11.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "lilfishy (lilfishy)",
+      "102.60",
+      "Trevor Lawrence (28.6)",
+      "C.J. Stroud (15.35)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Vanilla Gorillas (Kronik)",
+      "134.65",
+      "Jared Goff (26.05)",
+      "Michael Wilson (25.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Jerry Jones for President (tuckberg22)",
+      "135.90",
+      "Drake London (30.4)",
+      "Jacoby Brissett (32.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Thielen Mythelf (DerrickFish)",
+      "136.00",
+      "Tetairoa McMillan (46.2)",
+      "Aaron Rodgers (32.95)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Smokers Haven (SmokersHaven)",
+      "164.80",
+      "Tee Higgins (28.7)",
+      "Dak Prescott (23.45)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "212.35",
+      "Javonte Williams (31.3)",
+      "Brian Robinson Jr. (25.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "White Bowser (Wade55720)",
+      "190.55",
+      "CeeDee Lamb (43.3)",
+      "Jordan Love (20.05)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "HouseGordon (HouseGordon)",
+      "100.60",
+      "Puka Nacua (29.7)",
+      "T.J. Hockenson (26.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "171.90",
+      "Kyren Williams (36.7)",
+      "Kyle Monangai (30.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "QueenFish (QueenFish)",
+      "104.35",
+      "Patrick Mahomes (23.25)",
+      "PIT (13.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "jarvisevans (jarvisevans)",
+      "133.65",
+      "Quinshon Judkins (21.6)",
+      "Tyquan Thornton (30.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "JayLeno (JayLeno)",
+      "135.75",
+      "Drake Maye (32.85)",
+      "Keon Coleman (25.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "lilfishy (lilfishy)",
+      "129.95",
+      "Nico Collins (32.8)",
+      "C.J. Stroud (30.55)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Vanilla Gorillas (Kronik)",
+      "146.40",
+      "Jared Goff (31.6)",
+      "Deebo Samuel Sr. (17.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Jerry Jones for President (tuckberg22)",
+      "137.95",
+      "Malik Nabers (25.2)",
+      "SEA (21.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Thielen Mythelf (DerrickFish)",
+      "137.55",
+      "Jahmyr Gibbs (39.7)",
+      "Aaron Rodgers (31.35)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Smokers Haven (SmokersHaven)",
+      "115.10",
+      "DEN (30.0)",
+      "SF (27.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "171.95",
+      "Jaylen Warren (40.8)",
+      "Michael Penix Jr. (17.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "White Bowser (Wade55720)",
+      "154.70",
+      "Josh Allen (37.6)",
+      "Jordan Love (33.95)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "HouseGordon (HouseGordon)",
+      "163.50",
+      "Puka Nacua (39.7)",
+      "Jayden Daniels (36.25)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "144.20",
+      "Christian Watson (36.3)",
+      "Justin Jefferson (17.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "QueenFish (QueenFish)",
+      "143.95",
+      "Matthew Golden (22.3)",
+      "PHI (16.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "jarvisevans (jarvisevans)",
+      "152.60",
+      "Jason Myers (28.0)",
+      "Malik Willis (22.25)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "JayLeno (JayLeno)",
+      "152.60",
+      "Drake Maye (51.2)",
+      "Pat Freiermuth (21.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "lilfishy (lilfishy)",
+      "113.75",
+      "Trevor Lawrence (29.05)",
+      "C.J. Stroud (24.55)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Vanilla Gorillas (Kronik)",
+      "202.50",
+      "Jared Goff (36.65)",
+      "Kyler Murray (22.55)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Jerry Jones for President (tuckberg22)",
+      "177.35",
+      "Bucky Irving (33.5)",
+      "Jacoby Brissett (35.2)",
+      "",
+      ""
+    ],
+    [
       "Week 6",
-      "Kirk Touches His Cousins (Dontiddy) & Vanilla Gorillas (Kronik)",
-      "Completed trade involving 2 assets.",
+      "Thielen Mythelf (DerrickFish)",
+      "100.50",
+      "Matthew Stafford (22.1)",
+      "Aaron Rodgers (23.55)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Smokers Haven (SmokersHaven)",
+      "135.10",
+      "DeVonta Smith (20.5)",
+      "DEN (21.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "148.45",
+      "Kirk Cousins (27.65)",
+      "Michael Penix Jr. (29.35)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "White Bowser (Wade55720)",
+      "134.55",
+      "Josh Allen (24.85)",
+      "Jordan Love (26.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "HouseGordon (HouseGordon)",
+      "129.80",
+      "Jayden Daniels (28.0)",
+      "Tyler Shough (34.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "97.55",
+      "Kenneth Walker III (29.9)",
+      "DK Metcalf (20.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "QueenFish (QueenFish)",
+      "140.10",
+      "Matthew Golden (24.4)",
+      "Caleb Williams (20.55)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "jarvisevans (jarvisevans)",
+      "151.20",
+      "Christian McCaffrey (29.7)",
+      "ATL (15.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "JayLeno (JayLeno)",
+      "133.15",
+      "Drake Maye (33.15)",
+      "RJ Harvey (14.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "lilfishy (lilfishy)",
+      "94.90",
+      "Trevor Lawrence (39.4)",
+      "C.J. Stroud (33.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Vanilla Gorillas (Kronik)",
+      "149.55",
+      "Bryce Young (26.65)",
+      "Tre Tucker (27.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Jerry Jones for President (tuckberg22)",
+      "119.70",
+      "Malik Nabers (30.5)",
+      "Emeka Egbuka (17.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Smokers Haven (SmokersHaven)",
+      "25.70",
+      "Luther Burden III (25.7)",
+      "Colston Loveland (19.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Kirk Touches His Cousins (Dontiddy)",
+      "14.10",
+      "Hunter Henry (14.1)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "SeasonHerosPlayoffZeros (KillerCards)",
+      "32.50",
+      "Rhamondre Stevenson (23.5)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "QueenFish (QueenFish)",
+      "5.30",
+      "DeMario Douglas (5.3)",
+      "Caleb Williams (29.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "JayLeno (JayLeno)",
+      "36.65",
+      "Drake Maye (36.65)",
+      "TreVeyon Henderson (4.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "lilfishy (lilfishy)",
+      "10.90",
+      "Rome Odunze (10.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Vanilla Gorillas (Kronik)",
+      "26.80",
+      "D'Andre Swift (19.0)",
+      "None (0)",
       "",
       ""
     ],
@@ -4779,6 +7632,42 @@
       ""
     ],
     [
+      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Season",
+      "Date",
+      "Week",
+      "Teams Involved",
+      "Trade Breakdown",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
       "--- CURRENT ROSTERS & DRAFT PICKS ---",
       "",
       "",
@@ -4914,7 +7803,7 @@
       ""
     ],
     [
-      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "--- BOX SCORES & BENCH BLUNDERS ---",
       "",
       "",
       "",
@@ -4923,11 +7812,722 @@
       ""
     ],
     [
-      "Season",
-      "Date",
       "Week",
-      "Teams Involved",
-      "Trade Breakdown",
+      "Team / Manager",
+      "Total Score",
+      "Top Starter",
+      "Top Bench",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Thielen Mythelf (DerrickFish)",
+      "125.26",
+      "Jahmyr Gibbs (32.6)",
+      "Tyler Shough (23.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "JayLeno (JayLeno)",
+      "139.82",
+      "Ashton Jeanty (32.7)",
+      "Jordan Love (18.48)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Jeanty in a bottle (Dontiddy)",
+      "139.06",
+      "Caleb Williams (37.26)",
+      "Jalen Coker (33.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "lilfishy (lilfishy)",
+      "134.80",
+      "David Montgomery (28.9)",
+      "Patrick Mahomes (22.66)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Kronik (Kronik)",
+      "143.30",
+      "Derrick Henry (35.3)",
+      "Bryce Young (32.44)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "QueenFish (QueenFish)",
+      "103.82",
+      "Jalen Hurts (24.72)",
+      "Jayden Daniels (17.66)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "CeeDees NUTZ (lilfishy2011)",
+      "129.96",
+      "Josh Allen (34.66)",
+      "Dallas Goedert (23.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Houstoncora  (wolffpack27)",
+      "87.30",
+      "Trevor Lawrence (26.1)",
+      "Brock Purdy (22.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Tstruck97 (Tstruck97)",
+      "113.06",
+      "Justin Jefferson (31.2)",
+      "Jakobi Meyers (12.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Smokers Haven (SmokersHaven)",
+      "142.66",
+      "Bijan Robinson (29.3)",
+      "Kyle Monangai (20.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Tuaindapink1indastink (tokenwhiteguy)",
+      "121.54",
+      "Zay Flowers (26.0)",
+      "Daniel Jones (10.04)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Kolbilly (Kolbilly)",
+      "134.14",
+      "Kenneth Walker III (34.1)",
+      "Devaughn Vele (19.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Thielen Mythelf (DerrickFish)",
+      "133.38",
+      "Jahmyr Gibbs (23.3)",
+      "Tyler Shough (21.38)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "JayLeno (JayLeno)",
+      "98.40",
+      "Jonathan Taylor (29.2)",
+      "Jonah Coleman (14.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Jeanty in a bottle (Dontiddy)",
+      "105.32",
+      "Chris Olave (22.6)",
+      "Jaylen Warren (9.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "lilfishy (lilfishy)",
+      "109.96",
+      "Dak Prescott (29.76)",
+      "Patrick Mahomes (28.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Kronik (Kronik)",
+      "98.60",
+      "Amon-Ra St. Brown (35.2)",
+      "Bryce Young (24.08)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "QueenFish (QueenFish)",
+      "111.56",
+      "Travis Kelce (25.1)",
+      "Rachaad White (14.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "CeeDees NUTZ (lilfishy2011)",
+      "92.62",
+      "Josh Allen (39.82)",
+      "NE (23.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Houstoncora  (wolffpack27)",
+      "125.28",
+      "Brock Purdy (28.48)",
+      "Tre Tucker (22.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Tstruck97 (Tstruck97)",
+      "133.70",
+      "Davante Adams (39.5)",
+      "Baker Mayfield (13.18)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Smokers Haven (SmokersHaven)",
+      "86.68",
+      "DeVonta Smith (27.7)",
+      "Denzel Boston (20.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Tuaindapink1indastink (tokenwhiteguy)",
+      "125.38",
+      "CeeDee Lamb (35.3)",
+      "Matthew Stafford (27.98)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Kolbilly (Kolbilly)",
+      "125.88",
+      "Jaxon Smith-Njigba (42.5)",
+      "Bo Nix (15.12)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Thielen Mythelf (DerrickFish)",
+      "123.58",
+      "Jahmyr Gibbs (41.4)",
+      "Tyler Shough (22.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "JayLeno (JayLeno)",
+      "90.18",
+      "Christian Watson (22.6)",
+      "Kenyon Sadiq (23.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Jeanty in a bottle (Dontiddy)",
+      "96.62",
+      "Jaylen Warren (20.6)",
+      "Keenan Allen (18.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "lilfishy (lilfishy)",
+      "118.44",
+      "Ja'Marr Chase (24.8)",
+      "Patrick Mahomes (16.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Kronik (Kronik)",
+      "119.04",
+      "Jeremiyah Love (21.9)",
+      "Michael Wilson (25.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "QueenFish (QueenFish)",
+      "107.02",
+      "Drake London (28.4)",
+      "Pat Bryant (14.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "CeeDees NUTZ (lilfishy2011)",
+      "113.46",
+      "Tee Higgins (21.0)",
+      "Marvin Harrison Jr. (7.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Houstoncora  (wolffpack27)",
+      "126.28",
+      "Brock Purdy (31.28)",
+      "Harold Fannin Jr. (24.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Tstruck97 (Tstruck97)",
+      "130.64",
+      "George Kittle (26.2)",
+      "Jakobi Meyers (19.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Smokers Haven (SmokersHaven)",
+      "153.24",
+      "Bijan Robinson (35.3)",
+      "Wan'Dale Robinson (18.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Tuaindapink1indastink (tokenwhiteguy)",
+      "82.36",
+      "CeeDee Lamb (20.2)",
+      "Matthew Stafford (22.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Kolbilly (Kolbilly)",
+      "142.92",
+      "Jaxon Smith-Njigba (35.36)",
+      "Bo Nix (25.14)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Thielen Mythelf (DerrickFish)",
+      "128.52",
+      "Joe Burrow (24.72)",
+      "Tyler Shough (15.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "JayLeno (JayLeno)",
+      "132.68",
+      "Jonathan Taylor (22.7)",
+      "Drake Maye (24.16)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Jeanty in a bottle (Dontiddy)",
+      "137.08",
+      "Emanuel Wilson (26.0)",
+      "T.J. Hockenson (24.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "lilfishy (lilfishy)",
+      "76.50",
+      "Will Reichard (19.0)",
+      "Dak Prescott (18.1)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Kronik (Kronik)",
+      "106.46",
+      "Bryce Young (21.46)",
+      "Tetairoa McMillan (44.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "QueenFish (QueenFish)",
+      "96.32",
+      "Christian McCaffrey (16.0)",
+      "Pat Bryant (7.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "CeeDees NUTZ (lilfishy2011)",
+      "175.92",
+      "Javonte Williams (31.3)",
+      "Marvin Harrison Jr. (8.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Houstoncora  (wolffpack27)",
+      "119.18",
+      "James Cook III (16.3)",
+      "Nico Collins (30.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Tstruck97 (Tstruck97)",
+      "122.68",
+      "Kyren Williams (36.7)",
+      "Rome Odunze (15.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Smokers Haven (SmokersHaven)",
+      "105.96",
+      "Bijan Robinson (27.7)",
+      "Kyle Monangai (28.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Tuaindapink1indastink (tokenwhiteguy)",
+      "137.18",
+      "CeeDee Lamb (41.3)",
+      "Brian Robinson Jr. (25.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Kolbilly (Kolbilly)",
+      "104.42",
+      "Kenneth Walker III (30.9)",
+      "Aaron Rodgers (23.96)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Thielen Mythelf (DerrickFish)",
+      "125.10",
+      "Jahmyr Gibbs (37.7)",
+      "Pat Freiermuth (21.5)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "JayLeno (JayLeno)",
+      "124.38",
+      "Christian Watson (32.3)",
+      "Drake Maye (39.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Jeanty in a bottle (Dontiddy)",
+      "125.86",
+      "Jaylen Warren (36.8)",
+      "Kyle Pitts Sr. (15.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "lilfishy (lilfishy)",
+      "137.94",
+      "Bucky Irving (31.5)",
+      "Blake Corum (16.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Kronik (Kronik)",
+      "128.28",
+      "Isaiah Likely (32.4)",
+      "SF (20.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "QueenFish (QueenFish)",
+      "137.96",
+      "Jayden Daniels (32.26)",
+      "Jalen Hurts (11.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "CeeDees NUTZ (lilfishy2011)",
+      "136.10",
+      "Puka Nacua (37.7)",
+      "Dallas Goedert (9.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Houstoncora  (wolffpack27)",
+      "110.74",
+      "James Cook III (20.8)",
+      "C.J. Stroud (19.94)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Tstruck97 (Tstruck97)",
+      "123.74",
+      "Tyler Huntley (24.04)",
+      "J.K. Dobbins (15.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Smokers Haven (SmokersHaven)",
+      "133.98",
+      "Jacoby Brissett (26.28)",
+      "Denzel Boston (13.6)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Tuaindapink1indastink (tokenwhiteguy)",
+      "115.64",
+      "Malik Nabers (29.1)",
+      "Matthew Stafford (27.32)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Kolbilly (Kolbilly)",
+      "124.62",
+      "Parker Washington (30.4)",
+      "Aaron Rodgers (22.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Thielen Mythelf (DerrickFish)",
+      "112.46",
+      "Tyler Shough (26.96)",
+      "Keenan Allen (16.2)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "JayLeno (JayLeno)",
+      "116.54",
+      "Jordan Love (21.24)",
+      "Drake Maye (23.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Jeanty in a bottle (Dontiddy)",
+      "106.90",
+      "Kyle Pitts Sr. (23.0)",
+      "Khalil Shakir (13.4)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "lilfishy (lilfishy)",
+      "84.12",
+      "Xavier Worthy (14.3)",
+      "Jaylin Noel (20.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Kronik (Kronik)",
+      "94.24",
+      "Isaiah Likely (23.9)",
+      "Deshaun Watson (9.46)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "QueenFish (QueenFish)",
+      "119.30",
+      "Christian McCaffrey (29.7)",
+      "Rachaad White (15.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "CeeDees NUTZ (lilfishy2011)",
+      "93.40",
+      "Chuba Hubbard (19.1)",
+      "Travis Hunter (15.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Houstoncora  (wolffpack27)",
+      "106.34",
+      "Trevor Lawrence (28.34)",
+      "Tre Tucker (26.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Tstruck97 (Tstruck97)",
+      "96.90",
+      "George Kittle (17.9)",
+      "Chig Okonkwo (13.9)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Smokers Haven (SmokersHaven)",
+      "92.82",
+      "DeVonta Smith (20.5)",
+      "Dameon Pierce (15.0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Tuaindapink1indastink (tokenwhiteguy)",
+      "104.28",
+      "Malik Nabers (28.5)",
+      "Daniel Jones (15.76)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Kolbilly (Kolbilly)",
+      "141.12",
+      "Kenneth Walker III (27.9)",
+      "Emeka Egbuka (17.8)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Thielen Mythelf (DerrickFish)",
+      "26.80",
+      "D'Andre Swift (19.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Jeanty in a bottle (Dontiddy)",
+      "22.12",
+      "Caleb Williams (22.12)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "QueenFish (QueenFish)",
+      "14.10",
+      "Hunter Henry (14.1)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "CeeDees NUTZ (lilfishy2011)",
+      "2.00",
+      "NE (2.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Houstoncora  (wolffpack27)",
+      "23.70",
+      "Luther Burden III (23.7)",
+      "Roschon Johnson (1.3)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Tstruck97 (Tstruck97)",
+      "10.90",
+      "Rome Odunze (10.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Kolbilly (Kolbilly)",
+      "19.90",
+      "Colston Loveland (19.9)",
+      "None (0)",
       "",
       ""
     ],
@@ -5915,6 +9515,42 @@
       ""
     ],
     [
+      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "Season",
+      "Date",
+      "Week",
+      "Teams Involved",
+      "Trade Breakdown",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
       "--- CURRENT ROSTERS & DRAFT PICKS ---",
       "",
       "",
@@ -6050,7 +9686,7 @@
       ""
     ],
     [
-      "--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---",
+      "--- BOX SCORES & BENCH BLUNDERS ---",
       "",
       "",
       "",
@@ -6059,11 +9695,713 @@
       ""
     ],
     [
-      "Season",
-      "Date",
       "Week",
-      "Teams Involved",
-      "Trade Breakdown",
+      "Team / Manager",
+      "Total Score",
+      "Top Starter",
+      "Top Bench",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Smokers Haven (SmokersHaven)",
+      "157.60",
+      "Caleb Williams (41.26)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "157.36",
+      "Trevor Lawrence (34.1)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "All Bling No Ring (KillerCards)",
+      "163.54",
+      "Josh Allen (39.66)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "JayLeno (JayLeno)",
+      "168.74",
+      "Kenneth Walker III (32.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Wade55720 (Wade55720)",
+      "178.04",
+      "David Montgomery (27.4)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "InsideInsightt (InsideInsightt)",
+      "188.88",
+      "Derrick Henry (34.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "lilfishy (lilfishy)",
+      "149.56",
+      "Jalen Hurts (30.72)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "LaPorta-Potty (Miksimus80)",
+      "142.62",
+      "Bijan Robinson (27.3)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Burntcooks (Burntcooks)",
+      "122.78",
+      "Jahmyr Gibbs (31.1)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "wckdklwn (wckdklwn)",
+      "116.44",
+      "Bryce Young (37.44)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "jarvisevans (jarvisevans)",
+      "128.88",
+      "Chuba Hubbard (22.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 1",
+      "Bobby Trees \ud83c\udf33\ud83d\udd25\ud83d\udca8\ud83d\ude0f (StahTee)",
+      "170.34",
+      "Jaxson Dart (32.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Smokers Haven (SmokersHaven)",
+      "96.00",
+      "Joe Burrow (20.18)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "129.98",
+      "Amon-Ra St. Brown (30.7)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "All Bling No Ring (KillerCards)",
+      "192.34",
+      "Josh Allen (46.82)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "JayLeno (JayLeno)",
+      "132.08",
+      "Jaxon Smith-Njigba (38.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Wade55720 (Wade55720)",
+      "140.16",
+      "Dak Prescott (37.76)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "InsideInsightt (InsideInsightt)",
+      "111.08",
+      "Brock Purdy (32.48)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "lilfishy (lilfishy)",
+      "151.20",
+      "Jonathan Taylor (27.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "LaPorta-Potty (Miksimus80)",
+      "118.64",
+      "Deshaun Watson (23.72)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Burntcooks (Burntcooks)",
+      "161.08",
+      "Patrick Mahomes (34.98)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "wckdklwn (wckdklwn)",
+      "168.48",
+      "Matthew Stafford (34.98)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "jarvisevans (jarvisevans)",
+      "136.16",
+      "Christian McCaffrey (20.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 2",
+      "Bobby Trees \ud83c\udf33\ud83d\udd25\ud83d\udca8\ud83d\ude0f (StahTee)",
+      "126.36",
+      "Jared Goff (37.78)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Smokers Haven (SmokersHaven)",
+      "135.00",
+      "Jacoby Brissett (29.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "146.30",
+      "Marcus Mariota (26.42)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "All Bling No Ring (KillerCards)",
+      "179.56",
+      "James Cook III (19.4)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "JayLeno (JayLeno)",
+      "147.04",
+      "Jaxon Smith-Njigba (30.36)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Wade55720 (Wade55720)",
+      "128.26",
+      "Lamar Jackson (24.44)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "InsideInsightt (InsideInsightt)",
+      "124.08",
+      "Brock Purdy (39.28)",
+      "Brenton Strange (4.7)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "lilfishy (lilfishy)",
+      "171.28",
+      "Kirk Cousins (28.22)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "LaPorta-Potty (Miksimus80)",
+      "127.56",
+      "Bijan Robinson (34.3)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Burntcooks (Burntcooks)",
+      "220.00",
+      "Jahmyr Gibbs (37.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "wckdklwn (wckdklwn)",
+      "124.78",
+      "Matthew Stafford (24.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "jarvisevans (jarvisevans)",
+      "126.72",
+      "Geno Smith (32.04)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 3",
+      "Bobby Trees \ud83c\udf33\ud83d\udd25\ud83d\udca8\ud83d\ude0f (StahTee)",
+      "139.10",
+      "Tyler Shough (31.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Smokers Haven (SmokersHaven)",
+      "181.06",
+      "Joe Burrow (25.72)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "119.22",
+      "Nico Collins (27.3)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "All Bling No Ring (KillerCards)",
+      "184.18",
+      "Kyren Williams (31.7)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "JayLeno (JayLeno)",
+      "127.26",
+      "Kenneth Walker III (30.4)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Wade55720 (Wade55720)",
+      "107.86",
+      "Lamar Jackson (22.88)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "InsideInsightt (InsideInsightt)",
+      "143.24",
+      "Drake Maye (32.16)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "lilfishy (lilfishy)",
+      "137.08",
+      "Kirk Cousins (26.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "LaPorta-Potty (Miksimus80)",
+      "169.34",
+      "Tetairoa McMillan (38.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Burntcooks (Burntcooks)",
+      "139.92",
+      "Tee Higgins (21.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "wckdklwn (wckdklwn)",
+      "171.32",
+      "CeeDee Lamb (32.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "jarvisevans (jarvisevans)",
+      "147.80",
+      "Javonte Williams (28.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 4",
+      "Bobby Trees \ud83c\udf33\ud83d\udd25\ud83d\udca8\ud83d\ude0f (StahTee)",
+      "161.44",
+      "Puka Nacua (23.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Smokers Haven (SmokersHaven)",
+      "173.62",
+      "Joe Burrow (32.6)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "146.36",
+      "Jayden Daniels (32.26)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "All Bling No Ring (KillerCards)",
+      "204.90",
+      "Jaylen Warren (33.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "JayLeno (JayLeno)",
+      "99.30",
+      "Aaron Rodgers (28.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Wade55720 (Wade55720)",
+      "133.22",
+      "Jordan Love (29.28)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "InsideInsightt (InsideInsightt)",
+      "157.36",
+      "Drake Maye (47.46)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "lilfishy (lilfishy)",
+      "123.64",
+      "George Pickens (23.5)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "LaPorta-Potty (Miksimus80)",
+      "134.40",
+      "Tyler Huntley (28.04)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Burntcooks (Burntcooks)",
+      "131.10",
+      "Jahmyr Gibbs (35.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "wckdklwn (wckdklwn)",
+      "110.12",
+      "Matthew Stafford (33.32)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "jarvisevans (jarvisevans)",
+      "119.64",
+      "Mike Evans (22.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 5",
+      "Bobby Trees \ud83c\udf33\ud83d\udd25\ud83d\udca8\ud83d\ude0f (StahTee)",
+      "145.08",
+      "Jared Goff (34.94)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Smokers Haven (SmokersHaven)",
+      "136.62",
+      "Malik Nabers (22.5)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "121.04",
+      "Trevor Lawrence (35.34)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "All Bling No Ring (KillerCards)",
+      "126.28",
+      "C.J. Stroud (28.98)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "JayLeno (JayLeno)",
+      "116.42",
+      "Kenneth Walker III (26.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Wade55720 (Wade55720)",
+      "94.66",
+      "Jordan Love (22.24)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "InsideInsightt (InsideInsightt)",
+      "149.62",
+      "Drake Maye (29.8)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "lilfishy (lilfishy)",
+      "92.60",
+      "Kirk Cousins (22.52)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "LaPorta-Potty (Miksimus80)",
+      "96.10",
+      "Carnell Tate (16.0)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Burntcooks (Burntcooks)",
+      "79.30",
+      "Bhayshul Tuten (22.7)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "wckdklwn (wckdklwn)",
+      "103.20",
+      "Bryce Young (23.84)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "jarvisevans (jarvisevans)",
+      "167.54",
+      "Christian McCaffrey (26.2)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 6",
+      "Bobby Trees \ud83c\udf33\ud83d\udd25\ud83d\udca8\ud83d\ude0f (StahTee)",
+      "147.96",
+      "Tyler Shough (32.96)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Smokers Haven (SmokersHaven)",
+      "62.52",
+      "Caleb Williams (26.12)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "tokenwhiteguy (tokenwhiteguy)",
+      "8.90",
+      "Rome Odunze (8.9)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "All Bling No Ring (KillerCards)",
+      "1.30",
+      "Roschon Johnson (1.3)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "JayLeno (JayLeno)",
+      "3.30",
+      "TreVeyon Henderson (3.3)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "Wade55720 (Wade55720)",
+      "21.70",
+      "Luther Burden III (21.7)",
+      "None (0)",
+      "",
+      ""
+    ],
+    [
+      "Week 7",
+      "InsideInsightt (InsideInsightt)",
+      "65.34",
+      "Drake Maye (31.44)",
+      "None (0)",
       "",
       ""
     ],

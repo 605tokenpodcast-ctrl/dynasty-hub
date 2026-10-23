@@ -156,9 +156,7 @@
                                 <select id="h2h-mgr-2" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
                             </div>
                         </div>
-                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-3">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-3"></div>
                     </div>
                 </div>
 
@@ -166,7 +164,7 @@
                 <div id="tab-synergy" class="hidden space-y-6">
                     <div>
                         <h2 class="text-xl font-bold">🤝 Trade Partner Synergy Matrix</h2>
-                        <p class="text-slate-400 text-sm">Tracking who deals with whom across your multi-league network.</p>
+                        <p class="text-slate-400 text-sm">Click any trading pair below to inspect their blockbusters and draft pick exchanges.</p>
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm overflow-x-auto">
                         <div id="synergy-content"></div>
@@ -175,6 +173,19 @@
 
             </div>
         </main>
+    </div>
+
+    <!-- DRILL-DOWN TRADE MODAL -->
+    <div id="trade-modal" class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-xl">
+                <h3 id="modal-title" class="font-bold text-accent text-lg">Trade Partnership Details</h3>
+                <button onclick="closeTradeModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto space-y-4 text-sm divide-y divide-slate-800">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -426,10 +437,11 @@
             container.innerHTML = html;
         }
 
-        // --- UNIVERSAL TRADE ROW DETECTOR ---
         function isTradeRow(row) {
             const rowStr = row.join(' ').toLowerCase();
-            return (rowStr.includes('received:') || rowStr.includes('<--->') || rowStr.includes('trade') || rowStr.includes('pick')) && row.length >= 5 && row[3] && row[4];
+            const col0 = String(row[0] || '');
+            if (col0.includes('Regular Season') || col0.includes('Playoff') || (col0.includes('-') && row[2] && row[2].includes('.'))) return false;
+            return (rowStr.includes('received:') || rowStr.includes('<--->')) && row.length >= 5 && row[3] && row[4];
         }
 
         function renderTrades() {
@@ -447,6 +459,8 @@
                     if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
 
                     if ((inTradeSection || isTradeRow(r)) && r[0] && r[0] !== 'Season' && r[0] !== 'Team / Manager' && r[3]) {
+                        if (String(r[1]).includes('-') && !String(r[1]).includes('/')) return;
+                        
                         count++;
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-slate-800/50 transition";
@@ -562,6 +576,7 @@
                 const rows = globalMasterData[leagueName];
                 rows.forEach(r => {
                     if (isTradeRow(r) && r[3] && r[4]) {
+                        if (String(r[1]).includes('-') && !String(r[1]).includes('/')) return;
                         const recipient = getMasterOwner(String(r[3]).split('&')[0].trim());
                         if (!ownerPicks[recipient]) ownerPicks[recipient] = [];
                         ownerPicks[recipient].push({ league: leagueName, season: r[0] || '2026', details: r[4] });
@@ -605,7 +620,6 @@
             }
         }
 
-        // --- TRUE H2H MATCHUP PARSER (SCANS ALL-TIME MATCHUPS SECTION) ---
         function initH2HDropdowns() {
             const managers = new Set();
             Object.keys(globalMasterData).forEach(leagueName => {
@@ -649,7 +663,6 @@
             let m1Wins = 0;
             let m2Wins = 0;
 
-            // Scan all-time matchups rows in JSON where Team 1 (r[3]) and Team 2 (r[5]) meet
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName];
                 let inMatchups = false;
@@ -696,15 +709,25 @@
             `;
         }
 
-        // --- TRADE PARTNER SYNERGY MATRIX ---
+        // --- INTERACTIVE TRADE PARTNER SYNERGY MATRIX & DRILL-DOWN MODAL ---
+        const tradePairDatabase = {};
+
         function renderTradeSynergy() {
             const container = document.getElementById('synergy-content');
             const pairCounts = {};
+            Object.keys(tradePairDatabase).forEach(k => delete tradePairDatabase[k]);
 
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName];
+                let inTradeSection = false;
+
                 rows.forEach(r => {
-                    if (isTradeRow(r) && r[3]) {
+                    const col0 = String(r[0] || '');
+                    if (col0.includes('TRADE HISTORY')) { inTradeSection = true; return; }
+                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
+
+                    if ((inTradeSection || isTradeRow(r)) && r[3] && r[4]) {
+                        if (String(r[1]).includes('-') && !String(r[1]).includes('/')) return;
                         const tradeTeams = String(r[3]).split('&').map(t => getMasterOwner(t.trim()));
                         if (tradeTeams.length >= 2) {
                             const p1 = tradeTeams[0];
@@ -712,6 +735,17 @@
                             if (p1 && p2 && p1 !== p2) {
                                 const pairKey = [p1, p2].sort().join(' 🤝 ');
                                 pairCounts[pairKey] = (pairCounts[pairKey] || 0) + 1;
+
+                                if (!tradePairDatabase[pairKey]) {
+                                    tradePairDatabase[pairKey] = [];
+                                }
+                                tradePairDatabase[pairKey].push({
+                                    league: leagueName,
+                                    season: r[0] || '2026',
+                                    week: r[1] || 'Week 1',
+                                    teams: r[3],
+                                    breakdown: r[4]
+                                });
                             }
                         }
                     }
@@ -719,13 +753,20 @@
             });
 
             let html = `<table class="w-full text-left text-sm border-collapse">`;
-            html += `<thead class="bg-slate-900 text-slate-400 border-b border-slate-700"><tr><th class="p-3">Trading Pair</th><th class="p-3 text-right">Blockbusters Completed</th></tr></thead><tbody class="divide-y divide-slate-800">`;
+            html += `<thead class="bg-slate-900 text-slate-400 border-b border-slate-700"><tr><th class="p-3">Trading Pair (Click to Inspect)</th><th class="p-3 text-right">Blockbusters Completed</th></tr></thead><tbody class="divide-y divide-slate-800">`;
 
             const sortedPairs = Object.keys(pairCounts).sort((a, b) => pairCounts[b] - pairCounts[a]);
 
             if (sortedPairs.length > 0) {
                 sortedPairs.forEach(pair => {
-                    html += `<tr class="hover:bg-slate-800/40"><td class="p-3 font-semibold text-white">${pair}</td><td class="p-3 text-right font-bold text-accent">${pairCounts[pair]} Trades</td></tr>`;
+                    html += `
+                        <tr onclick="openTradeModal('${pair.replace(/'/g, "\\'")}')" class="hover:bg-slate-800/60 transition cursor-pointer">
+                            <td class="p-3 font-semibold text-white flex items-center gap-2">
+                                <span class="text-accent">🔍</span> ${pair}
+                            </td>
+                            <td class="p-3 text-right font-bold text-accent">${pairCounts[pair]} Trades</td>
+                        </tr>
+                    `;
                 });
             } else {
                 html += `<tr><td colspan="2" class="p-4 text-slate-400 text-center">No trade partnerships extracted.</td></tr>`;
@@ -733,6 +774,40 @@
 
             html += `</table>`;
             container.innerHTML = html;
+        }
+
+        function openTradeModal(pairKey) {
+            const modal = document.getElementById('trade-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+
+            title.innerText = `Trade Partnership: ${pairKey}`;
+            const trades = tradePairDatabase[pairKey] || [];
+
+            if (trades.length === 0) {
+                body.innerHTML = `<p class="text-slate-400 text-center py-4">No detailed trades found for this pair.</p>`;
+            } else {
+                let html = '';
+                trades.forEach(t => {
+                    html += `
+                        <div class="pt-3 first:pt-0 space-y-1">
+                            <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
+                                <span class="text-accent uppercase tracking-wider">${t.league}</span>
+                                <span>${t.season} &bull; ${t.week}</span>
+                            </div>
+                            <p class="font-bold text-white text-xs">${t.teams}</p>
+                            <p class="text-slate-300 text-xs bg-slate-950 p-2.5 rounded border border-slate-800/80 mt-1">${t.breakdown}</p>
+                        </div>
+                    `;
+                });
+                body.innerHTML = html;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeTradeModal() {
+            document.getElementById('trade-modal').classList.add('hidden');
         }
 
         function filterTrades() {

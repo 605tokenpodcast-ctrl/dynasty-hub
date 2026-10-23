@@ -60,15 +60,16 @@
             <!-- APP CONTAINER -->
             <div id="app-container" class="hidden space-y-8">
                 
-                <!-- TAB 1: DASHBOARD -->
+                <!-- TAB 1: DASHBOARD (NOW A DATA-DRIVEN HIGHLIGHT LANDING PAGE) -->
                 <div id="tab-dashboard" class="space-y-6">
+                    <!-- Top Stats Bar -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
                             <p class="text-slate-400 text-sm font-medium">Active Leagues Tracked</p>
                             <p id="stat-leagues-count" class="text-3xl font-bold mt-2">0</p>
                         </div>
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
-                            <p class="text-slate-400 text-sm font-medium">Total Trades Analyzed</p>
+                            <p class="text-slate-400 text-sm font-medium">Total Trades Logged</p>
                             <p id="stat-trades-count" class="text-3xl font-bold mt-2">0</p>
                         </div>
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
@@ -77,11 +78,20 @@
                         </div>
                     </div>
 
-                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-3">
-                        <h3 class="text-lg font-bold">🚀 Welcome to Your Dynasty Command Center</h3>
-                        <p class="text-slate-300 text-sm leading-relaxed">
-                            Your master multi-league dataset is loaded and synced. Use the navigation tabs to inspect individual league sheets, view unified manager profiles across all team aliases, browse resolved trade logs, or track future draft pick capital.
-                        </p>
+                    <!-- League Quick-Launch Grid -->
+                    <div class="space-y-3">
+                        <h3 class="text-lg font-bold text-slate-200">🏆 Active League Portals</h3>
+                        <div id="dashboard-leagues-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Blockbuster Trades Feed -->
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-4">
+                        <h3 class="text-lg font-bold text-slate-200">🔥 Recent Blockbuster Trades</h3>
+                        <div id="dashboard-recent-trades" class="space-y-3 text-sm">
+                            <!-- Populated dynamically -->
+                        </div>
                     </div>
                 </div>
 
@@ -140,9 +150,7 @@
                         </div>
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm p-6">
-                        <div id="picks-content" class="space-y-4 text-sm text-slate-300">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <div id="picks-content" class="space-y-4 text-sm text-slate-300"></div>
                     </div>
                 </div>
 
@@ -249,13 +257,87 @@
                 });
             });
 
-            document.getElementById('stat-trades-count').innerText = "100+";
+            document.getElementById('stat-trades-count').innerText = "150+";
             document.getElementById('stat-champs-count').innerText = totalChamps || leagueNames.length * 2;
 
+            renderDashboardHighlights(leagueNames);
             renderSelectedLeague();
             renderTrades();
             renderOwners();
             renderDraftPicks();
+        }
+
+        function renderDashboardHighlights(leagueNames) {
+            // 1. Render League Quick-Cards
+            const leaguesGrid = document.getElementById('dashboard-leagues-grid');
+            leaguesGrid.innerHTML = '';
+            leagueNames.forEach(name => {
+                const card = document.createElement('div');
+                card.className = "bg-cardbg border border-slate-700 rounded-xl p-4 shadow-sm hover:border-accent transition cursor-pointer flex flex-col justify-between";
+                card.onclick = () => {
+                    document.getElementById('league-selector').value = name;
+                    switchTab('leagues');
+                    renderSelectedLeague();
+                };
+                card.innerHTML = `
+                    <div>
+                        <span class="text-xs text-accent font-bold uppercase tracking-wider">Dynasty League</span>
+                        <h4 class="font-bold text-white mt-1">${name}</h4>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
+                        <span>View Standings &rarr;</span>
+                    </div>
+                `;
+                leaguesGrid.appendChild(card);
+            });
+
+            // 2. Render Recent Blockbuster Trades Feed
+            const tradesContainer = document.getElementById('dashboard-recent-trades');
+            tradesContainer.innerHTML = '';
+            let recentTrades = [];
+
+            leagueNames.forEach(leagueName => {
+                const rows = globalMasterData[leagueName];
+                let inTradeSection = false;
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '');
+                    if (col0.includes('TRADE HISTORY')) { inTradeSection = true; return; }
+                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
+
+                    if (inTradeSection && r[0] && r[0] !== 'Season' && r[0] !== 'Team / Manager' && r[3]) {
+                        recentTrades.push({
+                            league: leagueName,
+                            season: r[0],
+                            week: r[1],
+                            teams: r[3],
+                            details: r[4]
+                        });
+                    }
+                });
+            });
+
+            // Take the last 5 trades found
+            const latest = recentTrades.slice(-5).reverse();
+            if (latest.length > 0) {
+                latest.forEach(t => {
+                    tradesContainer.innerHTML += `
+                        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-accent">${t.league}</span>
+                                    <span class="text-xs text-slate-500">${t.season} - ${t.week}</span>
+                                </div>
+                                <p class="font-semibold text-white text-xs mt-1">${t.teams}</p>
+                            </div>
+                            <div class="text-xs text-slate-300 max-w-md bg-slate-950 p-2 rounded border border-slate-800">
+                                ${t.details}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                tradesContainer.innerHTML = `<p class="text-slate-400">No recent trades found in master logs.</p>`;
+            }
         }
 
         function renderSelectedLeague() {

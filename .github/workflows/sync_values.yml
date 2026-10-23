@@ -1,16 +1,16 @@
-name: Auto-Sync Dynasty Values
+name: Auto-Sync Dynasty Hub Data
 
 on:
   schedule:
     # Runs automatically every Tuesday at 8:00 AM UTC
     - cron: '0 8 * * 2'
-  workflow_dispatch: # Allows you to trigger a manual sync anytime from the GitHub website
+  workflow_dispatch: # Allows manual 1-click execution anytime
 
 permissions:
   contents: write
 
 jobs:
-  update-values:
+  update-hub-data:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -21,12 +21,15 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Run Sync Script
+      - name: Run KTC Value Sync
         run: python scripts/sync_ktc.py
+
+      - name: Run Sleeper League Data Sync
+        run: python scripts/sync_leagues.py
 
       - name: Commit and Push Changes if Updated
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ktc_values.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update dynasty player values [skip ci]" && git push)
+          git add ktc_values.json sleeper_leagues_master.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-sync live sleeper league data and KTC valuations [skip ci]" && git push)

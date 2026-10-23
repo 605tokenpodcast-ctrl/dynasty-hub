@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-League Dynasty Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,25 +21,60 @@
             }
         }
     </script>
+    <style>
+        body.broadcast-mode header,
+        body.broadcast-mode footer,
+        body.broadcast-mode .hide-on-broadcast {
+            display: none !important;
+        }
+        body.broadcast-mode main {
+            max-width: 1600px !important;
+            padding-top: 1.5rem !important;
+        }
+    </style>
 </head>
 <body class="bg-darkbg text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+
+    <!-- Floating Exit Broadcast Button (Only visible in Broadcast Mode) -->
+    <button id="exit-broadcast-btn" onclick="toggleBroadcastMode()" class="hidden fixed bottom-4 right-4 z-50 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl border border-rose-400 transition">
+        📺 Exit StreamYard Broadcast Mode
+    </button>
 
     <div>
         <!-- Navigation Header -->
         <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-40 shadow-md">
-            <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">🏈</span>
-                    <h1 class="text-xl font-bold tracking-wide">Multi-League Dynasty Hub</h1>
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🏈</span>
+                        <div>
+                            <h1 class="text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
+                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; 4 Active Leagues</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyDeepLink()" id="copy-link-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            🔗 Copy View Link
+                        </button>
+                        <button onclick="toggleBroadcastMode()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            📺 Broadcast Mode
+                        </button>
+                    </div>
                 </div>
-                <nav class="flex flex-wrap gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md font-medium bg-accent text-white transition">Trophy Room</button>
-                    <button onclick="switchTab('leagues')" id="nav-leagues" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Leagues</button>
-                    <button onclick="switchTab('owners')" id="nav-owners" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Unified Managers</button>
-                    <button onclick="switchTab('picks')" id="nav-picks" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Draft Picks</button>
-                    <button onclick="switchTab('trades')" id="nav-trades" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Trade Log</button>
-                    <button onclick="switchTab('h2h')" id="nav-h2h" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">H2H Records</button>
-                    <button onclick="switchTab('synergy')" id="nav-synergy" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Trade Partners</button>
+
+                <!-- Navigation Tabs -->
+                <nav class="flex flex-wrap gap-1 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-2.5 py-1.5 rounded-md font-medium bg-accent text-white transition">🏆 Trophy Room</button>
+                    <button onclick="switchTab('power')" id="nav-power" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
+                    <button onclick="switchTab('owners')" id="nav-owners" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
+                    <button onclick="switchTab('exposure')" id="nav-exposure" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
+                    <button onclick="switchTab('awards')" id="nav-awards" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
+                    <button onclick="switchTab('luck')" id="nav-luck" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
+                    <button onclick="switchTab('picks')" id="nav-picks" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
+                    <button onclick="switchTab('h2h')" id="nav-h2h" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
+                    <button onclick="switchTab('synergy')" id="nav-synergy" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
                 </nav>
             </div>
         </header>
@@ -60,22 +97,200 @@
             <!-- APP CONTAINER -->
             <div id="app-container" class="hidden space-y-8">
                 
-                <!-- TAB 1: TROPHY ROOM & CHAMPIONS (DASHBOARD) -->
+                <!-- TAB 1: TROPHY ROOM -->
                 <div id="tab-dashboard" class="space-y-6">
                     <div>
                         <h2 class="text-2xl font-bold">🏆 All-Time Trophy Room & Dominance Leaderboard</h2>
                         <p class="text-slate-400 text-sm">Aggregating championships, podium finishes, and records across your entire multi-league history.</p>
                     </div>
-
                     <div id="trophy-room-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-
                     <div class="space-y-3 pt-6 border-t border-slate-800">
                         <h3 class="text-lg font-bold text-slate-200">🚀 Active League Portals</h3>
                         <div id="dashboard-leagues-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
                     </div>
                 </div>
 
-                <!-- TAB 2: LEAGUES -->
+                <!-- TAB 2: KTC POWER RANKINGS -->
+                <div id="tab-power" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📈 True Dynasty Power Rankings (Roster + Picks)</h2>
+                            <p class="text-slate-400 text-sm">Combining live KeepTradeCut player values with future draft pick capital for every team.</p>
+                        </div>
+                        <select id="power-league-selector" onchange="renderPowerRankings()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                            <option value="ALL">All Leagues Combined (Empire Ranking)</option>
+                        </select>
+                    </div>
+                    <div id="power-rankings-container" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 3: UNIFIED MANAGERS -->
+                <div id="tab-owners" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">👔 Unified Owner Profiles & Empire Valuation</h2>
+                        <p class="text-slate-400 text-sm">Aggregating all-time records, podium finishes, roster KTC value, and future draft pick capital.</p>
+                    </div>
+                    <div id="owners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- TAB 4: PLAYER EXPOSURE MATRIX -->
+                <div id="tab-exposure" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🧬 Multi-League Player Exposure ("My Guys" Tracker)</h2>
+                            <p class="text-slate-400 text-sm">Search any NFL player to see who owns them across every league, or filter by manager to see their highest-owned players.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <select id="exposure-mgr-filter" onchange="renderPlayerExposure()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent">
+                                <option value="ALL">All Managers</option>
+                            </select>
+                            <input type="text" id="exposure-search" placeholder="Search player, pos, NFL team..." onkeyup="renderPlayerExposure()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs w-full sm:w-60 focus:outline-none focus:border-accent">
+                        </div>
+                    </div>
+                    <div id="exposure-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- TAB 5: 2026 BENCH BLUNDERS & WEEKLY AWARDS -->
+                <div id="tab-awards" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🔥 2026 Weekly High-Rollers & Bench Blunders</h2>
+                            <p class="text-slate-400 text-sm">Tracking weekly high-score belts, nuclear starters, and the biggest benchwarmer regrets of 2026.</p>
+                        </div>
+                        <select id="awards-league-filter" onchange="renderWeeklyAwards()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent">
+                            <option value="ALL">All Leagues</option>
+                        </select>
+                    </div>
+                    <div id="awards-summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
+                            <h3 class="text-lg font-bold text-amber-400">🪑 The 2026 Benchwarmer Hall of Shame (Biggest Bench Explosions)</h3>
+                            <div id="bench-blunders-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
+                            <h3 class="text-lg font-bold text-emerald-400">ベルト 2026 Weekly High-Roller Belt Winners</h3>
+                            <div id="weekly-highs-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: LUCK & ALL-PLAY STANDINGS -->
+                <div id="tab-luck" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🍀 True All-Play Record & Schedule Luck Index</h2>
+                            <p class="text-slate-400 text-sm">Comparing actual Win % against All-Play Win % (playing every team every week) to expose schedule luck.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="luck-league-filter" onchange="renderLuckIndex()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent">
+                                <option value="ALL">All Leagues Combined</option>
+                            </select>
+                            <select id="luck-season-filter" onchange="renderLuckIndex()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200">
+                                <option value="2026">2026 Season</option>
+                                <option value="ALL">All-Time Career</option>
+                                <option value="2025">2025 Season</option>
+                                <option value="2024">2024 Season</option>
+                                <option value="2023">2023 Season</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700 text-xs uppercase">
+                                    <tr>
+                                        <th class="p-4">Manager</th>
+                                        <th class="p-4">Actual Record</th>
+                                        <th class="p-4">All-Play Record</th>
+                                        <th class="p-4">Points For / Against</th>
+                                        <th class="p-4">Luck Variance (Actual vs Expected Wins)</th>
+                                        <th class="p-4">Verdict</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="luck-table-body" class="divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 7: DRAFT PICK INVENTORY MATRIX -->
+                <div id="tab-picks" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">🎯 Future Draft Pick Inventory Matrix</h2>
+                        <p class="text-slate-400 text-sm">Live inventory of future draft picks held by each manager across all leagues, weighted by KeepTradeCut pick values.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
+                </div>
+
+                <!-- TAB 8: TRADES & DRAFT LINEAGE -->
+                <div id="tab-trades" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📜 All-Time Trade & Draft Pick Lineage Log</h2>
+                            <p class="text-slate-400 text-sm">Complete history of trades with highlighted rookie draft selections (`Resulted in drafting:`).</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <button onclick="toggleLineageOnly()" id="lineage-filter-btn" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">
+                                🌱 Show Drafted Pick Lineage Only
+                            </button>
+                            <input type="text" id="trade-search" placeholder="Search player, manager, or pick..." onkeyup="filterTrades()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-64 focus:outline-none focus:border-accent">
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-4">Season / Date</th>
+                                        <th class="p-4">League</th>
+                                        <th class="p-4">Teams Involved</th>
+                                        <th class="p-4">Trade Breakdown & Draft Pick Lineage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trades-table-body" class="divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 9: HEAD-TO-HEAD RECORDS -->
+                <div id="tab-h2h" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">⚔️ Tale of the Tape: All-Time Head-to-Head Matrix</h2>
+                            <p class="text-slate-400 text-sm">Select any two managers to inspect their exact head-to-head record, total points scored, and game-by-game log.</p>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-6">
+                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                            <div class="w-full sm:w-1/2 space-y-1">
+                                <label class="text-xs text-slate-400 font-semibold">Manager A</label>
+                                <select id="h2h-mgr-1" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
+                            </div>
+                            <button onclick="swapH2HManagers()" title="Swap Managers" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg font-bold text-sm mt-4 sm:mt-5 border border-slate-700 transition">
+                                ⇄ VS
+                            </button>
+                            <div class="w-full sm:w-1/2 space-y-1">
+                                <label class="text-xs text-slate-400 font-semibold">Manager B</label>
+                                <select id="h2h-mgr-2" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
+                            </div>
+                        </div>
+                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-4"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 10: TRADE PARTNER SYNERGY -->
+                <div id="tab-synergy" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">🤝 Trade Partner Synergy Matrix</h2>
+                        <p class="text-slate-400 text-sm">Click any trading pair below to drill down and inspect every trade completed between those two managers.</p>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm overflow-x-auto">
+                        <div id="synergy-content"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 11: RAW LEAGUE SHEETS -->
                 <div id="tab-leagues" class="hidden space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                         <select id="league-selector" onchange="renderSelectedLeague()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent">
@@ -89,83 +304,6 @@
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
                         <div id="league-view-content" class="overflow-x-auto"></div>
-                    </div>
-                </div>
-
-                <!-- TAB 3: UNIFIED MANAGERS -->
-                <div id="tab-owners" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-xl font-bold">Unified Owner Profiles & KTC Portfolio Valuation</h2>
-                        <p class="text-slate-400 text-sm">Aggregating all-time records, podium finishes, and future draft pick capital across all team aliases.</p>
-                    </div>
-                    <div id="owners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                </div>
-
-                <!-- TAB 4: DRAFT PICK INVENTORY MATRIX -->
-                <div id="tab-picks" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-xl font-bold">Future Draft Pick Inventory Matrix</h2>
-                        <p class="text-slate-400 text-sm">Live inventory of future draft picks held by each manager across all leagues, weighted by KeepTradeCut pick values.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
-                </div>
-
-                <!-- TAB 5: TRADES -->
-                <div id="tab-trades" class="hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div>
-                            <h2 class="text-xl font-bold">All-Time Trade & Draft Resolution Log</h2>
-                            <p class="text-slate-400 text-sm">Complete history of trades and the exact draft selections those traded picks became.</p>
-                        </div>
-                        <input type="text" id="trade-search" placeholder="Search player, manager, or pick..." onkeyup="filterTrades()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-72 focus:outline-none focus:border-accent">
-                    </div>
-                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-sm">
-                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700">
-                                    <tr>
-                                        <th class="p-4">Season / Date</th>
-                                        <th class="p-4">League</th>
-                                        <th class="p-4">Teams Involved</th>
-                                        <th class="p-4">Trade Breakdown & Draft Pick Outcomes</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="trades-table-body" class="divide-y divide-slate-800"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 6: HEAD-TO-HEAD RECORDS -->
-                <div id="tab-h2h" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-xl font-bold">⚔️ All-Time Head-to-Head Matchup Matrix</h2>
-                        <p class="text-slate-400 text-sm">Select any two managers to inspect their exact head-to-head record and every completed game between them.</p>
-                    </div>
-                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-6">
-                        <div class="flex flex-col sm:flex-row items-center gap-4">
-                            <div class="w-full sm:w-1/2 space-y-1">
-                                <label class="text-xs text-slate-400 font-semibold">Manager A</label>
-                                <select id="h2h-mgr-1" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
-                            </div>
-                            <div class="text-slate-500 font-bold text-lg pt-4 sm:pt-0">VS</div>
-                            <div class="w-full sm:w-1/2 space-y-1">
-                                <label class="text-xs text-slate-400 font-semibold">Manager B</label>
-                                <select id="h2h-mgr-2" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
-                            </div>
-                        </div>
-                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-4"></div>
-                    </div>
-                </div>
-
-                <!-- TAB 7: TRADE PARTNER SYNERGY -->
-                <div id="tab-synergy" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-xl font-bold">🤝 Trade Partner Synergy Matrix</h2>
-                        <p class="text-slate-400 text-sm">Click any trading pair below to drill down and inspect every trade completed between those two managers.</p>
-                    </div>
-                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm overflow-x-auto">
-                        <div id="synergy-content"></div>
                     </div>
                 </div>
 
@@ -189,22 +327,73 @@
         Multi-League Fantasy Command Center &bull; Powered by Sleeper & Google Sheets
     </footer>
 
-    <!-- JavaScript Parser & UI Controller -->
+    <!-- JavaScript Engine -->
     <script>
         let globalMasterData = {};
         let currentLeagueFilter = 'all';
+        let currentActiveTab = 'dashboard';
+        let lineageOnlyMode = false;
         let sortedSynergyPairs = [];
         const tradePairDatabase = {};
 
-        // Alias dictionary to unify your accounts across all leagues and seasons
-        const aliasOverrides = {
+        // Default Alias Overrides (Merged automatically if managers_config.json is loaded)
+        let aliasOverrides = {
             "anthonyz": "Smokers Haven",
             "smokers haven": "Smokers Haven",
             "smokershaven": "Smokers Haven"
         };
 
-        // KeepTradeCut-style baseline values for future draft picks by round
-        const ktcPickValues = {
+        let managerMeta = {
+            "Smokers Haven": { tagline: "The 2027 1st-Round Draft Capital Kingpin", color: "#3b82f6" },
+            "Kronik": { tagline: "Multi-League Perennial Title Contender", color: "#10b981" },
+            "DerrickFish": { tagline: "The Fish's League Commissioner", color: "#f59e0b" },
+            "Dontiddy": { tagline: "High-Volume Blockbuster Deal Maker", color: "#8b5cf6" },
+            "lilfishy": { tagline: "Multi-League Dynasty Veteran", color: "#ec4899" }
+        };
+
+        // Built-in KeepTradeCut 1QB/Dynasty Reference Values (Merged with ktc_values.json if present)
+        let ktcPlayerValues = {
+            "Bijan Robinson": 9999, "Ja'Marr Chase": 9950, "Justin Jefferson": 9850, "CeeDee Lamb": 9600,
+            "Jahmyr Gibbs": 9550, "Malik Nabers": 9450, "Amon-Ra St. Brown": 9400, "Puka Nacua": 9250,
+            "Ashton Jeanty": 9200, "Brock Bowers": 9150, "Josh Allen": 9100, "Jayden Daniels": 9000,
+            "Lamar Jackson": 8850, "Breece Hall": 8600, "Marvin Harrison Jr.": 8550, "De'Von Achane": 8500,
+            "Drake Maye": 8450, "Jaxon Smith-Njigba": 8400, "Brian Thomas Jr.": 8350, "Trey McBride": 8300,
+            "Nico Collins": 8250, "Garrett Wilson": 8150, "Drake London": 8100, "Jalen Hurts": 8050,
+            "Saquon Barkley": 8000, "Ladd McConkey": 7950, "Rome Odunze": 7900, "Tetairoa McMillan": 7850,
+            "Omarion Hampton": 7800, "Jeremiyah Love": 7750, "Sam LaPorta": 7650, "Patrick Mahomes": 7600,
+            "Joe Burrow": 7550, "C.J. Stroud": 7450, "Jonathan Taylor": 7400, "Rashee Rice": 7350,
+            "Kyren Williams": 7300, "Kenneth Walker III": 7200, "Bucky Irving": 7150, "James Cook III": 7100,
+            "A.J. Brown": 7050, "DeVonta Smith": 7000, "Chris Olave": 6900, "Tee Higgins": 6850,
+            "Jordan Love": 6800, "Caleb Williams": 6750, "Bo Nix": 6700, "TreVeyon Henderson": 6650,
+            "Quinshon Judkins": 6600, "Luther Burden III": 6550, "Travis Hunter": 6500, "Emeka Egbuka": 6450,
+            "Colston Loveland": 6400, "Tyler Warren": 6350, "Zay Flowers": 6300, "George Pickens": 6250,
+            "Jameson Williams": 6200, "Brandon Aiyuk": 6100, "DK Metcalf": 6050, "Jordan Addison": 6000,
+            "Xavier Worthy": 5950, "Josh Jacobs": 5900, "Christian McCaffrey": 5850, "Chuba Hubbard": 5750,
+            "Justin Herbert": 5700, "Brock Purdy": 5650, "Kyler Murray": 5600, "Jaylen Waddle": 5550,
+            "Cam Skattebo": 5500, "Kaleb Johnson": 5450, "RJ Harvey": 5400, "Carnell Tate": 5350,
+            "Jordyn Tyson": 5300, "Makai Lemon": 5250, "Arch Manning": 5200, "Fernando Mendoza": 5100,
+            "Dalton Kincaid": 5050, "George Kittle": 5000, "Tucker Kraft": 4950, "T.J. Hockenson": 4900,
+            "Derrick Henry": 4850, "David Montgomery": 4800, "Chase Brown": 4750, "D'Andre Swift": 4700,
+            "Terry McLaurin": 4650, "DJ Moore": 4600, "Keon Coleman": 4550, "Ricky Pearsall": 4500,
+            "Jayden Reed": 4450, "Khalil Shakir": 4400, "Matthew Golden": 4350, "Tre' Harris": 4300,
+            "Jayden Higgins": 4250, "Bhayshul Tuten": 4200, "Dylan Sampson": 4150, "Woody Marks": 4100,
+            "Zachariah Branch": 4050, "Denzel Boston": 4000, "KC Concepcion Jr.": 3950, "Kenyon Sadiq": 3900,
+            "Harold Fannin Jr.": 3850, "Jaxson Dart": 3800, "Cam Ward": 3750, "Tyler Shough": 3700,
+            "Michael Penix Jr.": 3650, "Bryce Young": 3600, "Trevor Lawrence": 3550, "Dak Prescott": 3500,
+            "Baker Mayfield": 3450, "Jared Goff": 3400, "Sam Darnold": 3300, "Travis Etienne Jr.": 3250,
+            "Rhamondre Stevenson": 3200, "Javonte Williams": 3150, "Brian Robinson Jr.": 3100, "Jaylen Warren": 3050,
+            "Jordan Mason": 3000, "Rachaad White": 2950, "Zach Charbonnet": 2900, "Trey Benson": 2850,
+            "Blake Corum": 2800, "Braelon Allen": 2750, "Tyrone Tracy Jr.": 2700, "Isiah Pacheco": 2650,
+            "Alvin Kamara": 2600, "Aaron Jones Sr.": 2500, "Davante Adams": 2450, "Mike Evans": 2400,
+            "Courtland Sutton": 2350, "Michael Pittman Jr.": 2300, "Deebo Samuel Sr.": 2250, "Chris Godwin Jr.": 2200,
+            "Jerry Jeudy": 2150, "Jakobi Meyers": 2100, "Christian Watson": 2050, "Romeo Doubs": 2000,
+            "Josh Downs": 1950, "Wan'Dale Robinson": 1900, "Quentin Johnston": 1850, "Jauan Jennings": 1800,
+            "Alec Pierce": 1750, "Rashid Shaheed": 1700, "Kyle Pitts Sr.": 2400, "Mark Andrews": 2300,
+            "Jake Ferguson": 2250, "David Njoku": 2100, "Isaiah Likely": 2050, "Pat Freiermuth": 1900,
+            "Cade Otton": 1800, "Brandon Aubrey": 1500
+        };
+
+        let ktcPickValues = {
             1: 6500,
             2: 3200,
             3: 1500,
@@ -234,7 +423,6 @@
             return trimmed;
         }
 
-        // Clean section detector for sleeper_leagues_master.json
         function getSectionType(col0) {
             const s = String(col0 || '').trim().toUpperCase();
             if (!s.startsWith('---')) return null;
@@ -261,21 +449,48 @@
             return 0;
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            fetch('sleeper_leagues_master.json')
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    globalMasterData = data;
+        function scorePlayerKTC(playerEntry) {
+            // Format: "Bijan Robinson (RB - ATL)"
+            const match = String(playerEntry).match(/^(.+?)\s*\(([A-Z]+)\s*-\s*([A-Z]+)\)$/);
+            const cleanName = match ? match[1].trim() : String(playerEntry).trim();
+            const pos = match ? match[2].trim() : 'BN';
+            if (ktcPlayerValues[cleanName]) return ktcPlayerValues[cleanName];
+            if (pos === 'QB' || pos === 'RB' || pos === 'WR') return 1100;
+            if (pos === 'TE') return 900;
+            return 400; // K / DEF / deep bench baseline
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const [masterRes, ktcRes, mgrRes] = await Promise.allSettled([
+                    fetch('sleeper_leagues_master.json'),
+                    fetch('ktc_values.json'),
+                    fetch('managers_config.json')
+                ]);
+
+                if (ktcRes.status === 'fulfilled' && ktcRes.value.ok) {
+                    const ktcData = await ktcRes.value.json();
+                    if (ktcData.players) Object.assign(ktcPlayerValues, ktcData.players);
+                    if (ktcData.picks) Object.assign(ktcPickValues, ktcData.picks);
+                }
+
+                if (mgrRes.status === 'fulfilled' && mgrRes.value.ok) {
+                    const mgrData = await mgrRes.value.json();
+                    if (mgrData.aliasOverrides) Object.assign(aliasOverrides, mgrData.aliasOverrides);
+                    if (mgrData.managers) Object.assign(managerMeta, mgrData.managers);
+                }
+
+                if (masterRes.status === 'fulfilled' && masterRes.value.ok) {
+                    globalMasterData = await masterRes.value.json();
                     initApp();
-                })
-                .catch(err => {
-                    console.warn('Could not auto-load JSON:', err);
-                    document.getElementById('loading-title').innerText = "Manual Upload Required";
-                    document.getElementById('loading-desc').innerText = "Couldn't auto-fetch JSON from server. Please select your file below:";
-                });
+                } else {
+                    throw new Error('Could not fetch sleeper_leagues_master.json');
+                }
+            } catch (err) {
+                console.warn('Auto-load fallback triggered:', err);
+                document.getElementById('loading-title').innerText = "Manual Upload Required";
+                document.getElementById('loading-desc').innerText = "Couldn't auto-fetch JSON from server. Please select your file below:";
+            }
         });
 
         document.getElementById('json-file-input').addEventListener('change', function(event) {
@@ -289,14 +504,14 @@
                     initApp();
                 } catch (err) {
                     alert('Invalid JSON file format.');
-                    console.error(err);
                 }
             };
             reader.readAsText(file);
         });
 
-        function switchTab(tabId) {
-            ['dashboard', 'leagues', 'owners', 'picks', 'trades', 'h2h', 'synergy'].forEach(t => {
+        function switchTab(tabId, skipUrlUpdate = false) {
+            currentActiveTab = tabId;
+            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'luck', 'picks', 'trades', 'h2h', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -305,10 +520,45 @@
                     nav.classList.add('hover:bg-slate-800');
                 }
             });
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const targetEl = document.getElementById(`tab-${tabId}`);
+            if (targetEl) targetEl.classList.remove('hidden');
             const activeNav = document.getElementById(`nav-${tabId}`);
-            activeNav.classList.add('bg-accent', 'text-white');
-            activeNav.classList.remove('hover:bg-slate-800');
+            if (activeNav) {
+                activeNav.classList.add('bg-accent', 'text-white');
+                activeNav.classList.remove('hover:bg-slate-800');
+            }
+            if (!skipUrlUpdate) updateUrlParams();
+        }
+
+        function toggleBroadcastMode() {
+            document.body.classList.toggle('broadcast-mode');
+            const exitBtn = document.getElementById('exit-broadcast-btn');
+            exitBtn.classList.toggle('hidden');
+        }
+
+        function updateUrlParams() {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', currentActiveTab);
+            if (currentActiveTab === 'h2h') {
+                const m1 = document.getElementById('h2h-mgr-1')?.value;
+                const m2 = document.getElementById('h2h-mgr-2')?.value;
+                if (m1) url.searchParams.set('m1', m1);
+                if (m2) url.searchParams.set('m2', m2);
+            } else {
+                url.searchParams.delete('m1');
+                url.searchParams.delete('m2');
+            }
+            window.history.replaceState({}, '', url);
+        }
+
+        function copyDeepLink() {
+            updateUrlParams();
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const btn = document.getElementById('copy-link-btn');
+                const orig = btn.innerText;
+                btn.innerText = '✅ Link Copied!';
+                setTimeout(() => btn.innerText = orig, 2000);
+            });
         }
 
         function setLeagueViewFilter(filter) {
@@ -316,11 +566,9 @@
             ['all', 'standings', 'rosters', 'trades'].forEach(f => {
                 const btn = document.getElementById(`lfilter-${f}`);
                 if (!btn) return;
-                if (f === filter) {
-                    btn.className = "px-3 py-1.5 rounded bg-accent text-white font-medium transition";
-                } else {
-                    btn.className = "px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition";
-                }
+                btn.className = (f === filter)
+                    ? "px-3 py-1.5 rounded bg-accent text-white font-medium transition"
+                    : "px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition";
             });
             renderSelectedLeague();
         }
@@ -329,25 +577,49 @@
             document.getElementById('upload-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
 
-            const leagueNames = Object.keys(globalMasterData);
-            
-            const selector = document.getElementById('league-selector');
-            selector.innerHTML = '';
-            leagueNames.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.innerText = name;
-                selector.appendChild(opt);
+            const leagueNames = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]));
+            document.getElementById('sync-banner').innerText = `Synced with Sleeper Master JSON • ${leagueNames.length} Active Dynasty Leagues`;
+
+            // Populate all league dropdowns
+            ['league-selector', 'power-league-selector', 'awards-league-filter', 'luck-league-filter'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const keepFirst = id !== 'league-selector';
+                const firstOpt = keepFirst ? sel.options[0] : null;
+                sel.innerHTML = '';
+                if (firstOpt) sel.appendChild(firstOpt);
+                leagueNames.forEach(name => {
+                    sel.appendChild(new Option(name, name));
+                });
             });
 
             renderTrophyRoom(leagueNames);
             renderDashboardLeagues(leagueNames);
-            renderSelectedLeague();
+            renderPowerRankings();
             renderOwners();
+            initExposureFilter();
+            renderPlayerExposure();
+            renderWeeklyAwards();
+            renderLuckIndex();
             renderDraftPicksMatrix();
             renderTrades();
             initH2HDropdowns();
             renderTradeSynergy();
+            renderSelectedLeague();
+
+            // Check deep link params on initial load
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab');
+            const m1Param = params.get('m1');
+            const m2Param = params.get('m2');
+            if (m1Param && document.getElementById('h2h-mgr-1')) {
+                document.getElementById('h2h-mgr-1').value = m1Param;
+            }
+            if (m2Param && document.getElementById('h2h-mgr-2')) {
+                document.getElementById('h2h-mgr-2').value = m2Param;
+            }
+            if (m1Param || m2Param) calculateH2H();
+            if (tabParam) switchTab(tabParam, true);
         }
 
         // --- TAB 1: TROPHY ROOM ---
@@ -373,12 +645,8 @@
 
                     if (!managers[master]) {
                         managers[master] = {
-                            titles: 0,
-                            runnerUps: 0,
-                            thirdPlaces: 0,
-                            titleDetails: [],
-                            allLeagues: new Set(),
-                            aliases: new Set()
+                            titles: 0, runnerUps: 0, thirdPlaces: 0,
+                            titleDetails: [], allLeagues: new Set(), aliases: new Set()
                         };
                     }
 
@@ -404,37 +672,35 @@
                     return managers[b].thirdPlaces - managers[a].thirdPlaces;
                 });
 
-            if (champsList.length > 0) {
-                champsList.forEach(manager => {
-                    const data = managers[manager];
-                    const card = document.createElement('div');
-                    card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm flex flex-col justify-between space-y-4";
-                    card.innerHTML = `
-                        <div>
-                            <div class="flex justify-between items-start gap-2">
-                                <div>
-                                    <h3 class="text-xl font-bold text-accent">${manager}</h3>
-                                    <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliases).join(', ')}</p>
-                                </div>
-                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
-                                    🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}
-                                </span>
+            champsList.forEach(manager => {
+                const data = managers[manager];
+                const meta = managerMeta[manager] || {};
+                const card = document.createElement('div');
+                card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h3 class="text-xl font-bold text-accent">${manager}</h3>
+                                ${meta.tagline ? `<p class="text-xs text-amber-400/90 font-medium mt-0.5">"${meta.tagline}"</p>` : ''}
+                                <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliases).join(', ')}</p>
                             </div>
-                            <div class="flex gap-3 mt-3 text-xs text-slate-300">
-                                <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">🥈 ${data.runnerUps} Runner-Up</span>
-                                <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">🥉 ${data.thirdPlaces} 3rd Place</span>
-                            </div>
+                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+                                🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}
+                            </span>
                         </div>
-                        <div class="pt-3 border-t border-slate-800 text-xs space-y-1.5">
-                            <p class="text-slate-400">Title Banners: <span class="text-amber-300 font-semibold">${data.titleDetails.join(', ')}</span></p>
-                            <p class="text-slate-400">Active Leagues (${data.allLeagues.size}): <span class="text-slate-200 font-semibold">${Array.from(data.allLeagues).join(', ')}</span></p>
+                        <div class="flex gap-3 mt-3 text-xs text-slate-300">
+                            <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">🥈 ${data.runnerUps} Runner-Up</span>
+                            <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">🥉 ${data.thirdPlaces} 3rd Place</span>
                         </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } else {
-                grid.innerHTML = `<p class="text-slate-400 col-span-3">No championship markers found in standings data.</p>`;
-            }
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 text-xs space-y-1.5">
+                        <p class="text-slate-400">Title Banners: <span class="text-amber-300 font-semibold">${data.titleDetails.join(', ')}</span></p>
+                        <p class="text-slate-400">Active Leagues (${data.allLeagues.size}): <span class="text-slate-200 font-semibold">${Array.from(data.allLeagues).join(', ')}</span></p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
         function renderDashboardLeagues(leagueNames) {
@@ -444,9 +710,9 @@
                 const card = document.createElement('div');
                 card.className = "bg-cardbg border border-slate-700 rounded-xl p-4 shadow-sm hover:border-accent transition cursor-pointer flex flex-col justify-between";
                 card.onclick = () => {
-                    document.getElementById('league-selector').value = name;
-                    switchTab('leagues');
-                    renderSelectedLeague();
+                    document.getElementById('power-league-selector').value = name;
+                    switchTab('power');
+                    renderPowerRankings();
                 };
                 card.innerHTML = `
                     <div>
@@ -454,56 +720,96 @@
                         <h4 class="font-bold text-white mt-1">${name}</h4>
                     </div>
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
-                        <span>Inspect Portal &rarr;</span>
+                        <span>View Power Rankings &rarr;</span>
                     </div>
                 `;
                 leaguesGrid.appendChild(card);
             });
         }
 
-        // --- TAB 2: LEAGUES PORTAL ---
-        function renderSelectedLeague() {
-            const leagueName = document.getElementById('league-selector').value;
-            const rows = globalMasterData[leagueName] || [];
-            const container = document.getElementById('league-view-content');
+        // --- TAB 2: TRUE KTC POWER RANKINGS ---
+        function renderPowerRankings() {
+            const selectedLeague = document.getElementById('power-league-selector').value;
+            const container = document.getElementById('power-rankings-container');
+            const teams = [];
 
-            let html = `<h3 class="text-xl font-bold mb-4 text-accent">${leagueName}</h3>`;
-            html += `<table class="w-full text-left text-sm border-collapse">`;
+            Object.keys(globalMasterData).forEach(leagueName => {
+                if (selectedLeague !== 'ALL' && leagueName !== selectedLeague) return;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
 
-            let activeSection = 'profile';
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'rosters' || isColumnHeaderRow(col0) || !r[0]) return;
 
-            rows.forEach((row) => {
-                const col0 = String(row[0] || '').trim();
-                const col1 = String(row[1] || '').trim();
-                if (!col0 && !col1 && !row[5]) return; // skip empty spacer rows
+                    const rawTeam = col0;
+                    const owner = getMasterOwner(rawTeam);
+                    const record = String(r[1] || '0-0');
+                    const pf = String(r[2] || '0.00');
+                    const rosterList = String(r[3] || '').split(',').map(s => s.trim()).filter(Boolean);
+                    const picksList = String(r[4] || '').split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'none');
 
-                const secType = getSectionType(col0);
-                const isHeader = secType !== null;
-                if (isHeader) activeSection = secType;
+                    const scoredPlayers = rosterList.map(p => ({
+                        raw: p,
+                        val: scorePlayerKTC(p)
+                    })).sort((a, b) => b.val - a.val);
 
-                const isSubHeader = isColumnHeaderRow(col0);
+                    const rosterValue = scoredPlayers.reduce((sum, item) => sum + item.val, 0);
+                    const pickValue = picksList.reduce((sum, p) => sum + scoreDraftPickKTC(p), 0);
+                    const firstRdCount = picksList.filter(p => /Round\s+1\b/i.test(p)).length;
 
-                let renderRow = true;
-                if (currentLeagueFilter !== 'all') {
-                    renderRow = (activeSection === currentLeagueFilter);
-                }
-
-                if (renderRow) {
-                    if (isHeader) {
-                        html += `<tr class="bg-slate-900 border-t border-b border-slate-700"><td colspan="8" class="p-4 font-bold text-accent tracking-wide">${col0}</td></tr>`;
-                    } else {
-                        html += `<tr class="border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`;
-                        row.forEach(cell => {
-                            const cellVal = cell !== undefined && cell !== null ? cell : '';
-                            html += `<td class="p-3 text-xs leading-relaxed max-w-sm break-words">${cellVal}</td>`;
-                        });
-                        html += `</tr>`;
-                    }
-                }
+                    teams.push({
+                        league: leagueName,
+                        rawTeam,
+                        owner,
+                        record,
+                        pf,
+                        rosterValue,
+                        pickValue,
+                        totalValue: rosterValue + pickValue,
+                        topAssets: scoredPlayers.slice(0, 5),
+                        firstRdCount,
+                        totalPicks: picksList.length
+                    });
+                });
             });
 
-            html += `</table>`;
-            container.innerHTML = html;
+            teams.sort((a, b) => b.totalValue - a.totalValue);
+            const maxVal = teams.length > 0 ? teams[0].totalValue : 1;
+
+            container.innerHTML = teams.map((t, idx) => {
+                const rosterPct = Math.round((t.rosterValue / maxVal) * 100);
+                const pickPct = Math.round((t.pickValue / maxVal) * 100);
+                const topBadges = t.topAssets.map(a => `<span class="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-xs text-slate-200">${a.raw} <strong class="text-emerald-400">${a.val.toLocaleString()}</strong></span>`).join(' ');
+
+                return `
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-5 shadow-sm space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-accent/20 text-accent border border-accent/30 w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm">#${idx + 1}</span>
+                                <div>
+                                    <h4 class="font-bold text-white text-base">${t.owner} <span class="text-xs text-slate-400 font-normal">(${t.rawTeam})</span></h4>
+                                    <p class="text-xs text-accent font-semibold">${t.league} &bull; 2026 Record: ${t.record} (${t.pf} PF)</p>
+                                </div>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <p class="text-lg font-extrabold text-emerald-400">${t.totalValue.toLocaleString()} <span class="text-xs font-normal text-slate-400">Total KTC</span></p>
+                                <p class="text-xs text-slate-400">Roster: <strong class="text-slate-200">${t.rosterValue.toLocaleString()}</strong> &bull; Picks: <strong class="text-amber-400">${t.pickValue.toLocaleString()}</strong> (${t.firstRdCount}x 1sts)</p>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden flex">
+                            <div class="bg-emerald-500 h-full" style="width: ${rosterPct}%" title="Roster KTC Value"></div>
+                            <div class="bg-amber-400 h-full" style="width: ${pickPct}%" title="Future Pick KTC Value"></div>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <span class="text-xs text-slate-400 font-semibold mr-1 py-0.5">Cornerstones:</span>
+                            ${topBadges}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // --- TAB 3: UNIFIED MANAGERS ---
@@ -528,16 +834,9 @@
 
                         if (!unifiedOwners[masterOwner]) {
                             unifiedOwners[masterOwner] = { 
-                                leagues: new Set(), 
-                                champs: 0,
-                                runnerUps: 0,
-                                thirdPlaces: 0,
-                                totalWins: 0, 
-                                totalLosses: 0, 
-                                aliasesUsed: new Set(),
-                                firstRoundPicks: 0,
-                                totalFuturePicks: 0,
-                                ktcPickCapital: 0
+                                leagues: new Set(), champs: 0, runnerUps: 0, thirdPlaces: 0,
+                                totalWins: 0, totalLosses: 0, aliasesUsed: new Set(),
+                                firstRoundPicks: 0, totalFuturePicks: 0, ktcPickCapital: 0, ktcRosterCapital: 0
                             };
                         }
 
@@ -556,18 +855,20 @@
                         }
                     }
 
-                    // Parse actual Future Draft Picks from CURRENT ROSTERS & DRAFT PICKS section
                     if (section === 'rosters' && r[0]) {
                         const masterOwner = getMasterOwner(String(r[0]).trim());
-                        if (unifiedOwners[masterOwner] && r[4]) {
-                            const picksRaw = String(r[4]).split(',').map(s => s.trim()).filter(Boolean);
+                        if (unifiedOwners[masterOwner]) {
+                            const players = String(r[3] || '').split(',').map(s => s.trim()).filter(Boolean);
+                            players.forEach(p => {
+                                unifiedOwners[masterOwner].ktcRosterCapital += scorePlayerKTC(p);
+                            });
+
+                            const picksRaw = String(r[4] || '').split(',').map(s => s.trim()).filter(Boolean);
                             picksRaw.forEach(p => {
                                 if (p.toLowerCase() !== 'none') {
                                     unifiedOwners[masterOwner].totalFuturePicks++;
                                     unifiedOwners[masterOwner].ktcPickCapital += scoreDraftPickKTC(p);
-                                    if (/Round\s+1\b/i.test(p)) {
-                                        unifiedOwners[masterOwner].firstRoundPicks++;
-                                    }
+                                    if (/Round\s+1\b/i.test(p)) unifiedOwners[masterOwner].firstRoundPicks++;
                                 }
                             });
                         }
@@ -577,14 +878,14 @@
 
             const sortedOwners = Object.keys(unifiedOwners).sort((a, b) => {
                 if (unifiedOwners[b].champs !== unifiedOwners[a].champs) return unifiedOwners[b].champs - unifiedOwners[a].champs;
-                return unifiedOwners[b].totalWins - unifiedOwners[a].totalWins;
+                return (unifiedOwners[b].ktcRosterCapital + unifiedOwners[b].ktcPickCapital) - (unifiedOwners[a].ktcRosterCapital + unifiedOwners[a].ktcPickCapital);
             });
 
             sortedOwners.forEach(masterName => {
                 const data = unifiedOwners[masterName];
                 const totalGames = data.totalWins + data.totalLosses;
                 const winPct = totalGames > 0 ? ((data.totalWins / totalGames) * 100).toFixed(1) : "0.0";
-                const totalKtcScore = data.ktcPickCapital + (data.champs * 15000) + (data.totalWins * 500);
+                const totalKtcEmpire = data.ktcRosterCapital + data.ktcPickCapital;
 
                 const card = document.createElement('div');
                 card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm flex flex-col justify-between space-y-4";
@@ -608,15 +909,15 @@
                         </div>
                         <div>
                             <p class="text-slate-400 text-xs">Future Draft Capital</p>
-                            <p class="font-bold mt-0.5 text-amber-400">${data.firstRoundPicks}x 1sts <span class="text-slate-400 font-normal text-xs">(${data.totalFuturePicks} total)</span></p>
+                            <p class="font-bold mt-0.5 text-amber-400">${data.firstRoundPicks}x 1sts <span class="text-slate-400 font-normal text-xs">(${data.totalFuturePicks} picks)</span></p>
                         </div>
                         <div>
                             <p class="text-slate-400 text-xs">Podium Finishes</p>
                             <p class="font-bold mt-0.5 text-slate-200">🏆${data.champs} &bull; 🥈${data.runnerUps} &bull; 🥉${data.thirdPlaces}</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-xs">KTC Pick & Empire Value</p>
-                            <p class="font-bold mt-0.5 text-emerald-400">${totalKtcScore.toLocaleString()} pts</p>
+                            <p class="text-slate-400 text-xs">Total KTC Empire Value</p>
+                            <p class="font-bold mt-0.5 text-emerald-400">${totalKtcEmpire.toLocaleString()} KTC</p>
                         </div>
                     </div>
                 `;
@@ -624,7 +925,306 @@
             });
         }
 
-        // --- TAB 4: FUTURE DRAFT PICKS INVENTORY MATRIX ---
+        // --- TAB 4: MULTI-LEAGUE PLAYER EXPOSURE MATRIX ---
+        function initExposureFilter() {
+            const mgrs = new Set();
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section === 'rosters' && !isColumnHeaderRow(col0) && col0) {
+                        mgrs.add(getMasterOwner(col0));
+                    }
+                });
+            });
+            const sel = document.getElementById('exposure-mgr-filter');
+            sel.innerHTML = '<option value="ALL">All Managers (Global Exposure)</option>';
+            Array.from(mgrs).sort().forEach(m => sel.appendChild(new Option(m, m)));
+        }
+
+        function renderPlayerExposure() {
+            const mgrFilter = document.getElementById('exposure-mgr-filter').value;
+            const query = (document.getElementById('exposure-search')?.value || '').toLowerCase();
+            const grid = document.getElementById('exposure-grid');
+
+            const playerMap = {};
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'rosters' || isColumnHeaderRow(col0) || !col0) return;
+
+                    const owner = getMasterOwner(col0);
+                    if (mgrFilter !== 'ALL' && owner !== mgrFilter) return;
+
+                    const roster = String(r[3] || '').split(',').map(s => s.trim()).filter(Boolean);
+                    roster.forEach(pEntry => {
+                        if (query && !pEntry.toLowerCase().includes(query) && !owner.toLowerCase().includes(query)) return;
+                        if (!playerMap[pEntry]) {
+                            playerMap[pEntry] = {
+                                entry: pEntry,
+                                ktc: scorePlayerKTC(pEntry),
+                                shares: []
+                            };
+                        }
+                        playerMap[pEntry].shares.push({ league: leagueName, owner });
+                    });
+                });
+            });
+
+            const sortedPlayers = Object.values(playerMap).sort((a, b) => {
+                if (b.shares.length !== a.shares.length) return b.shares.length - a.shares.length;
+                return b.ktc - a.ktc;
+            }).slice(0, 60);
+
+            if (sortedPlayers.length === 0) {
+                grid.innerHTML = `<p class="text-slate-400 col-span-3 text-center py-6">No matching players found.</p>`;
+                return;
+            }
+
+            grid.innerHTML = sortedPlayers.map(p => {
+                const ownerBadges = p.shares.map(s => `
+                    <span class="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-xs flex justify-between items-center">
+                        <strong class="text-accent">${s.owner}</strong>
+                        <span class="text-slate-400 text-[11px] ml-2">${s.league}</span>
+                    </span>
+                `).join('');
+
+                return `
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 shadow-sm space-y-3 flex flex-col justify-between">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-bold text-white text-sm">${p.entry}</h4>
+                                <p class="text-xs text-emerald-400 font-semibold">${p.ktc.toLocaleString()} KTC</p>
+                            </div>
+                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full text-xs font-bold whitespace-nowrap">
+                                ${p.shares.length} Share${p.shares.length > 1 ? 's' : ''}
+                            </span>
+                        </div>
+                        <div class="space-y-1.5 pt-2 border-t border-slate-800">
+                            ${ownerBadges}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- TAB 5: 2026 BENCH BLUNDERS & WEEKLY AWARDS ---
+        function renderWeeklyAwards() {
+            const leagueFilter = document.getElementById('awards-league-filter').value;
+            const benchList = [];
+            const weeklyHighs = [];
+            const managerBenchPoints = {};
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                if (leagueFilter !== 'ALL' && leagueName !== leagueFilter) return;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
+                const weekBuckets = {};
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'boxscores' || isColumnHeaderRow(col0) || !col0) return;
+
+                    const week = col0;
+                    const rawTeam = String(r[1] || '');
+                    const owner = getMasterOwner(rawTeam);
+                    const totalScore = parseFloat(r[2]) || 0;
+                    const topStarter = String(r[3] || '');
+                    const topBench = String(r[4] || '');
+
+                    if (!weekBuckets[week]) weekBuckets[week] = [];
+                    weekBuckets[week].push({ league: leagueName, week, owner, rawTeam, totalScore, topStarter, topBench });
+                });
+
+                Object.keys(weekBuckets).forEach(wk => {
+                    const entries = weekBuckets[wk];
+                    const activeCount = entries.filter(e => e.totalScore > 0).length;
+                    if (activeCount < entries.length * 0.75) return; // skip unplayed or Thursday-only partial weeks
+
+                    // Weekly High Roller
+                    const sortedByTotal = [...entries].sort((a, b) => b.totalScore - a.totalScore);
+                    if (sortedByTotal[0] && sortedByTotal[0].totalScore > 0) {
+                        weeklyHighs.push(sortedByTotal[0]);
+                    }
+
+                    // Parse bench explosions
+                    entries.forEach(e => {
+                        const m = e.topBench.match(/\(([\d.]+)\)\s*$/);
+                        const benchPts = m ? parseFloat(m[1]) : 0;
+                        if (benchPts > 0) {
+                            benchList.push({ ...e, benchPts });
+                            managerBenchPoints[e.owner] = (managerBenchPoints[e.owner] || 0) + benchPts;
+                        }
+                    });
+                });
+            });
+
+            benchList.sort((a, b) => b.benchPts - a.benchPts);
+            weeklyHighs.sort((a, b) => b.totalScore - a.totalScore);
+
+            const topBenchManager = Object.keys(managerBenchPoints).sort((a, b) => managerBenchPoints[b] - managerBenchPoints[a])[0] || 'N/A';
+            const highestSingleWeek = weeklyHighs[0];
+            const biggestBenchBlunder = benchList[0];
+
+            document.getElementById('awards-summary-cards').innerHTML = `
+                <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-1">
+                    <p class="text-xs text-slate-400 font-bold uppercase">🏆 2026 Single-Week High Score</p>
+                    <p class="text-2xl font-extrabold text-emerald-400">${highestSingleWeek ? highestSingleWeek.totalScore.toFixed(2) + ' pts' : 'N/A'}</p>
+                    <p class="text-xs text-slate-300">${highestSingleWeek ? `${highestSingleWeek.owner} (${highestSingleWeek.league} • ${highestSingleWeek.week})` : ''}</p>
+                </div>
+                <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-1">
+                    <p class="text-xs text-slate-400 font-bold uppercase">🪑 Biggest Single-Player Bench Explosion</p>
+                    <p class="text-2xl font-extrabold text-amber-400">${biggestBenchBlunder ? biggestBenchBlunder.topBench : 'N/A'}</p>
+                    <p class="text-xs text-slate-300">${biggestBenchBlunder ? `Benched by ${biggestBenchBlunder.owner} (${biggestBenchBlunder.league} • ${biggestBenchBlunder.week})` : ''}</p>
+                </div>
+                <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-1">
+                    <p class="text-xs text-slate-400 font-bold uppercase">👑 Cumulative Max Bench Points Leader</p>
+                    <p class="text-2xl font-extrabold text-rose-400">${topBenchManager}</p>
+                    <p class="text-xs text-slate-300">${managerBenchPoints[topBenchManager] ? managerBenchPoints[topBenchManager].toFixed(2) + ' total top-bench points left on pine' : ''}</p>
+                </div>
+            `;
+
+            document.getElementById('bench-blunders-list').innerHTML = benchList.slice(0, 25).map(b => `
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg flex justify-between items-center text-xs">
+                    <div>
+                        <span class="font-bold text-accent">${b.owner}</span>
+                        <span class="text-slate-400 ml-1">(${b.league} &bull; ${b.week})</span>
+                        <p class="text-slate-300 mt-0.5">Benched: <strong class="text-amber-400">${b.topBench}</strong></p>
+                    </div>
+                    <span class="bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-1 rounded font-mono font-bold">${b.benchPts.toFixed(2)} pts</span>
+                </div>
+            `).join('');
+
+            document.getElementById('weekly-highs-list').innerHTML = weeklyHighs.map(w => `
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg flex justify-between items-center text-xs">
+                    <div>
+                        <span class="font-bold text-accent">${w.owner}</span>
+                        <span class="text-slate-400 ml-1">(${w.league} &bull; ${w.week})</span>
+                        <p class="text-slate-300 mt-0.5">MVP Starter: <strong class="text-emerald-400">${w.topStarter}</strong></p>
+                    </div>
+                    <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded font-mono font-bold">${w.totalScore.toFixed(2)} pts</span>
+                </div>
+            `).join('');
+        }
+
+        // --- TAB 6: TRUE ALL-PLAY & SCHEDULE LUCK INDEX ---
+        function renderLuckIndex() {
+            const leagueFilter = document.getElementById('luck-league-filter').value;
+            const seasonFilter = document.getElementById('luck-season-filter').value;
+            const tbody = document.getElementById('luck-table-body');
+
+            const stats = {};
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                if (leagueFilter !== 'ALL' && leagueName !== leagueFilter) return;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
+                const slateMap = {};
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
+
+                    const season = col0;
+                    if (seasonFilter !== 'ALL' && season !== seasonFilter) return;
+                    const week = String(r[1]).trim();
+                    const weekNum = parseInt(week.replace(/\D/g, ''), 10) || 1;
+                    if (weekNum > 14) return; // Regular season weeks 1-14 for true schedule luck
+                    const matchupId = String(r[2]).trim();
+                    if (matchupId === '0' || !matchupId) return;
+
+                    const key = `${season}|${week}`;
+                    if (!slateMap[key]) slateMap[key] = [];
+                    slateMap[key].push({
+                        t1: getMasterOwner(r[3]),
+                        s1: parseFloat(r[4]) || 0,
+                        t2: getMasterOwner(r[5]),
+                        s2: parseFloat(r[6]) || 0
+                    });
+                });
+
+                Object.keys(slateMap).forEach(key => {
+                    const games = slateMap[key];
+                    const allScores = [];
+                    games.forEach(g => {
+                        if (g.s1 > 0) allScores.push(g.s1);
+                        if (g.s2 > 0) allScores.push(g.s2);
+                    });
+                    if (allScores.length < games.length * 1.5) return; // skip unplayed weeks
+
+                    const teamWeekScores = [];
+                    games.forEach(g => {
+                        if (!stats[g.t1]) stats[g.t1] = { w: 0, l: 0, apW: 0, apL: 0, pf: 0, pa: 0 };
+                        if (!stats[g.t2]) stats[g.t2] = { w: 0, l: 0, apW: 0, apL: 0, pf: 0, pa: 0 };
+
+                        stats[g.t1].pf += g.s1; stats[g.t1].pa += g.s2;
+                        stats[g.t2].pf += g.s2; stats[g.t2].pa += g.s1;
+
+                        if (g.s1 > g.s2) { stats[g.t1].w++; stats[g.t2].l++; }
+                        else if (g.s2 > g.s1) { stats[g.t2].w++; stats[g.t1].l++; }
+
+                        teamWeekScores.push({ mgr: g.t1, score: g.s1 });
+                        teamWeekScores.push({ mgr: g.t2, score: g.s2 });
+                    });
+
+                    // Calculate All-Play wins/losses for this week
+                    for (let i = 0; i < teamWeekScores.length; i++) {
+                        for (let j = 0; j < teamWeekScores.length; j++) {
+                            if (i === j) continue;
+                            if (teamWeekScores[i].score > teamWeekScores[j].score) stats[teamWeekScores[i].mgr].apW++;
+                            else if (teamWeekScores[i].score < teamWeekScores[j].score) stats[teamWeekScores[i].mgr].apL++;
+                        }
+                    }
+                });
+            });
+
+            const rowsData = Object.keys(stats).map(mgr => {
+                const d = stats[mgr];
+                const games = d.w + d.l;
+                const apGames = d.apW + d.apL;
+                const apWinPct = apGames > 0 ? (d.apW / apGames) : 0;
+                const expectedWins = games * apWinPct;
+                const luckDiff = d.w - expectedWins;
+                return { mgr, ...d, games, apWinPct, expectedWins, luckDiff };
+            }).sort((a, b) => b.apWinPct - a.apWinPct);
+
+            tbody.innerHTML = rowsData.map(r => {
+                const actualPct = r.games > 0 ? ((r.w / r.games) * 100).toFixed(1) : '0.0';
+                const allPlayPct = (r.apWinPct * 100).toFixed(1);
+                const diffStr = (r.luckDiff >= 0 ? '+' : '') + r.luckDiff.toFixed(1);
+                const badge = r.luckDiff >= 1.5
+                    ? `<span class="bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-1 rounded text-xs font-bold">🍀 Lucky (+${r.luckDiff.toFixed(1)} W)</span>`
+                    : (r.luckDiff <= -1.5
+                        ? `<span class="bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2.5 py-1 rounded text-xs font-bold">⛈️ Unlucky (${r.luckDiff.toFixed(1)} W)</span>`
+                        : `<span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded text-xs font-bold">⚖️ True to Form</span>`);
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-4 font-bold text-accent">${r.mgr}</td>
+                        <td class="p-4 font-semibold">${r.w}-${r.l} <span class="text-xs text-slate-400">(${actualPct}%)</span></td>
+                        <td class="p-4 font-semibold text-emerald-400">${r.apW}-${r.apL} <span class="text-xs text-slate-400">(${allPlayPct}%)</span></td>
+                        <td class="p-4 text-xs text-slate-300">PF: <strong>${r.pf.toFixed(1)}</strong> &bull; PA: <strong>${r.pa.toFixed(1)}</strong></td>
+                        <td class="p-4 font-mono text-xs">${diffStr} Wins <span class="text-slate-400">(Exp: ${r.expectedWins.toFixed(1)})</span></td>
+                        <td class="p-4">${badge}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- TAB 7: DRAFT PICKS MATRIX ---
         function renderDraftPicksMatrix() {
             const grid = document.getElementById('picks-matrix-grid');
             grid.innerHTML = '';
@@ -645,29 +1245,20 @@
                     const picksList = picksStr ? picksStr.split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'none') : [];
 
                     if (!ownerPicks[owner]) {
-                        ownerPicks[owner] = {
-                            totalPicks: 0,
-                            firstRoundCount: 0,
-                            ktcValue: 0,
-                            byLeague: {}
-                        };
+                        ownerPicks[owner] = { totalPicks: 0, firstRoundCount: 0, ktcValue: 0, byLeague: {} };
                     }
 
                     ownerPicks[owner].byLeague[leagueName] = picksList;
                     picksList.forEach(p => {
                         ownerPicks[owner].totalPicks++;
                         ownerPicks[owner].ktcValue += scoreDraftPickKTC(p);
-                        if (/Round\s+1\b/i.test(p)) {
-                            ownerPicks[owner].firstRoundCount++;
-                        }
+                        if (/Round\s+1\b/i.test(p)) ownerPicks[owner].firstRoundCount++;
                     });
                 });
             });
 
             const sortedOwners = Object.keys(ownerPicks).sort((a, b) => {
-                if (ownerPicks[b].firstRoundCount !== ownerPicks[a].firstRoundCount) {
-                    return ownerPicks[b].firstRoundCount - ownerPicks[a].firstRoundCount;
-                }
+                if (ownerPicks[b].firstRoundCount !== ownerPicks[a].firstRoundCount) return ownerPicks[b].firstRoundCount - ownerPicks[a].firstRoundCount;
                 return ownerPicks[b].ktcValue - ownerPicks[a].ktcValue;
             });
 
@@ -679,7 +1270,6 @@
                 let leaguesHtml = '';
                 Object.keys(data.byLeague).forEach(lg => {
                     const picks = data.byLeague[lg];
-                    // Count duplicates (e.g., 9x "2027 Mid Round 1")
                     const counts = {};
                     picks.forEach(p => { counts[p] = (counts[p] || 0) + 1; });
 
@@ -710,7 +1300,7 @@
                         <div class="flex justify-between items-start gap-2">
                             <div>
                                 <h3 class="text-lg font-bold text-accent">${owner}</h3>
-                                <p class="text-xs text-emerald-400 font-semibold mt-0.5">Est. Pick Capital: ${data.ktcValue.toLocaleString()} KTC</p>
+                                <p class="text-xs text-emerald-400 font-semibold mt-0.5">Pick Capital: ${data.ktcValue.toLocaleString()} KTC</p>
                             </div>
                             <div class="text-right">
                                 <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full text-xs font-bold block">🔥 ${data.firstRoundCount}x 1st Rd</span>
@@ -726,11 +1316,25 @@
             });
         }
 
-        // --- TAB 5: STRICT TRADE LOG ---
+        // --- TAB 8: STRICT TRADE LOG & DRAFT PICK LINEAGE ---
+        function formatTradeBreakdown(text) {
+            return String(text || '')
+                .replace(/-> Resulted in drafting:\s*([^\],]+)/g, '<span class="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold text-[11px] mx-0.5">🌱 Drafted: $1</span>')
+                .replace(/<--->/g, '<span class="text-accent font-bold mx-2">⇄</span>');
+        }
+
+        function toggleLineageOnly() {
+            lineageOnlyMode = !lineageOnlyMode;
+            const btn = document.getElementById('lineage-filter-btn');
+            btn.className = lineageOnlyMode
+                ? "bg-emerald-600 text-white border border-emerald-500 px-3 py-2 rounded-lg text-xs font-bold transition"
+                : "bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition";
+            filterTrades();
+        }
+
         function renderTrades() {
             const tbody = document.getElementById('trades-table-body');
             tbody.innerHTML = '';
-            let count = 0;
 
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName] || [];
@@ -742,25 +1346,32 @@
                     if (newSec) { section = newSec; return; }
                     if (section !== 'trades' || isColumnHeaderRow(col0) || !col0 || !r[3] || !r[4]) return;
 
-                    count++;
+                    const hasLineage = String(r[4]).includes('Resulted in drafting:');
                     const tr = document.createElement('tr');
+                    tr.dataset.hasLineage = hasLineage ? '1' : '0';
                     tr.className = "hover:bg-slate-800/50 transition";
                     tr.innerHTML = `
                         <td class="p-4 font-medium whitespace-nowrap">${r[0]} &bull; ${r[2] || ''}<br><span class="text-xs text-slate-400">${r[1] || ''}</span></td>
                         <td class="p-4 text-accent font-semibold">${leagueName}</td>
                         <td class="p-4 font-medium text-white">${r[3]}</td>
-                        <td class="p-4 text-slate-300 text-xs leading-relaxed">${r[4]}</td>
+                        <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
                     `;
                     tbody.appendChild(tr);
                 });
             });
+        }
 
-            if (count === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No trade records detected in JSON data.</td></tr>`;
+        function filterTrades() {
+            const query = (document.getElementById('trade-search')?.value || '').toLowerCase();
+            const rows = document.getElementById('trades-table-body').getElementsByTagName('tr');
+            for (let row of rows) {
+                const matchesText = row.innerText.toLowerCase().includes(query);
+                const matchesLineage = !lineageOnlyMode || row.dataset.hasLineage === '1';
+                row.style.display = (matchesText && matchesLineage) ? '' : 'none';
             }
         }
 
-        // --- TAB 6: TRUE H2H MATCHUP PARSER & GAME LOG ---
+        // --- TAB 9: H2H RECORDS ---
         function initH2HDropdowns() {
             const managers = new Set();
             Object.keys(globalMasterData).forEach(leagueName => {
@@ -782,12 +1393,11 @@
             sel1.innerHTML = '';
             sel2.innerHTML = '';
 
-            sortedMgrs.forEach((m) => {
+            sortedMgrs.forEach(m => {
                 sel1.appendChild(new Option(m, m));
                 sel2.appendChild(new Option(m, m));
             });
 
-            // Default to Smokers Haven vs Kronik if present
             if (sortedMgrs.includes('Smokers Haven')) sel1.value = 'Smokers Haven';
             if (sortedMgrs.includes('Kronik')) sel2.value = 'Kronik';
             else if (sortedMgrs.length > 1) sel2.selectedIndex = 1;
@@ -795,26 +1405,33 @@
             calculateH2H();
         }
 
+        function swapH2HManagers() {
+            const sel1 = document.getElementById('h2h-mgr-1');
+            const sel2 = document.getElementById('h2h-mgr-2');
+            const temp = sel1.value;
+            sel1.value = sel2.value;
+            sel2.value = temp;
+            calculateH2H();
+        }
+
         function calculateH2H() {
             const m1 = document.getElementById('h2h-mgr-1').value;
             const m2 = document.getElementById('h2h-mgr-2').value;
             const box = document.getElementById('h2h-results-box');
+            if (currentActiveTab === 'h2h') updateUrlParams();
 
             if (m1 === m2) {
                 box.innerHTML = `<p class="text-amber-400 font-semibold text-sm">Please select two different managers to compare.</p>`;
                 return;
             }
 
-            let m1Wins = 0;
-            let m2Wins = 0;
-            let ties = 0;
+            let m1Wins = 0, m2Wins = 0, ties = 0, m1TotalPts = 0, m2TotalPts = 0;
             const matchupHistory = [];
 
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName] || [];
                 let section = '';
 
-                // First pass: identify which (Season, Week) slates are completed (at least 75% of teams scored > 0)
                 const weekStats = {};
                 rows.forEach(r => {
                     const col0 = String(r[0] || '').trim();
@@ -831,7 +1448,6 @@
                     if (s2 > 0) weekStats[key].nonZeroTeams++;
                 });
 
-                // Second pass: score completed real matchups (Matchup ID !== "0")
                 section = '';
                 rows.forEach(r => {
                     const col0 = String(r[0] || '').trim();
@@ -842,25 +1458,22 @@
                     const season = String(r[0]).trim();
                     const week = String(r[1]).trim();
                     const matchupId = String(r[2]).trim();
-
-                    // Exclude non-playoff / bye week ghost pairings where Sleeper matchup_id is 0
                     if (matchupId === '0' || !matchupId) return;
 
                     const wStat = weekStats[`${season}|${week}`];
-                    if (!wStat || wStat.totalTeams === 0 || (wStat.nonZeroTeams / wStat.totalTeams) < 0.75) {
-                        return; // Skip unplayed or partially-played Thursday slates
-                    }
+                    if (!wStat || wStat.totalTeams === 0 || (wStat.nonZeroTeams / wStat.totalTeams) < 0.75) return;
 
                     const team1Owner = getMasterOwner(r[3]);
                     const team2Owner = getMasterOwner(r[5]);
                     const score1 = parseFloat(r[4]);
                     const score2 = parseFloat(r[6]);
-
                     if (isNaN(score1) || isNaN(score2)) return;
 
                     if ((team1Owner === m1 && team2Owner === m2) || (team1Owner === m2 && team2Owner === m1)) {
                         const m1Score = (team1Owner === m1) ? score1 : score2;
                         const m2Score = (team1Owner === m1) ? score2 : score1;
+                        m1TotalPts += m1Score;
+                        m2TotalPts += m2Score;
 
                         let winner = 'Tie';
                         if (m1Score > m2Score) { m1Wins++; winner = m1; }
@@ -868,9 +1481,7 @@
                         else { ties++; }
 
                         matchupHistory.push({
-                            league: leagueName,
-                            season,
-                            week,
+                            league: leagueName, season, week,
                             m1Score: m1Score.toFixed(2),
                             m2Score: m2Score.toFixed(2),
                             winner
@@ -879,44 +1490,41 @@
                 });
             });
 
-            let logHtml = '';
-            if (matchupHistory.length > 0) {
-                logHtml = `
-                    <div class="pt-4 border-t border-slate-800 text-left space-y-2 max-h-80 overflow-y-auto pr-1">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Completed Matchup Log (${matchupHistory.length} Games)</p>
-                        ${matchupHistory.map(g => `
-                            <div class="bg-slate-950 border border-slate-800/80 rounded-lg px-3 py-2 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
-                                <span class="text-slate-400 font-medium"><strong class="text-accent">${g.league}</strong> &bull; ${g.season} ${g.week}</span>
-                                <span class="font-mono text-slate-200">
-                                    <strong class="${g.winner === m1 ? 'text-emerald-400' : ''}">${m1} ${g.m1Score}</strong>
-                                    <span class="text-slate-500 mx-1.5">-</span>
-                                    <strong class="${g.winner === m2 ? 'text-emerald-400' : ''}">${g.m2Score} ${m2}</strong>
-                                </span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                logHtml = `<p class="text-xs text-slate-400 pt-3 border-t border-slate-800">No completed head-to-head matchups found between these two managers.</p>`;
-            }
+            const logHtml = matchupHistory.length > 0 ? `
+                <div class="pt-4 border-t border-slate-800 text-left space-y-2 max-h-80 overflow-y-auto pr-1">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Completed Matchup Log (${matchupHistory.length} Games)</p>
+                    ${matchupHistory.map(g => `
+                        <div class="bg-slate-950 border border-slate-800/80 rounded-lg px-3 py-2 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
+                            <span class="text-slate-400 font-medium"><strong class="text-accent">${g.league}</strong> &bull; ${g.season} ${g.week}</span>
+                            <span class="font-mono text-slate-200">
+                                <strong class="${g.winner === m1 ? 'text-emerald-400' : ''}">${m1} ${g.m1Score}</strong>
+                                <span class="text-slate-500 mx-1.5">-</span>
+                                <strong class="${g.winner === m2 ? 'text-emerald-400' : ''}">${g.m2Score} ${m2}</strong>
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : `<p class="text-xs text-slate-400 pt-3 border-t border-slate-800">No completed head-to-head matchups found between these two managers.</p>`;
 
             box.innerHTML = `
                 <div class="grid grid-cols-3 items-center gap-4 py-2">
                     <div class="text-right">
-                        <p class="text-sm font-bold text-accent">${m1}</p>
-                        <p class="text-4xl font-extrabold text-white mt-1">${m1Wins}</p>
+                        <p class="text-base font-bold text-accent">${m1}</p>
+                        <p class="text-5xl font-extrabold text-white mt-1">${m1Wins}</p>
+                        <p class="text-xs text-slate-400 mt-1">${m1TotalPts.toFixed(2)} Total Pts</p>
                     </div>
                     <div class="text-slate-500 font-bold text-sm">VS${ties > 0 ? `<br><span class="text-xs">(${ties} Tie)</span>` : ''}</div>
                     <div class="text-left">
-                        <p class="text-sm font-bold text-accent">${m2}</p>
-                        <p class="text-4xl font-extrabold text-white mt-1">${m2Wins}</p>
+                        <p class="text-base font-bold text-accent">${m2}</p>
+                        <p class="text-5xl font-extrabold text-white mt-1">${m2Wins}</p>
+                        <p class="text-xs text-slate-400 mt-1">${m2TotalPts.toFixed(2)} Total Pts</p>
                     </div>
                 </div>
                 ${logHtml}
             `;
         }
 
-        // --- TAB 7: INTERACTIVE TRADE PARTNER SYNERGY MATRIX ---
+        // --- TAB 10: TRADE PARTNER SYNERGY MATRIX ---
         function renderTradeSynergy() {
             const container = document.getElementById('synergy-content');
             const pairCounts = {};
@@ -940,9 +1548,7 @@
                             const pairKey = [p1, p2].sort().join(' 🤝 ');
                             pairCounts[pairKey] = (pairCounts[pairKey] || 0) + 1;
 
-                            if (!tradePairDatabase[pairKey]) {
-                                tradePairDatabase[pairKey] = [];
-                            }
+                            if (!tradePairDatabase[pairKey]) tradePairDatabase[pairKey] = [];
                             tradePairDatabase[pairKey].push({
                                 league: leagueName,
                                 season: r[0] || '',
@@ -991,20 +1597,16 @@
             const trades = tradePairDatabase[pairKey] || [];
             title.innerText = `${pairKey} (${trades.length} Trade${trades.length > 1 ? 's' : ''})`;
 
-            if (trades.length === 0) {
-                body.innerHTML = `<p class="text-slate-400 text-center py-4">No detailed trades found for this pair.</p>`;
-            } else {
-                body.innerHTML = trades.map(t => `
-                    <div class="pt-3 first:pt-0 space-y-1.5">
-                        <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
-                            <span class="text-accent uppercase tracking-wider">${t.league}</span>
-                            <span>${t.season} &bull; ${t.week} (${t.date})</span>
-                        </div>
-                        <p class="font-bold text-white text-xs">${t.teams}</p>
-                        <p class="text-slate-300 text-xs bg-slate-950 p-3 rounded border border-slate-800/80 leading-relaxed">${t.breakdown}</p>
+            body.innerHTML = trades.map(t => `
+                <div class="pt-3 first:pt-0 space-y-1.5">
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
+                        <span class="text-accent uppercase tracking-wider">${t.league}</span>
+                        <span>${t.season} &bull; ${t.week} (${t.date})</span>
                     </div>
-                `).join('');
-            }
+                    <p class="font-bold text-white text-xs">${t.teams}</p>
+                    <p class="text-slate-300 text-xs bg-slate-950 p-3 rounded border border-slate-800/80 leading-relaxed">${formatTradeBreakdown(t.breakdown)}</p>
+                </div>
+            `).join('');
 
             modal.classList.remove('hidden');
         }
@@ -1013,12 +1615,49 @@
             document.getElementById('trade-modal').classList.add('hidden');
         }
 
-        function filterTrades() {
-            const query = document.getElementById('trade-search').value.toLowerCase();
-            const rows = document.getElementById('trades-table-body').getElementsByTagName('tr');
-            for (let row of rows) {
-                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
-            }
+        // --- TAB 11: RAW LEAGUE SHEETS ---
+        function renderSelectedLeague() {
+            const leagueName = document.getElementById('league-selector').value;
+            const rows = globalMasterData[leagueName] || [];
+            const container = document.getElementById('league-view-content');
+
+            let html = `<h3 class="text-xl font-bold mb-4 text-accent">${leagueName}</h3>`;
+            html += `<table class="w-full text-left text-sm border-collapse">`;
+
+            let activeSection = 'profile';
+
+            rows.forEach((row) => {
+                const col0 = String(row[0] || '').trim();
+                const col1 = String(row[1] || '').trim();
+                if (!col0 && !col1 && !row[5]) return;
+
+                const secType = getSectionType(col0);
+                const isHeader = secType !== null;
+                if (isHeader) activeSection = secType;
+
+                const isSubHeader = isColumnHeaderRow(col0);
+
+                let renderRow = true;
+                if (currentLeagueFilter !== 'all') {
+                    renderRow = (activeSection === currentLeagueFilter);
+                }
+
+                if (renderRow) {
+                    if (isHeader) {
+                        html += `<tr class="bg-slate-900 border-t border-b border-slate-700"><td colspan="8" class="p-4 font-bold text-accent tracking-wide">${col0}</td></tr>`;
+                    } else {
+                        html += `<tr class="border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`;
+                        row.forEach(cell => {
+                            const cellVal = cell !== undefined && cell !== null ? cell : '';
+                            html += `<td class="p-3 text-xs leading-relaxed max-w-sm break-words">${cellVal}</td>`;
+                        });
+                        html += `</tr>`;
+                    }
+                }
+            });
+
+            html += `</table>`;
+            container.innerHTML = html;
         }
     </script>
 </body>

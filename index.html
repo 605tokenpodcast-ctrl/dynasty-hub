@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-League Dynasty Hub</title>
-    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -25,19 +24,18 @@
 
     <div>
         <!-- Navigation Header -->
-        <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-40 shadow-md">
             <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🏈</span>
                     <h1 class="text-xl font-bold tracking-wide">Multi-League Dynasty Hub</h1>
                 </div>
-                <!-- Navigation Tabs -->
                 <nav class="flex flex-wrap gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
                     <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md font-medium bg-accent text-white transition">Trophy Room</button>
                     <button onclick="switchTab('leagues')" id="nav-leagues" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Leagues</button>
                     <button onclick="switchTab('owners')" id="nav-owners" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Unified Managers</button>
-                    <button onclick="switchTab('trades')" id="nav-trades" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Trade Log</button>
                     <button onclick="switchTab('picks')" id="nav-picks" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Draft Picks</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Trade Log</button>
                     <button onclick="switchTab('h2h')" id="nav-h2h" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">H2H Records</button>
                     <button onclick="switchTab('synergy')" id="nav-synergy" class="px-3 py-2 rounded-md font-medium hover:bg-slate-800 transition">Trade Partners</button>
                 </nav>
@@ -64,17 +62,13 @@
                 
                 <!-- TAB 1: TROPHY ROOM & CHAMPIONS (DASHBOARD) -->
                 <div id="tab-dashboard" class="space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div>
-                            <h2 class="text-2xl font-bold">🏆 All-Time Trophy Room & Dominance Leaderboard</h2>
-                            <p class="text-slate-400 text-sm">Aggregating championships, titles, and top managers across your entire multi-league history.</p>
-                        </div>
+                    <div>
+                        <h2 class="text-2xl font-bold">🏆 All-Time Trophy Room & Dominance Leaderboard</h2>
+                        <p class="text-slate-400 text-sm">Aggregating championships, podium finishes, and records across your entire multi-league history.</p>
                     </div>
 
-                    <!-- Trophy Room Grid -->
                     <div id="trophy-room-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-                    <!-- League Quick-Launch Cards -->
                     <div class="space-y-3 pt-6 border-t border-slate-800">
                         <h3 class="text-lg font-bold text-slate-200">🚀 Active League Portals</h3>
                         <div id="dashboard-leagues-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
@@ -86,9 +80,10 @@
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                         <select id="league-selector" onchange="renderSelectedLeague()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent">
                         </select>
-                        <div class="flex gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
+                        <div class="flex flex-wrap gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
                             <button onclick="setLeagueViewFilter('all')" id="lfilter-all" class="px-3 py-1.5 rounded bg-accent text-white font-medium transition">Full Sheet</button>
                             <button onclick="setLeagueViewFilter('standings')" id="lfilter-standings" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Standings</button>
+                            <button onclick="setLeagueViewFilter('rosters')" id="lfilter-rosters" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Rosters & Picks</button>
                             <button onclick="setLeagueViewFilter('trades')" id="lfilter-trades" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Trade History</button>
                         </div>
                     </div>
@@ -100,24 +95,36 @@
                 <!-- TAB 3: UNIFIED MANAGERS -->
                 <div id="tab-owners" class="hidden space-y-6">
                     <div>
-                        <h2 class="text-xl font-bold">Unified Owner Profiles & Portfolio Valuation</h2>
-                        <p class="text-slate-400 text-sm">Aggregating records, titles, and draft pick capital across team aliases.</p>
+                        <h2 class="text-xl font-bold">Unified Owner Profiles & KTC Portfolio Valuation</h2>
+                        <p class="text-slate-400 text-sm">Aggregating all-time records, podium finishes, and future draft pick capital across all team aliases.</p>
                     </div>
                     <div id="owners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
 
-                <!-- TAB 4: TRADES -->
+                <!-- TAB 4: DRAFT PICK INVENTORY MATRIX -->
+                <div id="tab-picks" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-xl font-bold">Future Draft Pick Inventory Matrix</h2>
+                        <p class="text-slate-400 text-sm">Live inventory of future draft picks held by each manager across all leagues, weighted by KeepTradeCut pick values.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
+                </div>
+
+                <!-- TAB 5: TRADES -->
                 <div id="tab-trades" class="hidden space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <h2 class="text-xl font-bold">All-Time Trade & Draft Resolution Log</h2>
-                        <input type="text" id="trade-search" placeholder="Search player, team, or pick..." onkeyup="filterTrades()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-72 focus:outline-none focus:border-accent">
+                        <div>
+                            <h2 class="text-xl font-bold">All-Time Trade & Draft Resolution Log</h2>
+                            <p class="text-slate-400 text-sm">Complete history of trades and the exact draft selections those traded picks became.</p>
+                        </div>
+                        <input type="text" id="trade-search" placeholder="Search player, manager, or pick..." onkeyup="filterTrades()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-72 focus:outline-none focus:border-accent">
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
                                 <thead class="bg-slate-900 text-slate-400 border-b border-slate-700">
                                     <tr>
-                                        <th class="p-4">Season / Week</th>
+                                        <th class="p-4">Season / Date</th>
                                         <th class="p-4">League</th>
                                         <th class="p-4">Teams Involved</th>
                                         <th class="p-4">Trade Breakdown & Draft Pick Outcomes</th>
@@ -129,20 +136,11 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: DRAFT PICK INVENTORY MATRIX -->
-                <div id="tab-picks" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-xl font-bold">Draft Pick Inventory Matrix</h2>
-                        <p class="text-slate-400 text-sm">Aggregated draft pick capital and future assets parsed from trade histories.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
-                </div>
-
                 <!-- TAB 6: HEAD-TO-HEAD RECORDS -->
                 <div id="tab-h2h" class="hidden space-y-6">
                     <div>
                         <h2 class="text-xl font-bold">⚔️ All-Time Head-to-Head Matchup Matrix</h2>
-                        <p class="text-slate-400 text-sm">Select two managers to inspect their true head-to-head record across all leagues.</p>
+                        <p class="text-slate-400 text-sm">Select any two managers to inspect their exact head-to-head record and every completed game between them.</p>
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-6">
                         <div class="flex flex-col sm:flex-row items-center gap-4">
@@ -156,7 +154,7 @@
                                 <select id="h2h-mgr-2" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
                             </div>
                         </div>
-                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-3"></div>
+                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-4"></div>
                     </div>
                 </div>
 
@@ -164,7 +162,7 @@
                 <div id="tab-synergy" class="hidden space-y-6">
                     <div>
                         <h2 class="text-xl font-bold">🤝 Trade Partner Synergy Matrix</h2>
-                        <p class="text-slate-400 text-sm">Click any trading pair below to inspect their blockbusters and draft pick exchanges.</p>
+                        <p class="text-slate-400 text-sm">Click any trading pair below to drill down and inspect every trade completed between those two managers.</p>
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm overflow-x-auto">
                         <div id="synergy-content"></div>
@@ -176,15 +174,13 @@
     </div>
 
     <!-- DRILL-DOWN TRADE MODAL -->
-    <div id="trade-modal" class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+    <div id="trade-modal" onclick="if(event.target === this) closeTradeModal()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-xl">
                 <h3 id="modal-title" class="font-bold text-accent text-lg">Trade Partnership Details</h3>
-                <button onclick="closeTradeModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">&times;</button>
+                <button onclick="closeTradeModal()" class="text-slate-400 hover:text-white text-2xl font-bold px-2 leading-none">&times;</button>
             </div>
-            <div id="modal-body" class="p-6 overflow-y-auto space-y-4 text-sm divide-y divide-slate-800">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto space-y-4 text-sm divide-y divide-slate-800"></div>
         </div>
     </div>
 
@@ -197,15 +193,29 @@
     <script>
         let globalMasterData = {};
         let currentLeagueFilter = 'all';
+        let sortedSynergyPairs = [];
+        const tradePairDatabase = {};
 
+        // Alias dictionary to unify your accounts across all leagues and seasons
         const aliasOverrides = {
             "anthonyz": "Smokers Haven",
             "smokers haven": "Smokers Haven",
             "smokershaven": "Smokers Haven"
         };
 
+        // KeepTradeCut-style baseline values for future draft picks by round
+        const ktcPickValues = {
+            1: 6500,
+            2: 3200,
+            3: 1500,
+            4: 750,
+            5: 400,
+            6: 250
+        };
+
         function getMasterOwner(teamString) {
-            const trimmed = String(teamString).trim();
+            const trimmed = String(teamString || '').trim();
+            if (!trimmed) return '';
             const lowerTrimmed = trimmed.toLowerCase();
             
             for (let key in aliasOverrides) {
@@ -216,11 +226,39 @@
 
             const match = trimmed.match(/\(([^)]+)\)\s*$/);
             if (match && match[1]) {
-                const username = match[1].trim().toLowerCase();
-                if (aliasOverrides[username]) return aliasOverrides[username];
-                return match[1].trim();
+                const username = match[1].trim();
+                const lowerUser = username.toLowerCase();
+                if (aliasOverrides[lowerUser]) return aliasOverrides[lowerUser];
+                return username;
             }
             return trimmed;
+        }
+
+        // Clean section detector for sleeper_leagues_master.json
+        function getSectionType(col0) {
+            const s = String(col0 || '').trim().toUpperCase();
+            if (!s.startsWith('---')) return null;
+            if (s.includes('LEAGUE PROFILE')) return 'profile';
+            if (s.includes('STANDINGS')) return 'standings';
+            if (s.includes('CURRENT ROSTERS')) return 'rosters';
+            if (s.includes('TRADE HISTORY')) return 'trades';
+            if (s.includes('BOX SCORES')) return 'boxscores';
+            if (s.includes('MATCHUPS')) return 'matchups';
+            return 'other';
+        }
+
+        function isColumnHeaderRow(col0) {
+            const c = String(col0 || '').trim();
+            return c === 'Season' || c === 'Team / Manager' || c === 'Week' || c === 'League Name';
+        }
+
+        function scoreDraftPickKTC(pickStr) {
+            const m = String(pickStr).match(/Round\s+(\d+)/i);
+            if (m && m[1]) {
+                const rd = parseInt(m[1], 10);
+                return ktcPickValues[rd] || 200;
+            }
+            return 0;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -258,7 +296,7 @@
         });
 
         function switchTab(tabId) {
-            ['dashboard', 'leagues', 'owners', 'trades', 'picks', 'h2h', 'synergy'].forEach(t => {
+            ['dashboard', 'leagues', 'owners', 'picks', 'trades', 'h2h', 'synergy'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -275,8 +313,9 @@
 
         function setLeagueViewFilter(filter) {
             currentLeagueFilter = filter;
-            ['all', 'standings', 'trades'].forEach(f => {
+            ['all', 'standings', 'rosters', 'trades'].forEach(f => {
                 const btn = document.getElementById(`lfilter-${f}`);
+                if (!btn) return;
                 if (f === filter) {
                     btn.className = "px-3 py-1.5 rounded bg-accent text-white font-medium transition";
                 } else {
@@ -304,58 +343,91 @@
             renderTrophyRoom(leagueNames);
             renderDashboardLeagues(leagueNames);
             renderSelectedLeague();
-            renderTrades();
             renderOwners();
             renderDraftPicksMatrix();
+            renderTrades();
             initH2HDropdowns();
             renderTradeSynergy();
         }
 
+        // --- TAB 1: TROPHY ROOM ---
         function renderTrophyRoom(leagueNames) {
             const grid = document.getElementById('trophy-room-grid');
             grid.innerHTML = '';
-            const champions = {};
+            const managers = {};
 
             leagueNames.forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                let inStandings = false;
-                rows.forEach(r => {
-                    const col0 = String(r[0] || '');
-                    if (col0.includes('PAST SEASONS STANDINGS') || col0.includes('STANDINGS')) { inStandings = true; }
-                    if (col0.includes('CURRENT ROSTERS') || col0.includes('TRADE HISTORY')) { inStandings = false; }
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
 
-                    if (inStandings && r[1] && r[1] !== 'Team / Manager') {
-                        if (String(r[4] || '').includes('League Champion')) {
-                            const rawTeam = String(r[1]);
-                            const master = getMasterOwner(rawTeam);
-                            if (!champions[master]) {
-                                champions[master] = { titles: 0, leagues: new Set(), aliases: new Set() };
-                            }
-                            champions[master].titles++;
-                            champions[master].leagues.add(leagueName);
-                            champions[master].aliases.add(rawTeam);
-                        }
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'standings' || isColumnHeaderRow(col0) || !r[1]) return;
+
+                    const rawTeam = String(r[1]).trim();
+                    const master = getMasterOwner(rawTeam);
+                    const placement = String(r[4] || '');
+                    const season = String(r[0] || '');
+
+                    if (!managers[master]) {
+                        managers[master] = {
+                            titles: 0,
+                            runnerUps: 0,
+                            thirdPlaces: 0,
+                            titleDetails: [],
+                            allLeagues: new Set(),
+                            aliases: new Set()
+                        };
+                    }
+
+                    managers[master].allLeagues.add(leagueName);
+                    managers[master].aliases.add(rawTeam);
+
+                    if (placement.includes('League Champion')) {
+                        managers[master].titles++;
+                        managers[master].titleDetails.push(`${leagueName} (${season})`);
+                    } else if (placement.includes('Runner-Up')) {
+                        managers[master].runnerUps++;
+                    } else if (placement.includes('3rd Place')) {
+                        managers[master].thirdPlaces++;
                     }
                 });
             });
 
-            const sortedChamps = Object.keys(champions).sort((a, b) => champions[b].titles - champions[a].titles);
+            const champsList = Object.keys(managers)
+                .filter(m => managers[m].titles > 0)
+                .sort((a, b) => {
+                    if (managers[b].titles !== managers[a].titles) return managers[b].titles - managers[a].titles;
+                    if (managers[b].runnerUps !== managers[a].runnerUps) return managers[b].runnerUps - managers[a].runnerUps;
+                    return managers[b].thirdPlaces - managers[a].thirdPlaces;
+                });
 
-            if (sortedChamps.length > 0) {
-                sortedChamps.forEach(manager => {
-                    const data = champions[manager];
+            if (champsList.length > 0) {
+                champsList.forEach(manager => {
+                    const data = managers[manager];
                     const card = document.createElement('div');
-                    card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-3";
+                    card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm flex flex-col justify-between space-y-4";
                     card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="text-xl font-bold text-accent">${manager}</h3>
-                                <p class="text-xs text-slate-400 mt-1">Teams: ${Array.from(data.aliases).join(', ')}</p>
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <div>
+                                    <h3 class="text-xl font-bold text-accent">${manager}</h3>
+                                    <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliases).join(', ')}</p>
+                                </div>
+                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+                                    🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}
+                                </span>
                             </div>
-                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-sm font-bold">🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}</span>
+                            <div class="flex gap-3 mt-3 text-xs text-slate-300">
+                                <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">🥈 ${data.runnerUps} Runner-Up</span>
+                                <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded">🥉 ${data.thirdPlaces} 3rd Place</span>
+                            </div>
                         </div>
-                        <div class="pt-2 border-t border-slate-800 text-xs text-slate-400">
-                            League(s): <span class="text-slate-200 font-semibold">${Array.from(data.leagues).join(', ')}</span>
+                        <div class="pt-3 border-t border-slate-800 text-xs space-y-1.5">
+                            <p class="text-slate-400">Title Banners: <span class="text-amber-300 font-semibold">${data.titleDetails.join(', ')}</span></p>
+                            <p class="text-slate-400">Active Leagues (${data.allLeagues.size}): <span class="text-slate-200 font-semibold">${Array.from(data.allLeagues).join(', ')}</span></p>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -382,13 +454,14 @@
                         <h4 class="font-bold text-white mt-1">${name}</h4>
                     </div>
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
-                        <span>View Standings &rarr;</span>
+                        <span>Inspect Portal &rarr;</span>
                     </div>
                 `;
                 leaguesGrid.appendChild(card);
             });
         }
 
+        // --- TAB 2: LEAGUES PORTAL ---
         function renderSelectedLeague() {
             const leagueName = document.getElementById('league-selector').value;
             const rows = globalMasterData[leagueName] || [];
@@ -397,26 +470,22 @@
             let html = `<h3 class="text-xl font-bold mb-4 text-accent">${leagueName}</h3>`;
             html += `<table class="w-full text-left text-sm border-collapse">`;
 
-            let renderRow = true;
-            let activeSection = 'all';
+            let activeSection = 'profile';
 
             rows.forEach((row) => {
-                const col0 = String(row[0] || '');
-                const isHeader = col0.includes('---') || col0.includes('===');
-                const isSubHeader = col0 === "Season" || col0 === "Team / Manager" || col0 === "League Name";
+                const col0 = String(row[0] || '').trim();
+                const col1 = String(row[1] || '').trim();
+                if (!col0 && !col1 && !row[5]) return; // skip empty spacer rows
 
-                if (isHeader) {
-                    if (col0.includes('STANDINGS')) activeSection = 'standings';
-                    else if (col0.includes('TRADE HISTORY')) activeSection = 'trades';
-                    else activeSection = 'other';
-                }
+                const secType = getSectionType(col0);
+                const isHeader = secType !== null;
+                if (isHeader) activeSection = secType;
 
-                if (currentLeagueFilter === 'standings') {
-                    renderRow = activeSection === 'standings' || isHeader && col0.includes('STANDINGS');
-                } else if (currentLeagueFilter === 'trades') {
-                    renderRow = activeSection === 'trades' || isHeader && col0.includes('TRADE HISTORY');
-                } else {
-                    renderRow = true;
+                const isSubHeader = isColumnHeaderRow(col0);
+
+                let renderRow = true;
+                if (currentLeagueFilter !== 'all') {
+                    renderRow = (activeSection === currentLeagueFilter);
                 }
 
                 if (renderRow) {
@@ -437,41 +506,252 @@
             container.innerHTML = html;
         }
 
-        function isTradeRow(row) {
-            const rowStr = row.join(' ').toLowerCase();
-            const col0 = String(row[0] || '');
-            if (col0.includes('Regular Season') || col0.includes('Playoff') || (col0.includes('-') && row[2] && row[2].includes('.'))) return false;
-            return (rowStr.includes('received:') || rowStr.includes('<--->')) && row.length >= 5 && row[3] && row[4];
+        // --- TAB 3: UNIFIED MANAGERS ---
+        function renderOwners() {
+            const grid = document.getElementById('owners-grid');
+            grid.innerHTML = '';
+            const unifiedOwners = {};
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (isColumnHeaderRow(col0)) return;
+
+                    if (section === 'standings' && r[1]) {
+                        const rawTeamName = String(r[1]).trim();
+                        const masterOwner = getMasterOwner(rawTeamName);
+
+                        if (!unifiedOwners[masterOwner]) {
+                            unifiedOwners[masterOwner] = { 
+                                leagues: new Set(), 
+                                champs: 0,
+                                runnerUps: 0,
+                                thirdPlaces: 0,
+                                totalWins: 0, 
+                                totalLosses: 0, 
+                                aliasesUsed: new Set(),
+                                firstRoundPicks: 0,
+                                totalFuturePicks: 0,
+                                ktcPickCapital: 0
+                            };
+                        }
+
+                        unifiedOwners[masterOwner].leagues.add(leagueName);
+                        unifiedOwners[masterOwner].aliasesUsed.add(rawTeamName);
+
+                        const placement = String(r[4] || '');
+                        if (placement.includes('League Champion')) unifiedOwners[masterOwner].champs++;
+                        else if (placement.includes('Runner-Up')) unifiedOwners[masterOwner].runnerUps++;
+                        else if (placement.includes('3rd Place')) unifiedOwners[masterOwner].thirdPlaces++;
+
+                        const rec = String(r[2] || '').split('-');
+                        if (rec.length === 2) {
+                            unifiedOwners[masterOwner].totalWins += parseInt(rec[0], 10) || 0;
+                            unifiedOwners[masterOwner].totalLosses += parseInt(rec[1], 10) || 0;
+                        }
+                    }
+
+                    // Parse actual Future Draft Picks from CURRENT ROSTERS & DRAFT PICKS section
+                    if (section === 'rosters' && r[0]) {
+                        const masterOwner = getMasterOwner(String(r[0]).trim());
+                        if (unifiedOwners[masterOwner] && r[4]) {
+                            const picksRaw = String(r[4]).split(',').map(s => s.trim()).filter(Boolean);
+                            picksRaw.forEach(p => {
+                                if (p.toLowerCase() !== 'none') {
+                                    unifiedOwners[masterOwner].totalFuturePicks++;
+                                    unifiedOwners[masterOwner].ktcPickCapital += scoreDraftPickKTC(p);
+                                    if (/Round\s+1\b/i.test(p)) {
+                                        unifiedOwners[masterOwner].firstRoundPicks++;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+
+            const sortedOwners = Object.keys(unifiedOwners).sort((a, b) => {
+                if (unifiedOwners[b].champs !== unifiedOwners[a].champs) return unifiedOwners[b].champs - unifiedOwners[a].champs;
+                return unifiedOwners[b].totalWins - unifiedOwners[a].totalWins;
+            });
+
+            sortedOwners.forEach(masterName => {
+                const data = unifiedOwners[masterName];
+                const totalGames = data.totalWins + data.totalLosses;
+                const winPct = totalGames > 0 ? ((data.totalWins / totalGames) * 100).toFixed(1) : "0.0";
+                const totalKtcScore = data.ktcPickCapital + (data.champs * 15000) + (data.totalWins * 500);
+
+                const card = document.createElement('div');
+                card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h3 class="text-xl font-bold text-accent">${masterName}</h3>
+                                <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliasesUsed).join(', ')}</p>
+                            </div>
+                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">🏆 ${data.champs} Titles</span>
+                        </div>
+                        <div class="text-xs text-slate-400">
+                            Leagues (${data.leagues.size}): <span class="text-slate-200 font-semibold">${Array.from(data.leagues).join(', ')}</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800 text-sm">
+                        <div>
+                            <p class="text-slate-400 text-xs">All-Time Record</p>
+                            <p class="font-bold mt-0.5">${data.totalWins}-${data.totalLosses} (${winPct}%)</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs">Future Draft Capital</p>
+                            <p class="font-bold mt-0.5 text-amber-400">${data.firstRoundPicks}x 1sts <span class="text-slate-400 font-normal text-xs">(${data.totalFuturePicks} total)</span></p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs">Podium Finishes</p>
+                            <p class="font-bold mt-0.5 text-slate-200">🏆${data.champs} &bull; 🥈${data.runnerUps} &bull; 🥉${data.thirdPlaces}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs">KTC Pick & Empire Value</p>
+                            <p class="font-bold mt-0.5 text-emerald-400">${totalKtcScore.toLocaleString()} pts</p>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
+        // --- TAB 4: FUTURE DRAFT PICKS INVENTORY MATRIX ---
+        function renderDraftPicksMatrix() {
+            const grid = document.getElementById('picks-matrix-grid');
+            grid.innerHTML = '';
+            const ownerPicks = {};
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'rosters' || isColumnHeaderRow(col0) || !r[0]) return;
+
+                    const owner = getMasterOwner(col0);
+                    const picksStr = String(r[4] || '').trim();
+                    const picksList = picksStr ? picksStr.split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'none') : [];
+
+                    if (!ownerPicks[owner]) {
+                        ownerPicks[owner] = {
+                            totalPicks: 0,
+                            firstRoundCount: 0,
+                            ktcValue: 0,
+                            byLeague: {}
+                        };
+                    }
+
+                    ownerPicks[owner].byLeague[leagueName] = picksList;
+                    picksList.forEach(p => {
+                        ownerPicks[owner].totalPicks++;
+                        ownerPicks[owner].ktcValue += scoreDraftPickKTC(p);
+                        if (/Round\s+1\b/i.test(p)) {
+                            ownerPicks[owner].firstRoundCount++;
+                        }
+                    });
+                });
+            });
+
+            const sortedOwners = Object.keys(ownerPicks).sort((a, b) => {
+                if (ownerPicks[b].firstRoundCount !== ownerPicks[a].firstRoundCount) {
+                    return ownerPicks[b].firstRoundCount - ownerPicks[a].firstRoundCount;
+                }
+                return ownerPicks[b].ktcValue - ownerPicks[a].ktcValue;
+            });
+
+            sortedOwners.forEach(owner => {
+                const data = ownerPicks[owner];
+                const card = document.createElement('div');
+                card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-4 flex flex-col justify-between";
+
+                let leaguesHtml = '';
+                Object.keys(data.byLeague).forEach(lg => {
+                    const picks = data.byLeague[lg];
+                    // Count duplicates (e.g., 9x "2027 Mid Round 1")
+                    const counts = {};
+                    picks.forEach(p => { counts[p] = (counts[p] || 0) + 1; });
+
+                    const badges = Object.keys(counts).map(p => {
+                        const qty = counts[p];
+                        const isFirst = /Round\s+1\b/i.test(p);
+                        const badgeClass = isFirst
+                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold"
+                            : "bg-slate-800 text-slate-300 border-slate-700";
+                        return `<span class="inline-block text-xs px-2 py-0.5 rounded border ${badgeClass}">${qty > 1 ? qty + 'x ' : ''}${p}</span>`;
+                    }).join(' ');
+
+                    leaguesHtml += `
+                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-accent uppercase tracking-wider">${lg}</span>
+                                <span class="text-slate-400">${picks.length} Picks</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${badges || '<span class="text-xs text-slate-500">No future picks</span>'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-accent">${owner}</h3>
+                                <p class="text-xs text-emerald-400 font-semibold mt-0.5">Est. Pick Capital: ${data.ktcValue.toLocaleString()} KTC</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-full text-xs font-bold block">🔥 ${data.firstRoundCount}x 1st Rd</span>
+                                <span class="text-xs text-slate-400 mt-1 block">${data.totalPicks} Total Picks</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                            ${leaguesHtml}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- TAB 5: STRICT TRADE LOG ---
         function renderTrades() {
             const tbody = document.getElementById('trades-table-body');
             tbody.innerHTML = '';
             let count = 0;
 
             Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                let inTradeSection = false;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
 
                 rows.forEach(r => {
-                    const col0 = String(r[0] || '');
-                    if (col0.includes('TRADE HISTORY')) { inTradeSection = true; return; }
-                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'trades' || isColumnHeaderRow(col0) || !col0 || !r[3] || !r[4]) return;
 
-                    if ((inTradeSection || isTradeRow(r)) && r[0] && r[0] !== 'Season' && r[0] !== 'Team / Manager' && r[3]) {
-                        if (String(r[1]).includes('-') && !String(r[1]).includes('/')) return;
-                        
-                        count++;
-                        const tr = document.createElement('tr');
-                        tr.className = "hover:bg-slate-800/50 transition";
-                        tr.innerHTML = `
-                            <td class="p-4 font-medium">${r[0]} - ${r[1] || 'Week 1'}<br><span class="text-xs text-slate-400">${r[2] || ''}</span></td>
-                            <td class="p-4 text-accent font-semibold">${leagueName}</td>
-                            <td class="p-4">${r[3]}</td>
-                            <td class="p-4 text-slate-300">${r[4]}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    }
+                    count++;
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/50 transition";
+                    tr.innerHTML = `
+                        <td class="p-4 font-medium whitespace-nowrap">${r[0]} &bull; ${r[2] || ''}<br><span class="text-xs text-slate-400">${r[1] || ''}</span></td>
+                        <td class="p-4 text-accent font-semibold">${leagueName}</td>
+                        <td class="p-4 font-medium text-white">${r[3]}</td>
+                        <td class="p-4 text-slate-300 text-xs leading-relaxed">${r[4]}</td>
+                    `;
+                    tbody.appendChild(tr);
                 });
             });
 
@@ -480,157 +760,17 @@
             }
         }
 
-        function renderOwners() {
-            const grid = document.getElementById('owners-grid');
-            grid.innerHTML = '';
-            const unifiedOwners = {};
-
-            Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                let inStandings = false;
-                rows.forEach(r => {
-                    const col0 = String(r[0] || '');
-                    if (col0.includes('PAST SEASONS STANDINGS') || col0.includes('STANDINGS')) { inStandings = true; }
-                    if (col0.includes('CURRENT ROSTERS') || col0.includes('TRADE HISTORY')) { inStandings = false; }
-
-                    if (inStandings && r[1] && r[1] !== 'Team / Manager') {
-                        const rawTeamName = String(r[1]);
-                        const masterOwner = getMasterOwner(rawTeamName);
-
-                        if (!unifiedOwners[masterOwner]) {
-                            unifiedOwners[masterOwner] = { 
-                                leagues: new Set(), 
-                                champs: 0, 
-                                totalWins: 0, 
-                                totalLosses: 0, 
-                                aliasesUsed: new Set(),
-                                assetCount: 0
-                            };
-                        }
-
-                        unifiedOwners[masterOwner].leagues.add(leagueName);
-                        unifiedOwners[masterOwner].aliasesUsed.add(rawTeamName);
-
-                        if (String(r[4]).includes('League Champion')) {
-                            unifiedOwners[masterOwner].champs++;
-                        }
-
-                        const rec = String(r[2] || '').split('-');
-                        if (rec.length === 2) {
-                            unifiedOwners[masterOwner].totalWins += parseInt(rec[0]) || 0;
-                            unifiedOwners[masterOwner].totalLosses += parseInt(rec[1]) || 0;
-                        }
-                    }
-                });
-            });
-
-            Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                rows.forEach(r => {
-                    if (isTradeRow(r) && r[3]) {
-                        const recipient = getMasterOwner(String(r[3]).split('&')[0].trim());
-                        if (unifiedOwners[recipient]) {
-                            unifiedOwners[recipient].assetCount++;
-                        }
-                    }
-                });
-            });
-
-            Object.keys(unifiedOwners).forEach(masterName => {
-                const data = unifiedOwners[masterName];
-                const totalGames = data.totalWins + data.totalLosses;
-                const winPct = totalGames > 0 ? ((data.totalWins / totalGames) * 100).toFixed(1) : "0.0";
-                const estimatedPortfolioValue = (data.champs * 25000) + (data.assetCount * 8500) + (data.totalWins * 1200) + 50000;
-
-                const card = document.createElement('div');
-                card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-4";
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-xl font-bold text-accent">${masterName}</h3>
-                            <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliasesUsed).join(', ')}</p>
-                        </div>
-                        <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold">🏆 ${data.champs} Titles</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800 text-sm">
-                        <div>
-                            <p class="text-slate-400 text-xs">All-Time Record</p>
-                            <p class="font-bold mt-0.5">${data.totalWins}-${data.totalLosses} (${winPct}%)</p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400 text-xs">Dynasty Portfolio Value</p>
-                            <p class="font-bold mt-0.5 text-emerald-400">$${estimatedPortfolioValue.toLocaleString()}</p>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function renderDraftPicksMatrix() {
-            const grid = document.getElementById('picks-matrix-grid');
-            grid.innerHTML = '';
-            const ownerPicks = {};
-
-            Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                rows.forEach(r => {
-                    if (isTradeRow(r) && r[3] && r[4]) {
-                        if (String(r[1]).includes('-') && !String(r[1]).includes('/')) return;
-                        const recipient = getMasterOwner(String(r[3]).split('&')[0].trim());
-                        if (!ownerPicks[recipient]) ownerPicks[recipient] = [];
-                        ownerPicks[recipient].push({ league: leagueName, season: r[0] || '2026', details: r[4] });
-                    }
-                });
-            });
-
-            const owners = Object.keys(ownerPicks);
-            if (owners.length > 0) {
-                owners.forEach(owner => {
-                    const picks = ownerPicks[owner];
-                    const card = document.createElement('div');
-                    card.className = "bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-4";
-                    
-                    let picksListHtml = '';
-                    picks.forEach(p => {
-                        picksListHtml += `
-                            <div class="bg-slate-900 border border-slate-800 p-2.5 rounded text-xs space-y-1">
-                                <div class="flex justify-between text-slate-400 font-semibold">
-                                    <span class="text-accent">${p.league}</span>
-                                    <span>${p.season}</span>
-                                </div>
-                                <p class="text-slate-200">${p.details}</p>
-                            </div>
-                        `;
-                    });
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <h3 class="text-lg font-bold text-accent">${owner}</h3>
-                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full text-xs font-bold">${picks.length} Assets Tracked</span>
-                        </div>
-                        <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                            ${picksListHtml}
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } else {
-                grid.innerHTML = `<p class="text-slate-400 col-span-3">No draft pick assets extracted from trade logs.</p>`;
-            }
-        }
-
+        // --- TAB 6: TRUE H2H MATCHUP PARSER & GAME LOG ---
         function initH2HDropdowns() {
             const managers = new Set();
             Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                let inStandings = false;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
                 rows.forEach(r => {
-                    const col0 = String(r[0] || '');
-                    if (col0.includes('PAST SEASONS STANDINGS') || col0.includes('STANDINGS')) { inStandings = true; }
-                    if (col0.includes('CURRENT ROSTERS') || col0.includes('TRADE HISTORY')) { inStandings = false; }
-
-                    if (inStandings && r[1] && r[1] !== 'Team / Manager') {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section === 'standings' && !isColumnHeaderRow(col0) && r[1]) {
                         managers.add(getMasterOwner(String(r[1])));
                     }
                 });
@@ -642,10 +782,15 @@
             sel1.innerHTML = '';
             sel2.innerHTML = '';
 
-            sortedMgrs.forEach((m, idx) => {
+            sortedMgrs.forEach((m) => {
                 sel1.appendChild(new Option(m, m));
-                sel2.appendChild(new Option(m, m, false, idx === 1 && sortedMgrs.length > 1));
+                sel2.appendChild(new Option(m, m));
             });
+
+            // Default to Smokers Haven vs Kronik if present
+            if (sortedMgrs.includes('Smokers Haven')) sel1.value = 'Smokers Haven';
+            if (sortedMgrs.includes('Kronik')) sel2.value = 'Kronik';
+            else if (sortedMgrs.length > 1) sel2.selectedIndex = 1;
 
             calculateH2H();
         }
@@ -662,109 +807,168 @@
 
             let m1Wins = 0;
             let m2Wins = 0;
+            let ties = 0;
+            const matchupHistory = [];
 
             Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                let inMatchups = false;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
 
+                // First pass: identify which (Season, Week) slates are completed (at least 75% of teams scored > 0)
+                const weekStats = {};
                 rows.forEach(r => {
-                    const col0 = String(r[0] || '');
-                    if (col0.includes('MATCHUPS') || col0.includes('ALL-TIME MATCHUPS')) { inMatchups = true; }
-                    if (col0.includes('STANDINGS') || col0.includes('TRADE HISTORY')) { inMatchups = false; }
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
 
-                    if (inMatchups && r.length >= 7 && r[3] && r[5]) {
-                        const team1Owner = getMasterOwner(r[3]);
-                        const team2Owner = getMasterOwner(r[5]);
-                        const score1 = parseFloat(r[4]);
-                        const score2 = parseFloat(r[6]);
+                    const key = `${r[0]}|${r[1]}`;
+                    if (!weekStats[key]) weekStats[key] = { totalTeams: 0, nonZeroTeams: 0 };
+                    const s1 = parseFloat(r[4]) || 0;
+                    const s2 = parseFloat(r[6]) || 0;
+                    weekStats[key].totalTeams += 2;
+                    if (s1 > 0) weekStats[key].nonZeroTeams++;
+                    if (s2 > 0) weekStats[key].nonZeroTeams++;
+                });
 
-                        if (!isNaN(score1) && !isNaN(score2) && (score1 > 0 || score2 > 0)) {
-                            if ((team1Owner === m1 && team2Owner === m2) || (team1Owner === m2 && team2Owner === m1)) {
-                                if (team1Owner === m1) {
-                                    if (score1 > score2) m1Wins++;
-                                    else if (score2 > score1) m2Wins++;
-                                } else {
-                                    if (score2 > score1) m1Wins++;
-                                    else if (score1 > score2) m2Wins++;
-                                }
-                            }
-                        }
+                // Second pass: score completed real matchups (Matchup ID !== "0")
+                section = '';
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
+
+                    const season = String(r[0]).trim();
+                    const week = String(r[1]).trim();
+                    const matchupId = String(r[2]).trim();
+
+                    // Exclude non-playoff / bye week ghost pairings where Sleeper matchup_id is 0
+                    if (matchupId === '0' || !matchupId) return;
+
+                    const wStat = weekStats[`${season}|${week}`];
+                    if (!wStat || wStat.totalTeams === 0 || (wStat.nonZeroTeams / wStat.totalTeams) < 0.75) {
+                        return; // Skip unplayed or partially-played Thursday slates
+                    }
+
+                    const team1Owner = getMasterOwner(r[3]);
+                    const team2Owner = getMasterOwner(r[5]);
+                    const score1 = parseFloat(r[4]);
+                    const score2 = parseFloat(r[6]);
+
+                    if (isNaN(score1) || isNaN(score2)) return;
+
+                    if ((team1Owner === m1 && team2Owner === m2) || (team1Owner === m2 && team2Owner === m1)) {
+                        const m1Score = (team1Owner === m1) ? score1 : score2;
+                        const m2Score = (team1Owner === m1) ? score2 : score1;
+
+                        let winner = 'Tie';
+                        if (m1Score > m2Score) { m1Wins++; winner = m1; }
+                        else if (m2Score > m1Score) { m2Wins++; winner = m2; }
+                        else { ties++; }
+
+                        matchupHistory.push({
+                            league: leagueName,
+                            season,
+                            week,
+                            m1Score: m1Score.toFixed(2),
+                            m2Score: m2Score.toFixed(2),
+                            winner
+                        });
                     }
                 });
             });
+
+            let logHtml = '';
+            if (matchupHistory.length > 0) {
+                logHtml = `
+                    <div class="pt-4 border-t border-slate-800 text-left space-y-2 max-h-80 overflow-y-auto pr-1">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Completed Matchup Log (${matchupHistory.length} Games)</p>
+                        ${matchupHistory.map(g => `
+                            <div class="bg-slate-950 border border-slate-800/80 rounded-lg px-3 py-2 flex flex-col sm:flex-row justify-between items-center text-xs gap-2">
+                                <span class="text-slate-400 font-medium"><strong class="text-accent">${g.league}</strong> &bull; ${g.season} ${g.week}</span>
+                                <span class="font-mono text-slate-200">
+                                    <strong class="${g.winner === m1 ? 'text-emerald-400' : ''}">${m1} ${g.m1Score}</strong>
+                                    <span class="text-slate-500 mx-1.5">-</span>
+                                    <strong class="${g.winner === m2 ? 'text-emerald-400' : ''}">${g.m2Score} ${m2}</strong>
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                logHtml = `<p class="text-xs text-slate-400 pt-3 border-t border-slate-800">No completed head-to-head matchups found between these two managers.</p>`;
+            }
 
             box.innerHTML = `
                 <div class="grid grid-cols-3 items-center gap-4 py-2">
                     <div class="text-right">
                         <p class="text-sm font-bold text-accent">${m1}</p>
-                        <p class="text-3xl font-extrabold text-white mt-1">${m1Wins}</p>
+                        <p class="text-4xl font-extrabold text-white mt-1">${m1Wins}</p>
                     </div>
-                    <div class="text-slate-500 font-bold text-sm">VS</div>
+                    <div class="text-slate-500 font-bold text-sm">VS${ties > 0 ? `<br><span class="text-xs">(${ties} Tie)</span>` : ''}</div>
                     <div class="text-left">
                         <p class="text-sm font-bold text-accent">${m2}</p>
-                        <p class="text-3xl font-extrabold text-white mt-1">${m2Wins}</p>
+                        <p class="text-4xl font-extrabold text-white mt-1">${m2Wins}</p>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 pt-2 border-t border-slate-800">True head-to-head matchup record parsed directly from all-time league schedules.</p>
+                ${logHtml}
             `;
         }
 
-        // --- INTERACTIVE TRADE PARTNER SYNERGY MATRIX & DRILL-DOWN MODAL ---
-        const tradePairDatabase = {};
-
+        // --- TAB 7: INTERACTIVE TRADE PARTNER SYNERGY MATRIX ---
         function renderTradeSynergy() {
             const container = document.getElementById('synergy-content');
             const pairCounts = {};
             Object.keys(tradePairDatabase).forEach(k => delete tradePairDatabase[k]);
 
             Object.keys(globalMasterData).forEach(leagueName => {
-                const rows = globalMasterData[leagueName];
-                let inTradeSection = false;
+                const rows = globalMasterData[leagueName] || [];
+                let section = '';
 
                 rows.forEach(r => {
-                    const col0 = String(r[0] || '');
-                    if (col0.includes('TRADE HISTORY')) { inTradeSection = true; return; }
-                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'trades' || isColumnHeaderRow(col0) || !col0 || !r[3] || !r[4]) return;
 
-                    if ((inTradeSection || isTradeRow(r)) && r[3] && r[4]) {
-                        if (String(r[1]).includes('-') && !String(r[1]).includes('/')) return;
-                        const tradeTeams = String(r[3]).split('&').map(t => getMasterOwner(t.trim()));
-                        if (tradeTeams.length >= 2) {
-                            const p1 = tradeTeams[0];
-                            const p2 = tradeTeams[1];
-                            if (p1 && p2 && p1 !== p2) {
-                                const pairKey = [p1, p2].sort().join(' 🤝 ');
-                                pairCounts[pairKey] = (pairCounts[pairKey] || 0) + 1;
+                    const tradeTeams = String(r[3]).split('&').map(t => getMasterOwner(t.trim())).filter(Boolean);
+                    if (tradeTeams.length >= 2) {
+                        const p1 = tradeTeams[0];
+                        const p2 = tradeTeams[1];
+                        if (p1 && p2 && p1 !== p2) {
+                            const pairKey = [p1, p2].sort().join(' 🤝 ');
+                            pairCounts[pairKey] = (pairCounts[pairKey] || 0) + 1;
 
-                                if (!tradePairDatabase[pairKey]) {
-                                    tradePairDatabase[pairKey] = [];
-                                }
-                                tradePairDatabase[pairKey].push({
-                                    league: leagueName,
-                                    season: r[0] || '2026',
-                                    week: r[1] || 'Week 1',
-                                    teams: r[3],
-                                    breakdown: r[4]
-                                });
+                            if (!tradePairDatabase[pairKey]) {
+                                tradePairDatabase[pairKey] = [];
                             }
+                            tradePairDatabase[pairKey].push({
+                                league: leagueName,
+                                season: r[0] || '',
+                                date: r[1] || '',
+                                week: r[2] || '',
+                                teams: r[3],
+                                breakdown: r[4]
+                            });
                         }
                     }
                 });
             });
 
+            sortedSynergyPairs = Object.keys(pairCounts).sort((a, b) => pairCounts[b] - pairCounts[a]);
+
             let html = `<table class="w-full text-left text-sm border-collapse">`;
-            html += `<thead class="bg-slate-900 text-slate-400 border-b border-slate-700"><tr><th class="p-3">Trading Pair (Click to Inspect)</th><th class="p-3 text-right">Blockbusters Completed</th></tr></thead><tbody class="divide-y divide-slate-800">`;
+            html += `<thead class="bg-slate-900 text-slate-400 border-b border-slate-700"><tr><th class="p-3">Trading Pair (Click to Inspect Deals)</th><th class="p-3 text-right">Blockbusters Completed</th></tr></thead><tbody class="divide-y divide-slate-800">`;
 
-            const sortedPairs = Object.keys(pairCounts).sort((a, b) => pairCounts[b] - pairCounts[a]);
-
-            if (sortedPairs.length > 0) {
-                sortedPairs.forEach(pair => {
+            if (sortedSynergyPairs.length > 0) {
+                sortedSynergyPairs.forEach((pair, idx) => {
                     html += `
-                        <tr onclick="openTradeModal('${pair.replace(/'/g, "\\'")}')" class="hover:bg-slate-800/60 transition cursor-pointer">
+                        <tr onclick="openTradeModal(${idx})" class="hover:bg-slate-800/60 transition cursor-pointer">
                             <td class="p-3 font-semibold text-white flex items-center gap-2">
                                 <span class="text-accent">🔍</span> ${pair}
                             </td>
-                            <td class="p-3 text-right font-bold text-accent">${pairCounts[pair]} Trades</td>
+                            <td class="p-3 text-right font-bold text-accent">${pairCounts[pair]} Trade${pairCounts[pair] > 1 ? 's' : ''}</td>
                         </tr>
                     `;
                 });
@@ -772,35 +976,34 @@
                 html += `<tr><td colspan="2" class="p-4 text-slate-400 text-center">No trade partnerships extracted.</td></tr>`;
             }
 
-            html += `</table>`;
+            html += `</tbody></table>`;
             container.innerHTML = html;
         }
 
-        function openTradeModal(pairKey) {
+        function openTradeModal(pairIndex) {
+            const pairKey = sortedSynergyPairs[pairIndex];
+            if (!pairKey) return;
+
             const modal = document.getElementById('trade-modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
 
-            title.innerText = `Trade Partnership: ${pairKey}`;
             const trades = tradePairDatabase[pairKey] || [];
+            title.innerText = `${pairKey} (${trades.length} Trade${trades.length > 1 ? 's' : ''})`;
 
             if (trades.length === 0) {
                 body.innerHTML = `<p class="text-slate-400 text-center py-4">No detailed trades found for this pair.</p>`;
             } else {
-                let html = '';
-                trades.forEach(t => {
-                    html += `
-                        <div class="pt-3 first:pt-0 space-y-1">
-                            <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
-                                <span class="text-accent uppercase tracking-wider">${t.league}</span>
-                                <span>${t.season} &bull; ${t.week}</span>
-                            </div>
-                            <p class="font-bold text-white text-xs">${t.teams}</p>
-                            <p class="text-slate-300 text-xs bg-slate-950 p-2.5 rounded border border-slate-800/80 mt-1">${t.breakdown}</p>
+                body.innerHTML = trades.map(t => `
+                    <div class="pt-3 first:pt-0 space-y-1.5">
+                        <div class="flex justify-between items-center text-xs text-slate-400 font-semibold">
+                            <span class="text-accent uppercase tracking-wider">${t.league}</span>
+                            <span>${t.season} &bull; ${t.week} (${t.date})</span>
                         </div>
-                    `;
-                });
-                body.innerHTML = html;
+                        <p class="font-bold text-white text-xs">${t.teams}</p>
+                        <p class="text-slate-300 text-xs bg-slate-950 p-3 rounded border border-slate-800/80 leading-relaxed">${t.breakdown}</p>
+                    </div>
+                `).join('');
             }
 
             modal.classList.remove('hidden');

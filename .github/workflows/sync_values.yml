@@ -1,0 +1,32 @@
+name: Auto-Sync Dynasty Values
+
+on:
+  schedule:
+    # Runs automatically every Tuesday at 8:00 AM UTC
+    - cron: '0 8 * * 2'
+  workflow_dispatch: # Allows you to trigger a manual sync anytime from the GitHub website
+
+permissions:
+  contents: write
+
+jobs:
+  update-values:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Run Sync Script
+        run: python scripts/sync_ktc.py
+
+      - name: Commit and Push Changes if Updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add ktc_values.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update dynasty player values [skip ci]" && git push)

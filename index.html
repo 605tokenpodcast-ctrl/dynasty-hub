@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-League Fantasy Command Center</title>
+    <title>Multi-League Dynasty Hub</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -33,11 +33,11 @@
                 </div>
                 <!-- Navigation Tabs -->
                 <nav class="flex flex-wrap gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-md text-sm font-medium bg-accent text-white transition">Dashboard</button>
-                    <button onclick="switchTab('leagues')" id="nav-leagues" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Leagues</button>
-                    <button onclick="switchTab('owners')" id="nav-owners" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Unified Managers</button>
-                    <button onclick="switchTab('trades')" id="nav-trades" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Trade & Draft Log</button>
-                    <button onclick="switchTab('ai-chat')" id="nav-ai-chat" class="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white transition flex items-center gap-1.5"><span>✨</span> AI League Expert</button>
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3.5 py-2 rounded-md text-sm font-medium bg-accent text-white transition">Dashboard</button>
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="px-3.5 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Leagues</button>
+                    <button onclick="switchTab('owners')" id="nav-owners" class="px-3.5 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Unified Managers</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="px-3.5 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Trade Log</button>
+                    <button onclick="switchTab('picks')" id="nav-picks" class="px-3.5 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition">Draft Picks</button>
                 </nav>
             </div>
         </header>
@@ -77,10 +77,10 @@
                         </div>
                     </div>
 
-                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
-                        <h3 class="text-lg font-bold mb-4">🚀 Welcome to Your Dynasty Command Center</h3>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-3">
+                        <h3 class="text-lg font-bold">🚀 Welcome to Your Dynasty Command Center</h3>
                         <p class="text-slate-300 text-sm leading-relaxed">
-                            Use the navigation tabs above to inspect individual league standings, view unified manager profiles across all team aliases, and search through every trade. Click <span class="text-purple-400 font-semibold">AI League Expert</span> to chat live with Gemini about your league data!
+                            Your master multi-league dataset is loaded and synced. Use the navigation tabs to inspect individual league sheets, view unified manager profiles across all team aliases, browse resolved trade logs, or track future draft pick capital.
                         </p>
                     </div>
                 </div>
@@ -131,41 +131,17 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: GEMINI AI CHAT ASSISTANT -->
-                <div id="tab-ai-chat" class="hidden space-y-6 max-w-4xl mx-auto">
-                    <div class="bg-cardbg border border-slate-700 rounded-xl shadow-xl overflow-hidden flex flex-col h-[650px]">
-                        <!-- Chat Header & API Key Setup -->
-                        <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🤖</span>
-                                <div>
-                                    <h2 class="font-bold text-lg text-white">Gemini AI League Expert</h2>
-                                    <p class="text-xs text-slate-400">Powered by Gemini AI with live access to your league data.</p>
-                                </div>
-                            </div>
-                            <!-- API Key Input -->
-                            <div class="flex items-center gap-2 w-full sm:w-auto">
-                                <input type="password" id="gemini-api-key" placeholder="Paste Gemini API Key..." onchange="saveApiKey()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-full sm:w-48 focus:outline-none focus:border-purple-500">
-                                <span id="api-key-status" class="text-xs text-emerald-400 font-semibold whitespace-nowrap"></span>
-                            </div>
+                <!-- TAB 5: DRAFT PICK INVENTORY MATRIX -->
+                <div id="tab-picks" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold">Draft Pick Capital & Resolution Matrix</h2>
+                            <p class="text-slate-400 text-sm">Reviewing draft pick resolutions and trade assets extracted from league logs.</p>
                         </div>
-
-                        <!-- Chat Messages Window -->
-                        <div id="ai-chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-950/40">
-                            <div class="flex items-start gap-3">
-                                <div class="bg-purple-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
-                                <div class="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-slate-200 max-w-xl shadow-sm leading-relaxed">
-                                    Hey! I'm your AI league expert. Paste your free Gemini API key in the top right, and you can ask me anything about trades, records, championship counts, or league history across all your loaded leagues!
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Chat Input Box -->
-                        <div class="p-4 bg-slate-900 border-t border-slate-700 flex gap-3 items-center">
-                            <input type="text" id="ai-chat-input" placeholder="Ask about trades, standings, or player histories..." onkeypress="handleAiKeyPress(event)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 text-slate-100 placeholder-slate-500">
-                            <button onclick="sendGeminiMessage()" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition shadow-md flex items-center gap-2">
-                                <span>Send</span> 🚀
-                            </button>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm p-6">
+                        <div id="picks-content" class="space-y-4 text-sm text-slate-300">
+                            <!-- Populated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -185,12 +161,6 @@
         let currentLeagueFilter = 'all';
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('gemini_api_key');
-            if (savedKey) {
-                document.getElementById('gemini-api-key').value = savedKey;
-                document.getElementById('api-key-status').innerText = '✓ Key Saved';
-            }
-
             fetch('sleeper_leagues_master.json')
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
@@ -224,29 +194,19 @@
             reader.readAsText(file);
         });
 
-        function saveApiKey() {
-            const key = document.getElementById('gemini-api-key').value.trim();
-            localStorage.setItem('gemini_api_key', key);
-            document.getElementById('api-key-status').innerText = key ? '✓ Key Saved' : '';
-        }
-
         function switchTab(tabId) {
-            ['dashboard', 'leagues', 'owners', 'trades', 'ai-chat'].forEach(t => {
+            ['dashboard', 'leagues', 'owners', 'trades', 'picks'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
                 if (nav) {
-                    nav.classList.remove('bg-accent', 'bg-purple-600', 'text-white');
+                    nav.classList.remove('bg-accent', 'text-white');
                     nav.classList.add('hover:bg-slate-800');
                 }
             });
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const activeNav = document.getElementById(`nav-${tabId}`);
-            if (tabId === 'ai-chat') {
-                activeNav.classList.add('bg-purple-600', 'text-white');
-            } else {
-                activeNav.classList.add('bg-accent', 'text-white');
-            }
+            activeNav.classList.add('bg-accent', 'text-white');
             activeNav.classList.remove('hover:bg-slate-800');
         }
 
@@ -272,6 +232,7 @@
 
             const selector = document.getElementById('league-selector');
             selector.innerHTML = '';
+            let totalTradesCount = 0;
             let totalChamps = 0;
 
             leagueNames.forEach(name => {
@@ -282,6 +243,8 @@
 
                 const rows = globalMasterData[name];
                 rows.forEach(r => {
+                    const line = String(r[0] || '');
+                    if (line.includes('TRADE HISTORY')) totalTradesCount++;
                     if (String(r[4] || '').includes('League Champion')) totalChamps++;
                 });
             });
@@ -292,6 +255,7 @@
             renderSelectedLeague();
             renderTrades();
             renderOwners();
+            renderDraftPicks();
         }
 
         function renderSelectedLeague() {
@@ -458,125 +422,52 @@
             });
         }
 
+        function renderDraftPicks() {
+            const container = document.getElementById('picks-content');
+            let html = `<p class="mb-4 text-slate-300">Extracting draft pick mentions and traded selections from all league trade logs:</p>`;
+            html += `<div class="space-y-3">`;
+
+            let pickCount = 0;
+            Object.keys(globalMasterData).forEach(leagueName => {
+                const rows = globalMasterData[leagueName];
+                let inTradeSection = false;
+
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '');
+                    if (col0.includes('TRADE HISTORY')) { inTradeSection = true; return; }
+                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
+
+                    if (inTradeSection && r[4] && (String(r[4]).toLowerCase().includes('pick') || String(r[4]).toLowerCase().includes('rd') || String(r[4]).toLowerCase().includes('round'))) {
+                        pickCount++;
+                        html += `
+                            <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-lg flex flex-col sm:flex-row justify-between gap-2">
+                                <div>
+                                    <span class="text-xs font-bold text-accent uppercase tracking-wider">${leagueName} (${r[0]} - ${r[1]})</span>
+                                    <p class="font-semibold text-white mt-1">Teams: ${r[3]}</p>
+                                </div>
+                                <div class="text-xs text-slate-300 sm:max-w-md bg-slate-950 p-2 rounded border border-slate-800">
+                                    ${r[4]}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            });
+
+            if (pickCount === 0) {
+                html += `<p class="text-slate-400">No explicit draft pick text strings detected in trade logs.</p>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
         function filterTrades() {
             const query = document.getElementById('trade-search').value.toLowerCase();
             const rows = document.getElementById('trades-table-body').getElementsByTagName('tr');
             for (let row of rows) {
                 row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
             }
-        }
-
-        // --- GEMINI API INTEGRATION WITH AUTO-RETRY ---
-        function handleAiKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendGeminiMessage();
-            }
-        }
-
-        async function sendGeminiMessage() {
-            const apiKey = document.getElementById('gemini-api-key').value.trim();
-            if (!apiKey) {
-                alert('Please enter your Gemini API key in the top right of the chat box!');
-                return;
-            }
-
-            const input = document.getElementById('ai-chat-input');
-            const msg = input.value.trim();
-            if (!msg) return;
-
-            const chatWindow = document.getElementById('ai-chat-messages');
-
-            // Append User Message
-            chatWindow.innerHTML += `
-                <div class="flex items-start justify-end gap-3">
-                    <div class="bg-accent text-white rounded-2xl px-4 py-3 text-sm max-w-xl shadow-sm leading-relaxed">
-                        ${escapeHtml(msg)}
-                    </div>
-                    <div class="bg-slate-700 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">You</div>
-                </div>
-            `;
-            input.value = '';
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            const loadingId = 'loading-' + Date.now();
-            chatWindow.innerHTML += `
-                <div id="${loadingId}" class="flex items-start gap-3">
-                    <div class="bg-purple-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-slate-400 animate-pulse">
-                        Analyzing league records and trade history...
-                    </div>
-                </div>
-            `;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            try {
-                const leagueNames = Object.keys(globalMasterData);
-                let summaryData = {};
-                leagueNames.forEach(name => {
-                    const rows = globalMasterData[name];
-                    summaryData[name] = rows.slice(0, 100); 
-                });
-
-                const leagueContext = JSON.stringify(summaryData);
-                const prompt = `You are an expert, witty fantasy football commissioner and analyst. Answer the user's question accurately using this league data.\n\nDATA:\n${leagueContext}\n\nUSER QUESTION: ${msg}`;
-
-                // Function with automatic retry for traffic spikes
-                async function callGemini(retries = 2, delay = 2000) {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const data = await response.json();
-                    
-                    if (data.error && data.error.message && data.error.message.includes('high demand') && retries > 0) {
-                        console.warn(`High demand detected. Retrying in ${delay}ms... (${retries} attempts left)`);
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        return callGemini(retries - 1, delay * 2);
-                    }
-                    return data;
-                }
-
-                const data = await callGemini();
-                if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
-                    const reply = data.candidates[0].content.parts[0].text;
-                    chatWindow.innerHTML += `
-                        <div class="flex items-start gap-3">
-                            <div class="bg-purple-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">AI</div>
-                            <div class="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-slate-200 max-w-xl shadow-sm leading-relaxed">
-                                ${formatAiReply(reply)}
-                            </div>
-                        </div>
-                    `;
-                } else if (data.error) {
-                    throw new Error(data.error.message || 'API Error');
-                } else {
-                    throw new Error('Invalid API response structure');
-                }
-            } catch (err) {
-                console.error(err);
-                if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-                chatWindow.innerHTML += `
-                    <div class="flex items-start gap-3">
-                        <div class="bg-red-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm shrink-0">!</div>
-                        <div class="bg-red-950/60 border border-red-800 rounded-2xl px-4 py-3 text-sm text-red-200 max-w-xl shadow-sm">
-                            Error connecting to Gemini API: ${escapeHtml(err.message)}
-                        </div>
-                    </div>
-                `;
-            }
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        function escapeHtml(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
-
-        function formatAiReply(text) {
-            return escapeHtml(text).replace(/\n/g, '<br>');
         }
     </script>
 </body>

@@ -156,10 +156,11 @@
         let globalMasterData = {};
         let currentLeagueFilter = 'all';
 
-        // Custom alias mapping to merge specific managers (e.g., AnthonyZ and Smokers Haven)
+        // Robust alias mapping to unify your usernames and team names
         const aliasOverrides = {
             "anthonyz": "Smokers Haven",
-            "smokers haven": "Smokers Haven"
+            "smokers haven": "Smokers Haven",
+            "smokershaven": "Smokers Haven"
         };
 
         function getMasterOwner(teamString) {
@@ -225,9 +226,7 @@
                     nav.classList.add('hover:bg-slate-800');
                 }
             });
-            document.getElementById(`tab-${tabId}`).classList.add('hidden'); // safety clear
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            
             const activeNav = document.getElementById(`nav-${tabId}`);
             activeNav.classList.add('bg-accent', 'text-white');
             activeNav.classList.remove('hover:bg-slate-800');
@@ -252,7 +251,6 @@
 
             const leagueNames = Object.keys(globalMasterData);
             
-            // Populate league dropdown selector
             const selector = document.getElementById('league-selector');
             selector.innerHTML = '';
             leagueNames.forEach(name => {
@@ -281,9 +279,28 @@
                 let inStandings = false;
                 rows.forEach(r => {
                     const col0 = String(r[0] || '');
-                    if (col0.includes('PAST SEASONS STANDINGS')) { inStandings = true; return; }
-                    if (col0.includes('CURRENT ROSTERS')) { inStandings = false; }
+                    if (col0.includes('PAST SEASONS STANDINGS') || col0.includes('STANDINGS')) { inStandings = true; }
+                    if (col0.includes('CURRENT ROSTERS') || col0.includes('TRADE HISTORY')) { inStandings = false; }
 
+                    // Check any cell in the row for team/manager string if standings section is active
+                    if (inStandings) {
+                        r.forEach(cell => {
+                            const cellStr = String(cell || '');
+                            if (cellStr.toLowerCase().includes('smokers') || cellStr.toLowerCase().includes('anthonyz')) {
+                                const master = getMasterOwner(cellStr);
+                                if (String(r[4] || '').includes('League Champion') || cellStr.includes('Champion')) {
+                                    if (!champions[master]) {
+                                        champions[master] = { titles: 0, leagues: new Set(), aliases: new Set() };
+                                    }
+                                    champions[master].titles++;
+                                    champions[master].leagues.add(leagueName);
+                                    champions[master].aliases.add(cellStr);
+                                }
+                            }
+                        });
+                    }
+
+                    // Standard standings check
                     if (inStandings && r[1] && r[1] !== 'Team / Manager') {
                         if (String(r[4] || '').includes('League Champion')) {
                             const rawTeam = String(r[1]);
@@ -441,8 +458,8 @@
                 let inStandings = false;
                 rows.forEach(r => {
                     const col0 = String(r[0] || '');
-                    if (col0.includes('PAST SEASONS STANDINGS')) { inStandings = true; return; }
-                    if (col0.includes('CURRENT ROSTERS')) { inStandings = false; }
+                    if (col0.includes('PAST SEASONS STANDINGS') || col0.includes('STANDINGS')) { inStandings = true; }
+                    if (col0.includes('CURRENT ROSTERS') || col0.includes('TRADE HISTORY')) { inStandings = false; }
 
                     if (inStandings && r[1] && r[1] !== 'Team / Manager') {
                         const rawTeamName = String(r[1]);

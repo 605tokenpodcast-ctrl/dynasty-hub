@@ -69,7 +69,7 @@
                         </div>
                     </div>
 
-                    <!-- Trophy Room Grid (Populated from Standings Data) -->
+                    <!-- Trophy Room Grid -->
                     <div id="trophy-room-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Populated dynamically -->
                     </div>
@@ -156,6 +156,31 @@
         let globalMasterData = {};
         let currentLeagueFilter = 'all';
 
+        // Custom alias mapping to merge specific managers (e.g., AnthonyZ and Smokers Haven)
+        const aliasOverrides = {
+            "anthonyz": "Smokers Haven",
+            "smokers haven": "Smokers Haven"
+        };
+
+        function getMasterOwner(teamString) {
+            const trimmed = String(teamString).trim();
+            const lowerTrimmed = trimmed.toLowerCase();
+            
+            for (let key in aliasOverrides) {
+                if (lowerTrimmed.includes(key)) {
+                    return aliasOverrides[key];
+                }
+            }
+
+            const match = trimmed.match(/\(([^)]+)\)\s*$/);
+            if (match && match[1]) {
+                const username = match[1].trim().toLowerCase();
+                if (aliasOverrides[username]) return aliasOverrides[username];
+                return match[1].trim();
+            }
+            return trimmed;
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             fetch('sleeper_leagues_master.json')
                 .then(response => {
@@ -236,12 +261,6 @@
             const grid = document.getElementById('trophy-room-grid');
             grid.innerHTML = '';
 
-            function getMasterOwner(teamString) {
-                const trimmed = String(teamString).trim();
-                const match = trimmed.match(/\(([^)]+)\)\s*$/);
-                return (match && match[1]) ? match[1].trim() : trimmed;
-            }
-
             const champions = {};
 
             leagueNames.forEach(leagueName => {
@@ -278,7 +297,7 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <h3 class="text-xl font-bold text-accent">${manager}</h3>
-                                <p class="text-xs text-slate-400 mt-1">Team: ${Array.from(data.aliases).join(', ')}</p>
+                                <p class="text-xs text-slate-400 mt-1">Teams: ${Array.from(data.aliases).join(', ')}</p>
                             </div>
                             <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-sm font-bold">🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}</span>
                         </div>
@@ -401,12 +420,6 @@
         function renderOwners() {
             const grid = document.getElementById('owners-grid');
             grid.innerHTML = '';
-
-            function getMasterOwner(teamString) {
-                const trimmed = String(teamString).trim();
-                const match = trimmed.match(/\(([^)]+)\)\s*$/);
-                return (match && match[1]) ? match[1].trim() : trimmed;
-            }
 
             const unifiedOwners = {};
 

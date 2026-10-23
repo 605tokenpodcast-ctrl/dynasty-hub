@@ -142,7 +142,7 @@
                 <div id="tab-h2h" class="hidden space-y-6">
                     <div>
                         <h2 class="text-xl font-bold">⚔️ All-Time Head-to-Head Matchup Matrix</h2>
-                        <p class="text-slate-400 text-sm">Select two managers to inspect their all-time record against each other.</p>
+                        <p class="text-slate-400 text-sm">Select two managers to inspect their true head-to-head record across all leagues.</p>
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-6">
                         <div class="flex flex-col sm:flex-row items-center gap-4">
@@ -426,12 +426,10 @@
             container.innerHTML = html;
         }
 
-        // --- ACCURATE TRADE LOG PARSER ---
-        function isActualTradeRow(row) {
+        // --- UNIVERSAL TRADE ROW DETECTOR ---
+        function isTradeRow(row) {
             const rowStr = row.join(' ').toLowerCase();
-            // Looks for rows that contain trade activity keywords and team involvement
-            return (rowStr.includes('sent') || rowStr.includes('rcv') || rowStr.includes('gave') || rowStr.includes('acquired') || row.length >= 4) && 
-                   (rowStr.includes('pick') || rowStr.includes('rd') || rowStr.includes('round') || rowStr.includes('trade') || rowStr.includes('202'));
+            return (rowStr.includes('received:') || rowStr.includes('<--->') || rowStr.includes('trade') || rowStr.includes('pick')) && row.length >= 5 && row[3] && row[4];
         }
 
         function renderTrades() {
@@ -445,18 +443,18 @@
 
                 rows.forEach(r => {
                     const col0 = String(r[0] || '');
-                    if (col0.includes('TRADE HISTORY') || col0.includes('TRADES')) { inTradeSection = true; return; }
-                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS') || col0.includes('STANDINGS')) { inTradeSection = false; }
+                    if (col0.includes('TRADE HISTORY')) { inTradeSection = true; return; }
+                    if (col0.includes('WEEKLY PLAYER BOX SCORES') || col0.includes('ALL-TIME MATCHUPS')) { inTradeSection = false; }
 
-                    if ((inTradeSection || isActualTradeRow(r)) && r[0] && r[0] !== 'Season' && r[0] !== 'Team / Manager' && r[3]) {
+                    if ((inTradeSection || isTradeRow(r)) && r[0] && r[0] !== 'Season' && r[0] !== 'Team / Manager' && r[3]) {
                         count++;
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-slate-800/50 transition";
                         tr.innerHTML = `
-                            <td class="p-4 font-medium">${r[0]} - ${r[1] || 'Week'}</td>
+                            <td class="p-4 font-medium">${r[0]} - ${r[1] || 'Week 1'}<br><span class="text-xs text-slate-400">${r[2] || ''}</span></td>
                             <td class="p-4 text-accent font-semibold">${leagueName}</td>
                             <td class="p-4">${r[3]}</td>
-                            <td class="p-4 text-slate-300">${r[4] || r.slice(4).join(' ')}</td>
+                            <td class="p-4 text-slate-300">${r[4]}</td>
                         `;
                         tbody.appendChild(tr);
                     }
@@ -515,8 +513,8 @@
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName];
                 rows.forEach(r => {
-                    if (isActualTradeRow(r) && r[3]) {
-                        const recipient = getMasterOwner(String(r[3]).split('->')[0].trim());
+                    if (isTradeRow(r) && r[3]) {
+                        const recipient = getMasterOwner(String(r[3]).split('&')[0].trim());
                         if (unifiedOwners[recipient]) {
                             unifiedOwners[recipient].assetCount++;
                         }
@@ -563,8 +561,8 @@
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName];
                 rows.forEach(r => {
-                    if (isActualTradeRow(r) && r[3] && r[4]) {
-                        const recipient = getMasterOwner(String(r[3]).split('->')[0].trim());
+                    if (isTradeRow(r) && r[3] && r[4]) {
+                        const recipient = getMasterOwner(String(r[3]).split('&')[0].trim());
                         if (!ownerPicks[recipient]) ownerPicks[recipient] = [];
                         ownerPicks[recipient].push({ league: leagueName, season: r[0] || '2026', details: r[4] });
                     }
@@ -607,7 +605,7 @@
             }
         }
 
-        // --- REAL H2H CALCULATOR ---
+        // --- TRUE H2H MATCHUP PARSER (SCANS ALL-TIME MATCHUPS SECTION) ---
         function initH2HDropdowns() {
             const managers = new Set();
             Object.keys(globalMasterData).forEach(leagueName => {
@@ -651,51 +649,36 @@
             let m1Wins = 0;
             let m2Wins = 0;
 
-            // Scan actual matchup and standings records to build true head-to-head comparison
+            // Scan all-time matchups rows in JSON where Team 1 (r[3]) and Team 2 (r[5]) meet
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName];
                 let inMatchups = false;
+
                 rows.forEach(r => {
                     const col0 = String(r[0] || '');
                     if (col0.includes('MATCHUPS') || col0.includes('ALL-TIME MATCHUPS')) { inMatchups = true; }
                     if (col0.includes('STANDINGS') || col0.includes('TRADE HISTORY')) { inMatchups = false; }
 
-                    if (inMatchups) {
-                        const rowText = r.join(' ').toLowerCase();
-                        if (rowText.includes(m1.toLowerCase()) && rowText.includes(m2.toLowerCase())) {
-                            const scores = r.filter(cell => !isNaN(parseFloat(cell)) && parseFloat(cell) > 30);
-                            if (scores.length >= 2) {
-                                if (parseFloat(scores[0]) > parseFloat(scores[1])) m1Wins++;
-                                else m2Wins++;
+                    if (inMatchups && r.length >= 7 && r[3] && r[5]) {
+                        const team1Owner = getMasterOwner(r[3]);
+                        const team2Owner = getMasterOwner(r[5]);
+                        const score1 = parseFloat(r[4]);
+                        const score2 = parseFloat(r[6]);
+
+                        if (!isNaN(score1) && !isNaN(score2) && (score1 > 0 || score2 > 0)) {
+                            if ((team1Owner === m1 && team2Owner === m2) || (team1Owner === m2 && team2Owner === m1)) {
+                                if (team1Owner === m1) {
+                                    if (score1 > score2) m1Wins++;
+                                    else if (score2 > score1) m2Wins++;
+                                } else {
+                                    if (score2 > score1) m1Wins++;
+                                    else if (score1 > score2) m2Wins++;
+                                }
                             }
                         }
                     }
                 });
             });
-
-            // If explicit matchups aren't populated in text cells, compute proportionate head-to-head based on win efficiency
-            if (m1Wins === 0 && m2Wins === 0) {
-                let m1Score = 0, m2Score = 0;
-                Object.keys(globalMasterData).forEach(leagueName => {
-                    const rows = globalMasterData[leagueName];
-                    rows.forEach(r => {
-                        if (r[1]) {
-                            const owner = getMasterOwner(String(r[1]));
-                            const rec = String(r[2] || '').split('-');
-                            if (rec.length === 2) {
-                                const wins = parseInt(rec[0]) || 0;
-                                const losses = parseInt(rec[1]) || 0;
-                                if (owner === m1) m1Score += (wins * 2) - losses;
-                                if (owner === m2) m2Score += (wins * 2) - losses;
-                            }
-                        }
-                    });
-                });
-                const total = Math.max(5, Math.abs(m1Score + m2Score) % 12 + 4);
-                m1Wins = Math.max(1, Math.round(total * (m1Score / (m1Score + m2Score || 1))));
-                m2Wins = total - m1Wins;
-                if (m1Wins === m2Wins) m1Wins++;
-            }
 
             box.innerHTML = `
                 <div class="grid grid-cols-3 items-center gap-4 py-2">
@@ -709,7 +692,7 @@
                         <p class="text-3xl font-extrabold text-white mt-1">${m2Wins}</p>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 pt-2 border-t border-slate-800">All-time competitive head-to-head meeting ledger across shared dynasty leagues.</p>
+                <p class="text-xs text-slate-400 pt-2 border-t border-slate-800">True head-to-head matchup record parsed directly from all-time league schedules.</p>
             `;
         }
 
@@ -721,11 +704,11 @@
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName];
                 rows.forEach(r => {
-                    if (isActualTradeRow(r) && r[3]) {
-                        const teams = String(r[3]).split('->');
-                        if (teams.length >= 2) {
-                            const p1 = getMasterOwner(teams[0].trim());
-                            const p2 = getMasterOwner(teams[teams.length - 1].trim());
+                    if (isTradeRow(r) && r[3]) {
+                        const tradeTeams = String(r[3]).split('&').map(t => getMasterOwner(t.trim()));
+                        if (tradeTeams.length >= 2) {
+                            const p1 = tradeTeams[0];
+                            const p2 = tradeTeams[1];
                             if (p1 && p2 && p1 !== p2) {
                                 const pairKey = [p1, p2].sort().join(' 🤝 ');
                                 pairCounts[pairKey] = (pairCounts[pairKey] || 0) + 1;

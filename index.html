@@ -49,7 +49,7 @@
                         <span class="text-2xl">🏈</span>
                         <div>
                             <h1 class="text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
-                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; 6 Active Leagues</p>
+                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; 4 Active Leagues</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -168,7 +168,7 @@
                             <div id="bench-blunders-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
                         </div>
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
-                            <h3 class="text-lg font-bold text-emerald-400">🏆 2026 Weekly High-Roller Belt Winners</h3>
+                            <h3 class="text-lg font-bold text-emerald-400">ベルト 2026 Weekly High-Roller Belt Winners</h3>
                             <div id="weekly-highs-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
                         </div>
                     </div>
@@ -324,7 +324,7 @@
 
     <!-- Footer -->
     <footer class="bg-cardbg border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        Multi-League Fantasy Command Center &bull; Powered by Sleeper & GitHub Actions
+        Multi-League Fantasy Command Center &bull; Powered by Sleeper & Google Sheets
     </footer>
 
     <!-- JavaScript Engine -->
@@ -450,16 +450,16 @@
         }
 
         function scorePlayerKTC(playerEntry) {
+            // Format: "Bijan Robinson (RB - ATL)"
             const match = String(playerEntry).match(/^(.+?)\s*\(([A-Z]+)\s*-\s*([A-Z]+)\)$/);
             const cleanName = match ? match[1].trim() : String(playerEntry).trim();
             const pos = match ? match[2].trim() : 'BN';
             if (ktcPlayerValues[cleanName]) return ktcPlayerValues[cleanName];
             if (pos === 'QB' || pos === 'RB' || pos === 'WR') return 1100;
             if (pos === 'TE') return 900;
-            return 400; 
+            return 400; // K / DEF / deep bench baseline
         }
 
-        // --- AUTOMATIC LOAD ON STARTUP ---
         window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const [masterRes, ktcRes, mgrRes] = await Promise.allSettled([
@@ -484,7 +484,7 @@
                     globalMasterData = await masterRes.value.json();
                     initApp();
                 } else {
-                    throw new Error('Could not fetch sleeper_leagues_master.json automatically');
+                    throw new Error('Could not fetch sleeper_leagues_master.json');
                 }
             } catch (err) {
                 console.warn('Auto-load fallback triggered:', err);
@@ -1050,13 +1050,15 @@
                 Object.keys(weekBuckets).forEach(wk => {
                     const entries = weekBuckets[wk];
                     const activeCount = entries.filter(e => e.totalScore > 0).length;
-                    if (activeCount < entries.length * 0.75) return;
+                    if (activeCount < entries.length * 0.75) return; // skip unplayed or Thursday-only partial weeks
 
+                    // Weekly High Roller
                     const sortedByTotal = [...entries].sort((a, b) => b.totalScore - a.totalScore);
                     if (sortedByTotal[0] && sortedByTotal[0].totalScore > 0) {
                         weeklyHighs.push(sortedByTotal[0]);
                     }
 
+                    // Parse bench explosions
                     entries.forEach(e => {
                         const m = e.topBench.match(/\(([\d.]+)\)\s*$/);
                         const benchPts = m ? parseFloat(m[1]) : 0;
@@ -1140,7 +1142,7 @@
                     if (seasonFilter !== 'ALL' && season !== seasonFilter) return;
                     const week = String(r[1]).trim();
                     const weekNum = parseInt(week.replace(/\D/g, ''), 10) || 1;
-                    if (weekNum > 14) return;
+                    if (weekNum > 14) return; // Regular season weeks 1-14 for true schedule luck
                     const matchupId = String(r[2]).trim();
                     if (matchupId === '0' || !matchupId) return;
 
@@ -1161,7 +1163,7 @@
                         if (g.s1 > 0) allScores.push(g.s1);
                         if (g.s2 > 0) allScores.push(g.s2);
                     });
-                    if (allScores.length < games.length * 1.5) return;
+                    if (allScores.length < games.length * 1.5) return; // skip unplayed weeks
 
                     const teamWeekScores = [];
                     games.forEach(g => {
@@ -1178,6 +1180,7 @@
                         teamWeekScores.push({ mgr: g.t2, score: g.s2 });
                     });
 
+                    // Calculate All-Play wins/losses for this week
                     for (let i = 0; i < teamWeekScores.length; i++) {
                         for (let j = 0; j < teamWeekScores.length; j++) {
                             if (i === j) continue;

@@ -43,7 +43,9 @@ LEAGUES_TO_SYNC = [
 
 MASTER_FILE = "sleeper_leagues_master.json"
 API_BASE = "https://www.fleaflicker.com/api/"
-REQUEST_DELAY = 0.15          # seconds between calls, be polite
+REQUEST_DELAY = 0.8           # seconds between calls - Fleaflicker answers HTTP 403 if you go faster
+RETRY_BACKOFF = [5, 20, 60, 120]   # seconds to wait before each retry of a refused/failed call
+SEASON_RETRY_COOLDOWN = 150   # extra cooldown before re-trying a season that failed outright
 MAX_SCORING_PERIODS = 20      # upper bound if the API doesn't tell us
 FALLBACK_REG_SEASON_WEEKS = 14
 FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
@@ -85,12 +87,16 @@ def num(x, default=0.0):
         return default
 
 
+class FleaError(Exception):
+    """A call kept failing after all retries (rate limit, outage...). Distinct from 'no such season'."""
+
+
 def api(endpoint, **params):
     query = {"sport": "NFL"}
     query.update({k: v for k, v in params.items() if v is not None})
     url = API_BASE + endpoint + "?" + urllib.parse.urlencode(query)
     data = None
-    for attempt in range(3):
+    for attempt in range(len(RETRY_BACKOFF) + 1):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (dynasty-hub sync)"})
             with urllib.request.urlopen(req, timeout=30) as resp:
@@ -103,7 +109,10 @@ def api(endpoint, **params):
             print(f"  {endpoint} {params}: HTTP {e.code} (attempt {attempt + 1})")
         except Exception as e:  # network hiccup, bad JSON...
             print(f"  {endpoint} {params}: {e} (attempt {attempt + 1})")
-        time.sleep(1.5 * (attempt + 1))
+        if attempt < len(RETRY_BACKOFF):
+            time.sleep(RETRY_BACKOFF[attempt])
+    else:
+        raise FleaError(f"{endpoint} {params} kept failing")
     time.sleep(REQUEST_DELAY)
     dbg_key = (endpoint, params.get("league_id"))
     if data is not None and DEBUG and dbg_key not in _debug_seen:
@@ -408,7 +417,10 @@ def build_trade_rows(trades, season_labels, latest_label):
 # rosters + picks (current season only)
 # --------------------------------------------------------------------------- #
 def fetch_roster_str(league_id, team_id, season):
-    data = api("FetchRoster", league_id=league_id, team_id=team_id, season=season)
+    try:
+        data = api("FetchRoster", league_id=league_id, team_id=team_id, season=season)
+    except FleaError:
+        return ""
     names = []
     if data:
         for grp in data.get("groups") or []:
@@ -420,7 +432,10 @@ def fetch_roster_str(league_id, team_id, season):
 
 
 def fetch_picks_str(league_id, team_id, season):
-    data = api("FetchTeamPicks", league_id=league_id, team_id=team_id)
+    try:
+        data = api("FetchTeamPicks", league_id=league_id, team_id=team_id)
+    except FleaError:
+        return "None"
     picks = []
     if data:
         for pk in data.get("picks") or []:
@@ -447,17 +462,17 @@ def collect_league(league):
     season_labels, latest_label = {}, {}
     current_rows = []
 
-    for season in range(league["start_season"], last + 1):
+    def load_season(season):
         print(f"- season {season}")
         info = build_season(league_id, season)
         if not info:
-            print("  no data (league didn't exist or API refused)")
-            continue
+            print("  no data (league didn't exist for this season)")
+            return
         rows, periods, placements = info["rows"], info["periods"], info["placements"]
         season_labels[season] = {r["id"]: r["label"] for r in rows}
         latest_label.update(season_labels[season])
         if season == cur:
-            current_rows = rows
+            current_rows.extend(rows)
 
         for r in rows:
             standings_rows.append([
@@ -474,6 +489,35 @@ def collect_league(league):
                 matchup_rows.append([str(season), f"Week {p}", str(idx), h, f"{g['hs']:.2f}", a, f"{g['as']:.2f}"])
                 n_games += 1
         print(f"  {len(rows)} teams, {n_games} games, regular season = {info['reg_weeks']} wks, placements = {placements or 'n/a'}")
+
+    def drop_partial(season):
+        s_ = str(season)
+        standings_rows[:] = [r for r in standings_rows if r[0] != s_]
+        matchup_rows[:] = [r for r in matchup_rows if r[0] != s_]
+        season_labels.pop(season, None)
+
+    failed = []
+    for season in range(league["start_season"], last + 1):
+        try:
+            load_season(season)
+        except FleaError as e:
+            print(f"  !! season {season} failed ({e}); will retry after a cooldown")
+            drop_partial(season)
+            failed.append(season)
+
+    if failed:
+        print(f"Cooling down {SEASON_RETRY_COOLDOWN}s before retrying seasons {failed}")
+        time.sleep(SEASON_RETRY_COOLDOWN)
+        still = []
+        for season in failed:
+            try:
+                load_season(season)
+            except FleaError as e:
+                print(f"  !! season {season} failed again ({e})")
+                drop_partial(season)
+                still.append(season)
+        if still:
+            raise FleaError(f"{name}: seasons {still} could not be loaded; existing data left untouched")
 
     if not standings_rows:
         return None
@@ -578,9 +622,15 @@ def sync_fleaflicker():
         master = json.load(f)
 
     ok = False
+    failures = []
     key_lookup = {k.strip().lower(): k for k in master}
     for league in LEAGUES_TO_SYNC:
-        data = collect_league(league)
+        try:
+            data = collect_league(league)
+        except FleaError as e:
+            print(f"!! {league['name']}: {e}")
+            failures.append(league["name"])
+            continue
         if not data:
             print(f"!! No data loaded for {league['name']} - leaving existing data untouched.")
             continue
@@ -596,12 +646,15 @@ def sync_fleaflicker():
             master[league["name"]] = build_standalone_block(league, data)
         ok = True
 
+    if ok:
+        with open(MASTER_FILE, "w", encoding="utf-8") as f:
+            json.dump(master, f, separators=(",", ":"))
+    if failures:
+        print(f"Fleaflicker sync INCOMPLETE - not updated: {failures}. Re-run the workflow in a few minutes.")
+        sys.exit(1)
     if not ok:
         print("Fleaflicker sync FAILED: nothing was loaded.")
         sys.exit(1)
-
-    with open(MASTER_FILE, "w", encoding="utf-8") as f:
-        json.dump(master, f, separators=(",", ":"))
     print("Fleaflicker sync completed.")
 
 

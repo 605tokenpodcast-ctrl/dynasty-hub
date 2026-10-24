@@ -27,6 +27,9 @@ jobs:
       - name: Run Sleeper League Data Sync
         run: python scripts/sync_leagues.py
 
+      - name: Run Fleaflicker League History Sync
+        run: python scripts/sync_fleaflicker.py
+
       - name: Commit and Push Changes if Updated
         run: |
           git config --global user.name "github-actions[bot]"

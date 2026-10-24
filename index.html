@@ -701,12 +701,11 @@
                     if (!managers[master]) {
                         managers[master] = {
                             titles: 0, runnerUps: 0, thirdPlaces: 0,
-                            titleDetails: [], allLeagues: new Set(), aliases: new Set()
+                            titleDetails: [], allLeagues: new Set()
                         };
                     }
 
                     managers[master].allLeagues.add(leagueName);
-                    managers[master].aliases.add(rawTeam);
 
                     if (placement.includes('League Champion')) {
                         managers[master].titles++;
@@ -738,7 +737,6 @@
                             <div>
                                 <h3 class="text-xl font-bold text-accent">${manager}</h3>
                                 ${meta.tagline ? `<p class="text-xs text-amber-400/90 font-medium mt-0.5">"${meta.tagline}"</p>` : ''}
-                                <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliases).join(', ')}</p>
                             </div>
                             <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                                 🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}
@@ -845,7 +843,7 @@
                             <div class="flex items-center gap-3">
                                 <span class="bg-accent/20 text-accent border border-accent/30 w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm">#${idx + 1}</span>
                                 <div>
-                                    <h4 class="font-bold text-white text-base">${t.owner} <span class="text-xs text-slate-400 font-normal">(${t.rawTeam})</span></h4>
+                                    <h4 class="font-bold text-white text-base">${t.owner}
                                     <p class="text-xs text-accent font-semibold">${t.league} &bull; 2026 Record: ${t.record} (${t.pf} PF)</p>
                                 </div>
                             </div>
@@ -890,13 +888,12 @@
                         if (!unifiedOwners[masterOwner]) {
                             unifiedOwners[masterOwner] = { 
                                 leagues: new Set(), champs: 0, runnerUps: 0, thirdPlaces: 0,
-                                totalWins: 0, totalLosses: 0, aliasesUsed: new Set(),
+                                totalWins: 0, totalLosses: 0,
                                 firstRoundPicks: 0, totalFuturePicks: 0, ktcPickCapital: 0, ktcRosterCapital: 0
                             };
                         }
 
                         unifiedOwners[masterOwner].leagues.add(leagueName);
-                        unifiedOwners[masterOwner].aliasesUsed.add(rawTeamName);
 
                         const placement = String(r[4] || '');
                         if (placement.includes('League Champion')) unifiedOwners[masterOwner].champs++;
@@ -949,7 +946,6 @@
                         <div class="flex justify-between items-start gap-2">
                             <div>
                                 <h3 class="text-xl font-bold text-accent">${masterName}</h3>
-                                <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliasesUsed).join(', ')}</p>
                             </div>
                             <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">🏆 ${data.champs} Titles</span>
                         </div>

@@ -28,6 +28,16 @@ LEAGUES_TO_SYNC = [
         "name": "Fleaflicker Main League",
         "type": "dynasty",
         "start_season": 2015,
+    },
+    {
+        # Ran on Fleaflicker 2016-2020, then moved to Sleeper. Its history is spliced
+        # into the existing Sleeper block (key below) instead of getting its own block.
+        "id": "181202",
+        "name": "Hail Mary Jane Congregation (Fleaflicker era)",
+        "type": "dynasty",
+        "start_season": 2016,
+        "end_season": 2020,
+        "merge_into": "Hail Mary Jane Congregation",
     }
 ]
 
@@ -95,10 +105,11 @@ def api(endpoint, **params):
             print(f"  {endpoint} {params}: {e} (attempt {attempt + 1})")
         time.sleep(1.5 * (attempt + 1))
     time.sleep(REQUEST_DELAY)
-    if data is not None and DEBUG and endpoint not in _debug_seen:
-        _debug_seen.add(endpoint)
+    dbg_key = (endpoint, params.get("league_id"))
+    if data is not None and DEBUG and dbg_key not in _debug_seen:
+        _debug_seen.add(dbg_key)
         os.makedirs(DEBUG_DIR, exist_ok=True)
-        with open(os.path.join(DEBUG_DIR, f"{endpoint}.json"), "w", encoding="utf-8") as f:
+        with open(os.path.join(DEBUG_DIR, f"{endpoint}_{params.get('league_id', '')}.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=1)
             f.write("\n")
     return data
@@ -425,16 +436,18 @@ def fetch_picks_str(league_id, team_id, season):
 # --------------------------------------------------------------------------- #
 # main
 # --------------------------------------------------------------------------- #
-def sync_league(league):
+def collect_league(league):
+    """Pull standings / matchups / trades (and rosters if it's a live season)."""
     league_id, name = league["id"], league["name"]
+    last = league.get("end_season") or current_season()
     cur = current_season()
-    print(f"== {name} ({league_id}), seasons {league['start_season']}-{cur}")
+    print(f"== {name} ({league_id}), seasons {league['start_season']}-{last}")
 
     standings_rows, matchup_rows = [], []
     season_labels, latest_label = {}, {}
     current_rows = []
 
-    for season in range(league["start_season"], cur + 1):
+    for season in range(league["start_season"], last + 1):
         print(f"- season {season}")
         info = build_season(league_id, season)
         if not info:
@@ -463,7 +476,6 @@ def sync_league(league):
         print(f"  {len(rows)} teams, {n_games} games, regular season = {info['reg_weeks']} wks, placements = {placements or 'n/a'}")
 
     if not standings_rows:
-        print("!! No Fleaflicker data could be loaded - leaving existing data untouched.")
         return None
 
     # newest season first (matches Sleeper block); keep original order inside a season
@@ -473,42 +485,89 @@ def sync_league(league):
     print("- trades")
     trades = fetch_all_trades(league_id)
     trade_rows = build_trade_rows(trades, season_labels, latest_label)
+    # a league that has an end_season must not pick up trades from later seasons
+    trade_rows = [t for t in trade_rows if int(t[0]) <= last]
     print(f"  {len(trade_rows)} completed trades")
 
-    print("- current rosters & picks")
     roster_rows = []
-    for r in current_rows:
-        record = f"{r['wins']}-{r['losses']}"
-        roster_rows.append([
-            r["label"], record, f"{r['pf']:.2f}",
-            fetch_roster_str(league_id, r["id"], current_season()),
-            fetch_picks_str(league_id, r["id"], current_season()),
-            "", "",
-        ])
+    if current_rows:
+        print("- current rosters & picks")
+        for r in current_rows:
+            roster_rows.append([
+                r["label"], f"{r['wins']}-{r['losses']}", f"{r['pf']:.2f}",
+                fetch_roster_str(league_id, r["id"], cur),
+                fetch_picks_str(league_id, r["id"], cur),
+                "", "",
+            ])
+    return {"standings": standings_rows, "matchups": matchup_rows, "trades": trade_rows,
+            "rosters": roster_rows, "last": last}
 
-    block = [
+
+def build_standalone_block(league, data):
+    cur = current_season()
+    return [
         ["--- LEAGUE PROFILE ---", "", "", "", "", "", ""],
-        ["League Name", name, "", "", "", "", ""],
-        ["League ID", league_id, "", "", "", "", ""],
+        ["League Name", league["name"], "", "", "", "", ""],
+        ["League ID", league["id"], "", "", "", "", ""],
         ["League Type", league["type"].capitalize(), "", "", "", "", ""],
         ["Current Season", str(cur), "", "", "", "", ""],
         BLANK,
         ["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""],
         ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""],
-    ] + standings_rows + [
+    ] + data["standings"] + [
         BLANK,
         ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
         ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""],
-    ] + roster_rows + [
+    ] + data["rosters"] + [
         BLANK,
         ["--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---", "", "", "", "", "", ""],
         ["Season", "Date", "Week", "Teams Involved", "Trade Breakdown", "", ""],
-    ] + trade_rows + [
+    ] + data["trades"] + [
         BLANK,
         ["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
         ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"],
-    ] + matchup_rows
-    return block
+    ] + data["matchups"]
+
+
+def merge_into_existing(rows, data, first_season, last_season):
+    """
+    Splice Fleaflicker-era history into an existing (Sleeper) block.
+    Removes any rows already present for those seasons (placeholders or a previous
+    run of this script) and appends the fresh ones at the end of each section.
+    """
+    seasons = {str(y) for y in range(first_season, last_season + 1)}
+    wanted = {"standings": data["standings"], "trades": data["trades"], "matchups": data["matchups"]}
+
+    kept, sec = [], None
+    last_idx = {}   # section -> index in `kept` of its last non-blank row
+    for r in rows:
+        c0 = str(r[0] if r else "").strip()
+        u0 = c0.upper()
+        if u0.startswith("---"):
+            if "PROFILE" in u0: sec = "profile"
+            elif "STANDINGS" in u0: sec = "standings"
+            elif "ROSTERS" in u0: sec = "rosters"
+            elif "TRADE" in u0: sec = "trades"
+            elif "BOX SCORES" in u0: sec = "boxscores"
+            elif "MATCHUPS" in u0: sec = "matchups"
+            else: sec = "other"
+            kept.append(r)
+            last_idx[sec] = len(kept) - 1
+            continue
+        if sec in wanted and c0 in seasons:
+            continue                      # replaced by fresh data
+        kept.append(r)
+        if any(str(c).strip() for c in r):
+            last_idx[sec] = len(kept) - 1
+
+    missing = [k for k in wanted if k not in last_idx]
+    if missing:
+        print(f"!! target block has no {missing} section(s); those rows were not merged")
+
+    for sec_name in sorted((k for k in wanted if k in last_idx), key=lambda k: -last_idx[k]):
+        pos = last_idx[sec_name] + 1
+        kept[pos:pos] = wanted[sec_name]
+    return kept
 
 
 def sync_fleaflicker():
@@ -519,11 +578,23 @@ def sync_fleaflicker():
         master = json.load(f)
 
     ok = False
+    key_lookup = {k.strip().lower(): k for k in master}
     for league in LEAGUES_TO_SYNC:
-        block = sync_league(league)
-        if block:
-            master[league["name"]] = block
-            ok = True
+        data = collect_league(league)
+        if not data:
+            print(f"!! No data loaded for {league['name']} - leaving existing data untouched.")
+            continue
+        target = league.get("merge_into")
+        if target:
+            key = key_lookup.get(target.strip().lower())
+            if not key:
+                print(f"!! merge target '{target}' not found in {MASTER_FILE}; skipped")
+                continue
+            master[key] = merge_into_existing(master[key], data, league["start_season"], data["last"])
+            print(f"Merged {league['name']} into '{key}'")
+        else:
+            master[league["name"]] = build_standalone_block(league, data)
+        ok = True
 
     if not ok:
         print("Fleaflicker sync FAILED: nothing was loaded.")

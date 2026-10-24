@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -30,6 +31,38 @@
         body.broadcast-mode main {
             max-width: 1600px !important;
             padding-top: 1.5rem !important;
+        }
+        /* Markdown & Table Styling for Chat Bubbles */
+        #chat-messages table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 0.78rem;
+            background: rgba(15, 23, 42, 0.75);
+            border-radius: 6px;
+            overflow: hidden;
+            display: block;
+            overflow-x: auto;
+        }
+        #chat-messages th, #chat-messages td {
+            border: 1px solid #334155;
+            padding: 5px 8px;
+            text-align: left;
+        }
+        #chat-messages th {
+            background: rgba(51, 65, 85, 0.85);
+            color: #38bdf8;
+            font-weight: 700;
+        }
+        #chat-messages p {
+            margin-bottom: 0.5rem;
+        }
+        #chat-messages p:last-child {
+            margin-bottom: 0;
+        }
+        #chat-messages ul, #chat-messages ol {
+            margin: 0.4rem 0 0.5rem 1.25rem;
+            list-style-type: disc;
         }
     </style>
 </head>
@@ -345,7 +378,15 @@
                 <h3 class="font-bold text-white text-sm">🎙️ League Trash Talk Bot</h3>
                 <button onclick="toggleChat()" class="text-slate-400 hover:text-white text-xl font-bold px-1 leading-none">&times;</button>
             </div>
-            <select id="chat-who" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-semibold text-accent focus:outline-none"></select>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                <select id="chat-who" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-semibold text-accent focus:outline-none"></select>
+                <select id="chat-mood" title="Choose the bot's attitude" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-semibold text-amber-400 focus:outline-none cursor-pointer">
+                    <option value="default">🎙️ Classic Radio Host</option>
+                    <option value="ruthless">🔥 Ruthless Roast</option>
+                    <option value="hype">🚀 Delusional Hype Man</option>
+                    <option value="detective">🕵️ Conspiracy Detective</option>
+                </select>
+            </div>
         </div>
         <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 text-sm"></div>
         <div id="chat-chips" class="px-3 pb-2 flex flex-wrap gap-1.5"></div>
@@ -1749,6 +1790,9 @@
         }
 
         function chatFormat(s) {
+            if (typeof marked !== 'undefined' && marked.parse) {
+                return marked.parse(String(s || ''));
+            }
             return chatEscape(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
         }
 
@@ -1781,6 +1825,12 @@
             if (src) Array.from(src.options).forEach(o => sel.appendChild(new Option(o.value, o.value)));
             sel.value = chatStore('chatWho') || '';
             sel.onchange = () => chatStore('chatWho', sel.value);
+
+            const moodSel = document.getElementById('chat-mood');
+            if (moodSel) {
+                moodSel.value = chatStore('chatMood') || 'default';
+                moodSel.onchange = () => chatStore('chatMood', moodSel.value);
+            }
 
             addChatBubble('bot', "I know every league's history plus this week's live matchups and injuries. Ask me anything, or ask who's about to get embarrassed.");
             const chips = [
@@ -2006,10 +2056,13 @@
 
             try {
                 const context = await buildChatContext();
+                const moodEl = document.getElementById('chat-mood');
+                const mood = moodEl ? moodEl.value : (chatStore('chatMood') || 'default');
                 const reply = await postChat({
                     messages: chatHistory.slice(-12),
                     context,
-                    who: chatStore('chatWho') || ''
+                    who: chatStore('chatWho') || '',
+                    mood
                 });
                 pending.innerHTML = chatFormat(reply);
                 chatHistory.push({ role: 'assistant', content: reply });

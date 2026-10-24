@@ -337,6 +337,24 @@
         </div>
     </div>
 
+    <!-- LEAGUE CHATBOT -->
+    <button id="chat-fab" onclick="toggleChat()" class="hide-on-broadcast fixed bottom-4 right-4 z-40 bg-accent hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-full shadow-2xl border border-blue-300/30 text-sm transition">🎙️ Trash Talk Bot</button>
+    <div id="chat-panel" class="hide-on-broadcast hidden fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:w-96 h-[34rem] max-h-[85vh] bg-cardbg border border-slate-700 rounded-xl shadow-2xl flex-col overflow-hidden">
+        <div class="p-3 bg-slate-900 border-b border-slate-800 space-y-2">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-white text-sm">🎙️ League Trash Talk Bot</h3>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-white text-xl font-bold px-1 leading-none">&times;</button>
+            </div>
+            <select id="chat-who" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-semibold text-accent focus:outline-none"></select>
+        </div>
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 text-sm"></div>
+        <div id="chat-chips" class="px-3 pb-2 flex flex-wrap gap-1.5"></div>
+        <form onsubmit="event.preventDefault(); sendChat();" class="p-3 border-t border-slate-800 flex gap-2">
+            <input id="chat-input" type="text" autocomplete="off" maxlength="500" placeholder="Ask about matchups, injuries, history..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            <button type="submit" class="bg-accent hover:bg-blue-500 text-white font-bold px-3 rounded-lg text-sm transition">Send</button>
+        </form>
+    </div>
+
     <!-- HALL OF RECORDS TOP-10 MODAL -->
     <div id="records-modal" onclick="if(event.target === this) closeRecordModal()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
         <div class="bg-cardbg border border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
@@ -687,6 +705,7 @@
             renderWeeklyAwards();
             renderLuckIndex();
             renderRecords();
+            recordsSnapshot = recordsDetailStore.slice(); // all-league records, used by the chatbot
             renderDraftPicksMatrix();
             renderTrades();
             initH2HDropdowns();
@@ -1705,6 +1724,303 @@
                     .map(p => ({ name: `${p.a} vs ${p.b}`, value: `${p.aw + p.bw} games`, detail: `Series: ${p.a} ${p.aw}-${p.bw} ${p.b}` }))));
 
             grid.innerHTML = cards.join('');
+        }
+
+        // --- LEAGUE CHATBOT ---
+        // After deploying worker.js to Cloudflare, paste the Worker URL here.
+        const CHAT_ENDPOINT = 'https://YOUR-WORKER.workers.dev';
+
+        let chatHistory = [];
+        let chatBusy = false;
+        let chatOpenedOnce = false;
+        let chatContextCache = { ts: 0, text: '' };
+        let recordsSnapshot = [];
+
+        function chatStore(key, val) {
+            try {
+                if (val === undefined) return localStorage.getItem(key);
+                localStorage.setItem(key, val);
+            } catch (e) {}
+            return null;
+        }
+
+        function chatEscape(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function chatFormat(s) {
+            return chatEscape(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+        }
+
+        function addChatBubble(role, text) {
+            const box = document.getElementById('chat-messages');
+            const el = document.createElement('div');
+            el.className = role === 'user'
+                ? 'ml-8 bg-accent/20 border border-accent/30 text-slate-100 rounded-lg px-3 py-2'
+                : 'mr-8 bg-slate-900 border border-slate-800 text-slate-200 rounded-lg px-3 py-2';
+            el.innerHTML = chatFormat(text);
+            box.appendChild(el);
+            box.scrollTop = box.scrollHeight;
+            return el;
+        }
+
+        function toggleChat() {
+            const panel = document.getElementById('chat-panel');
+            const opening = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !opening);
+            panel.classList.toggle('flex', opening);
+            document.getElementById('chat-fab').classList.toggle('hidden', opening);
+            if (opening && !chatOpenedOnce) { chatOpenedOnce = true; initChatUi(); }
+            if (opening) document.getElementById('chat-input').focus();
+        }
+
+        function initChatUi() {
+            const sel = document.getElementById('chat-who');
+            const src = document.getElementById('h2h-mgr-1');
+            sel.innerHTML = '<option value="">Who are you? (so I can roast the right person)</option>';
+            if (src) Array.from(src.options).forEach(o => sel.appendChild(new Option(o.value, o.value)));
+            sel.value = chatStore('chatWho') || '';
+            sel.onchange = () => chatStore('chatWho', sel.value);
+
+            addChatBubble('bot', "I know every league's history plus this week's live matchups and injuries. Ask me anything, or ask who's about to get embarrassed.");
+            const chips = [
+                'Who is most likely to win in my closest matchup this week?',
+                'Which starters are hurt this week?',
+                'Roast the unluckiest manager',
+                'Who has the best trophy case?'
+            ];
+            document.getElementById('chat-chips').innerHTML = chips.map(c =>
+                `<button type="button" onclick="sendChat(this.innerText)" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2 py-1 rounded-full transition">${c}</button>`
+            ).join('');
+        }
+
+        async function chatFetchJson(url) {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`${r.status} from ${url.split('?')[0]}`);
+            return r.json();
+        }
+
+        function chatLeagueProfiles() {
+            const out = [];
+            Object.keys(globalMasterData).forEach(name => {
+                const rows = globalMasterData[name];
+                if (!Array.isArray(rows) || isAwardExcluded(name)) return;
+                let id = '';
+                rows.forEach(r => { if (String(r[0] || '').trim() === 'League ID') id = String(r[1] || '').trim(); });
+                out.push({ name, id });
+            });
+            return out;
+        }
+
+        // Static facts from the master JSON: current records, recent trades, all-time owner stats, Hall of Records.
+        function buildStaticSummary() {
+            const lines = [];
+            const owners = {};
+
+            chatLeagueProfiles().forEach(p => {
+                let section = '';
+                const current = [];
+                const trades = [];
+                globalMasterData[p.name].forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const sec = getSectionType(col0);
+                    if (sec) { section = sec; return; }
+                    if (isColumnHeaderRow(col0) || !col0) return;
+
+                    if (section === 'standings' && r[1]) {
+                        const o = getMasterOwner(String(r[1]));
+                        const d = owners[o] = owners[o] || { t: 0, ru: 0, w: 0, l: 0, lg: new Set() };
+                        d.lg.add(p.name);
+                        const pl = String(r[4] || '');
+                        if (pl.includes('League Champion')) d.t++;
+                        else if (pl.includes('Runner-Up')) d.ru++;
+                        const rec = String(r[2] || '').split('-');
+                        d.w += parseInt(rec[0], 10) || 0;
+                        d.l += parseInt(rec[1], 10) || 0;
+                    }
+                    if (section === 'rosters') current.push(`${getMasterOwner(col0)} ${r[1] || ''} (${r[2] || '0'} PF)`);
+                    if (section === 'trades' && trades.length < 3 && r[3] && r[4]) {
+                        trades.push(`${r[0]} ${r[1]}: ${r[4]}`.slice(0, 350));
+                    }
+                });
+                lines.push(`## ${p.name}`);
+                if (current.length) lines.push('Current records: ' + current.join('; '));
+                if (trades.length) lines.push('Recent trades: ' + trades.join(' | '));
+            });
+
+            lines.push('## All-time manager stats (titles, runner-ups, record)');
+            Object.keys(owners).forEach(o => {
+                const d = owners[o];
+                lines.push(`${o}: ${d.t} titles, ${d.ru} runner-ups, ${d.w}-${d.l} all-time, in ${d.lg.size} leagues`);
+            });
+
+            if (recordsSnapshot.length) {
+                lines.push('## Hall of Records (top 3 each)');
+                recordsSnapshot.forEach(x => {
+                    lines.push(`${x.title}: ` + x.entries.slice(0, 3).map(e => `${e.name} ${e.value} (${e.detail})`).join(' | '));
+                });
+            }
+            return lines.join('\n');
+        }
+
+        async function getChatPlayers() {
+            try {
+                const cached = JSON.parse(chatStore('sleeperPlayersTrim') || 'null');
+                if (cached && Date.now() - cached.ts < 6 * 3600 * 1000) return cached.map;
+            } catch (e) {}
+            const raw = await chatFetchJson('https://api.sleeper.app/v1/players/nfl');
+            const keep = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DEF']);
+            const map = {};
+            Object.keys(raw).forEach(id => {
+                const p = raw[id];
+                if (!p || !keep.has(p.position)) return;
+                if (p.position !== 'DEF' && !p.team && !p.injury_status) return;
+                map[id] = {
+                    n: p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || id,
+                    p: p.position,
+                    i: p.injury_status || ''
+                };
+            });
+            chatStore('sleeperPlayersTrim', JSON.stringify({ ts: Date.now(), map }));
+            return map;
+        }
+
+        // Unofficial Sleeper endpoint. Approximate PPR points; quietly skipped if it fails.
+        async function getChatProjections(season, week) {
+            try {
+                const qs = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(p => `position[]=${p}`).join('&');
+                const arr = await chatFetchJson(`https://api.sleeper.com/projections/nfl/${season}/${week}?season_type=regular&${qs}`);
+                const m = {};
+                arr.forEach(x => {
+                    const s = x.stats || {};
+                    const v = s.pts_ppr ?? s.pts_half_ppr ?? s.pts_std;
+                    if (v != null) m[x.player_id] = v;
+                });
+                return m;
+            } catch (e) { return {}; }
+        }
+
+        async function getLeagueLiveText(p, week, players, proj) {
+            const base = `https://api.sleeper.app/v1/league/${p.id}`;
+            const [users, rosters, matchups] = await Promise.all([
+                chatFetchJson(`${base}/users`),
+                chatFetchJson(`${base}/rosters`),
+                chatFetchJson(`${base}/matchups/${week}`)
+            ]);
+            const userById = {};
+            users.forEach(u => { userById[u.user_id] = u; });
+            const ownerByRoster = {};
+            rosters.forEach(r => {
+                const u = userById[r.owner_id];
+                ownerByRoster[r.roster_id] = u ? getMasterOwner(u.display_name) : `Team ${r.roster_id}`;
+            });
+
+            const groups = {};
+            matchups.forEach(m => {
+                if (m.matchup_id == null) return;
+                (groups[m.matchup_id] = groups[m.matchup_id] || []).push(m);
+            });
+
+            const lines = [`## ${p.name} - Week ${week} matchups`];
+            Object.keys(groups).forEach(id => {
+                const sides = groups[id].map(m => {
+                    let total = 0, anyProj = false;
+                    const starters = (m.starters || []).filter(s => s && s !== '0').map(s => {
+                        const pl = players[s] || { n: s, p: '', i: '' };
+                        const pr = proj[s];
+                        if (pr != null) { total += pr; anyProj = true; }
+                        return `${pl.n} (${pl.p}${pl.i ? ' ' + pl.i : ''}${pr != null ? ' ' + pr.toFixed(1) : ''})`;
+                    });
+                    const live = m.points > 0 ? `, live score ${m.points}` : '';
+                    return `${ownerByRoster[m.roster_id] || 'Team ' + m.roster_id} [${anyProj ? 'proj ' + total.toFixed(1) : 'no projection'}${live}]: ${starters.join(', ')}`;
+                });
+                lines.push(sides.join('\n   VS   '));
+            });
+            return lines.join('\n');
+        }
+
+        async function buildChatContext() {
+            if (Date.now() - chatContextCache.ts < 10 * 60 * 1000 && chatContextCache.text) return chatContextCache.text;
+            const parts = [`Today: ${new Date().toDateString()}`, buildStaticSummary()];
+
+            try {
+                const state = await chatFetchJson('https://api.sleeper.app/v1/state/nfl');
+                const week = state.week || state.display_week || 1;
+                const profiles = chatLeagueProfiles();
+                const live = profiles.filter(p => /^\d{12,}$/.test(p.id));
+                const noFeed = profiles.filter(p => !/^\d{12,}$/.test(p.id)).map(p => p.name);
+
+                const [players, proj] = await Promise.all([getChatPlayers(), getChatProjections(state.season, week)]);
+                const results = await Promise.allSettled(live.map(p => getLeagueLiveText(p, week, players, proj)));
+                parts.push(`# LIVE DATA (NFL ${state.season_type} week ${week}). Injury tags come from Sleeper (Q = questionable, D = doubtful, O = out, IR). Projections are approximate PPR points.`);
+                results.forEach((r, i) => {
+                    parts.push(r.status === 'fulfilled' ? r.value : `## ${live[i].name}: live data failed to load`);
+                });
+                if (noFeed.length) parts.push(`No live matchup feed for: ${noFeed.join(', ')} (history and records only).`);
+            } catch (e) {
+                parts.push(`Live Sleeper data was unavailable (${e.message}). Say so if asked about this week's matchups or injuries.`);
+            }
+
+            chatContextCache = { ts: Date.now(), text: parts.join('\n\n') };
+            return chatContextCache.text;
+        }
+
+        async function postChat(body) {
+            const send = () => {
+                const headers = { 'Content-Type': 'application/json' };
+                const code = chatStore('chatPasscode');
+                if (code) headers['x-passcode'] = code;
+                return fetch(CHAT_ENDPOINT, { method: 'POST', headers, body: JSON.stringify(body) });
+            };
+            let res = await send();
+            if (res.status === 401) {
+                const code = window.prompt('Enter the league passcode:');
+                if (!code) throw new Error('A passcode is needed to use the bot.');
+                chatStore('chatPasscode', code.trim());
+                res = await send();
+            }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                if (res.status === 401) chatStore('chatPasscode', '');
+                throw new Error(data.error || `Chat server returned ${res.status}`);
+            }
+            return data.reply;
+        }
+
+        async function sendChat(presetText) {
+            const input = document.getElementById('chat-input');
+            const text = String(presetText || input.value || '').trim();
+            if (!text || chatBusy) return;
+
+            if (CHAT_ENDPOINT.includes('YOUR-WORKER')) {
+                addChatBubble('bot', "I'm not connected yet. Deploy worker.js and paste its URL into CHAT_ENDPOINT in index.html.");
+                return;
+            }
+
+            chatBusy = true;
+            input.value = '';
+            document.getElementById('chat-chips').innerHTML = '';
+            addChatBubble('user', text);
+            chatHistory.push({ role: 'user', content: text });
+            const pending = addChatBubble('bot', 'Pulling up the receipts...');
+
+            try {
+                const context = await buildChatContext();
+                const reply = await postChat({
+                    messages: chatHistory.slice(-12),
+                    context,
+                    who: chatStore('chatWho') || ''
+                });
+                pending.innerHTML = chatFormat(reply);
+                chatHistory.push({ role: 'assistant', content: reply });
+            } catch (e) {
+                pending.innerHTML = chatFormat(`Something broke: ${e.message}`);
+                chatHistory.pop(); // let them retry the same question
+            } finally {
+                chatBusy = false;
+                const box = document.getElementById('chat-messages');
+                box.scrollTop = box.scrollHeight;
+            }
         }
 
         // --- TAB 7: DRAFT PICKS MATRIX ---

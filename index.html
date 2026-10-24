@@ -345,6 +345,21 @@
             "pokelegoej": "BigDEddie"
         };
 
+        // Same person, different username on Fleaflicker vs Sleeper (matched on the exact username, case-insensitive)
+        const exactAliases = {
+            "derrickfish": "DerrickFish",
+            "thecards": "KillerCards",
+            "peopleaters420": "Burntcooks",
+            "andylang1031": "Kronik",
+            "leno": "JayLeno",
+            "jarvis2023": "jarvisevans",
+            "jarvis1983": "jarvisevans",
+            "insideinsight36": "InsideInsightt",
+            "insightinside": "InsideInsightt",
+            "insideinsightt": "InsideInsightt",
+            "easy-e_lliott": "michaelpacheco"
+        };
+
         let managerMeta = {
             "Smokers Haven": { tagline: "The 2027 1st-Round Draft Capital Kingpin", color: "#3b82f6" },
             "Kronik": { tagline: "Multi-League Perennial Title Contender", color: "#10b981" },
@@ -435,13 +450,12 @@
             }
 
             const match = trimmed.match(/\(([^)]+)\)\s*$/);
-            if (match && match[1]) {
-                const username = match[1].trim();
-                const lowerUser = username.toLowerCase();
-                if (aliasOverrides[lowerUser]) return aliasOverrides[lowerUser];
-                return username;
-            }
-            return trimmed;
+            const username = (match && match[1]) ? match[1].trim() : trimmed;
+            const lowerUser = username.toLowerCase();
+            if (aliasOverrides[lowerUser]) return aliasOverrides[lowerUser];
+            // Exact (case-insensitive) username matches, e.g. Fleaflicker -> Sleeper identities
+            if (exactAliases[lowerUser]) return exactAliases[lowerUser];
+            return username;
         }
 
         function getSectionType(col0) {

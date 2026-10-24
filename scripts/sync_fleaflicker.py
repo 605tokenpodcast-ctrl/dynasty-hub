@@ -2,9 +2,14 @@ import json
 import os
 import urllib.request
 
-ACTIVE_FLEA_ID = "165455"        # Current active league (2015-Present)
+HISTORICAL_LEAGUE_ID = "181202"  # 2016-2020 history for Hail Mary Jane
+TARGET_LEAGUE_NAME = "Hail Mary Jane Congregation"
+HISTORICAL_SEASONS = ["2016", "2017", "2018", "2019", "2020"]
+
+ACTIVE_FLEA_ID = "165455"        # Current active league
 ACTIVE_FLEA_NAME = "Fleaflicker Main League"
-ACTIVE_SEASONS = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"]
+# Restrict active seasons to years the league is actively populated to prevent empty API returns
+ACTIVE_SEASONS = ["2024", "2025", "2026"]
 
 def fetch_json(url):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -44,7 +49,7 @@ def parse_fleaflicker_standings(season, league_id):
             
     return standings_rows
 
-def sync_fleaflicker_active():
+def sync_fleaflicker():
     if not os.path.exists('sleeper_leagues_master.json'):
         print("sleeper_leagues_master.json not found!")
         return
@@ -52,9 +57,39 @@ def sync_fleaflicker_active():
     with open('sleeper_leagues_master.json', 'r', encoding='utf-8') as f:
         master_data = json.load(f)
 
-    print(f"Building dataset for active Fleaflicker league {ACTIVE_FLEA_ID}...")
-    flea_standings = []
+    # --- PART 1: Safely inject historical 181202 data into Hail Mary Jane Congregation ---
+    target_key = None
+    for k in master_data.keys():
+        if k.strip().lower() == TARGET_LEAGUE_NAME.lower():
+            target_key = k
+            break
 
+    if target_key:
+        print(f"Syncing historical records for {target_key}...")
+        existing_rows = master_data[target_key]
+        
+        # Keep non-historical rows (trades, draft picks, sleeper seasons) intact
+        preserved_rows = [r for r in existing_rows if str(r[0] if r else '').strip() not in HISTORICAL_SEASONS]
+
+        new_hist_standings = []
+        for season in HISTORICAL_SEASONS:
+            new_hist_standings.extend(parse_fleaflicker_standings(season, HISTORICAL_LEAGUE_ID))
+
+        standings_header = ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""]
+
+        # Rebuild target league while keeping all trades and drafts safe
+        master_data[target_key] = (
+            [r for r in preserved_rows if not str(r[0]).upper().startswith('---')] +
+            [["", "", "", "", "", "", ""]] +
+            [["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""]] +
+            [standings_header] +
+            new_hist_standings +
+            [r for r in preserved_rows if len(r) > 4 or (len(r) == 7 and str(r[1]).startswith("Week"))]
+        )
+
+    # --- PART 2: Build Active Fleaflicker League 165455 ---
+    print(f"Building master dataset for active Fleaflicker league {ACTIVE_FLEA_ID}...")
+    flea_standings = []
     for season in ACTIVE_SEASONS:
         flea_standings.extend(parse_fleaflicker_standings(season, ACTIVE_FLEA_ID))
 
@@ -63,7 +98,6 @@ def sync_fleaflicker_active():
         ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""]
     ]
 
-    # Safely write or update the standalone Fleaflicker league block without affecting Sleeper leagues
     master_data[ACTIVE_FLEA_NAME] = (
         [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""],
          ["League Name", ACTIVE_FLEA_NAME, "", "", "", "", ""],
@@ -80,7 +114,7 @@ def sync_fleaflicker_active():
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
 
-    print("Successfully updated active Fleaflicker league while keeping Sleeper leagues and trades intact!")
+    print("Successfully synchronized Fleaflicker leagues with correct active ranges!")
 
 if __name__ == '__main__':
-    sync_fleaflicker_active()
+    sync_fleaflicker()

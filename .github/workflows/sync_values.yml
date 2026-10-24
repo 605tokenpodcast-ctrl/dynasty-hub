@@ -28,7 +28,19 @@ jobs:
         run: python scripts/sync_leagues.py
 
       - name: Run Fleaflicker League History Sync
+        continue-on-error: true   # a Fleaflicker outage shouldn't block KTC/Sleeper updates
+        env:
+          FLEA_DEBUG: "1"
         run: python scripts/sync_fleaflicker.py
+
+      - name: Upload Fleaflicker raw API samples (for debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleaflicker-debug
+          path: fleaflicker_debug/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Commit and Push Changes if Updated
         run: |

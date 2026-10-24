@@ -8,13 +8,13 @@ LEAGUE_IDS = [
     "1388685966092296192", # Andy's league
     "1312042561786904576", # Hail Mary Jane Congregation
     "1338346687445348352", # Fish's League
-    "1389343056888606720", # Roundhouse
-    "1329118060811927552"  # All Flex Zone
+    "1389343056888606720", # Roundhouse (Redraft)
+    "1329118060811927552"  # All Flex Zone (Redraft)
 ]
 
 CURRENT_SEASON = "2026"
 FUTURE_PICK_SEASONS = ["2027", "2028", "2029"]
-REDRAFT_LEAGUES = ["All Flex Zone", "Roundhouse"]
+REDRAFT_LEAGUE_IDS = ["1389343056888606720", "1329118060811927552"]
 
 def fetch_json(url):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -45,7 +45,6 @@ def build_master_data():
         except Exception as e:
             print(f"Could not parse existing master JSON: {e}")
 
-    # Create a case-insensitive/trimmed lookup map for existing league keys
     existing_key_map = {k.strip().lower(): k for k in master_data.keys()}
 
     print("Fetching NFL players database from Sleeper...")
@@ -58,10 +57,14 @@ def build_master_data():
             continue
 
         raw_name = league_info.get('name', f"League {league_id}").strip()
-        # Match existing key in master_data if present
         league_key = existing_key_map.get(raw_name.lower(), raw_name)
         existing_rows = master_data.get(league_key, [])
-        is_redraft = league_key in REDRAFT_LEAGUES or raw_name in REDRAFT_LEAGUES
+        
+        # Bulletproof check: explicit ID match or keyword match for redraft leagues
+        is_redraft = (
+            league_id in REDRAFT_LEAGUE_IDS or
+            any(term in league_key.lower() for term in ["flex", "roundhouse"])
+        )
 
         draft_rounds = league_info.get('settings', {}).get('draft_rounds', 4)
         rosters = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/rosters") or []
@@ -273,7 +276,6 @@ def build_master_data():
                     if c0 not in ('Season', CURRENT_SEASON):
                         historical_matchups.append(row)
 
-            # Deduplicate new 2026 trades against existing trades
             existing_trade_sigs = {
                 (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip())
                 for r in historical_trades if len(r) >= 4
@@ -319,7 +321,7 @@ def build_master_data():
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
 
-    print("Successfully merged live Sleeper data while respecting redraft configurations!")
+    print("Successfully merged live Sleeper data while locking out future picks for redraft leagues!")
 
 if __name__ == '__main__':
     build_master_data()

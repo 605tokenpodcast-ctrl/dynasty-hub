@@ -69,6 +69,7 @@
                     <button onclick="switchTab('owners')" id="nav-owners" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
                     <button onclick="switchTab('exposure')" id="nav-exposure" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
                     <button onclick="switchTab('awards')" id="nav-awards" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
+                    <button onclick="switchTab('records')" id="nav-records" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
                     <button onclick="switchTab('luck')" id="nav-luck" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
                     <button onclick="switchTab('picks')" id="nav-picks" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
                     <button onclick="switchTab('trades')" id="nav-trades" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
@@ -211,6 +212,20 @@
                             </table>
                         </div>
                     </div>
+                </div>
+
+                <!-- TAB: HALL OF RECORDS -->
+                <div id="tab-records" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🏅 All-Time Hall of Records</h2>
+                            <p class="text-slate-400 text-sm">Streaks, single-game freak shows, and season-long feats across your full league history.</p>
+                        </div>
+                        <select id="records-league-filter" onchange="renderRecords()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                            <option value="ALL">All Leagues</option>
+                        </select>
+                    </div>
+                    <div id="records-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
 
                 <!-- TAB 7: DRAFT PICK INVENTORY MATRIX -->
@@ -566,7 +581,7 @@
 
         function switchTab(tabId, skipUrlUpdate = false) {
             currentActiveTab = tabId;
-            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'luck', 'picks', 'trades', 'h2h', 'synergy', 'leagues'].forEach(t => {
+            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'records', 'luck', 'picks', 'trades', 'h2h', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -636,7 +651,7 @@
             document.getElementById('sync-banner').innerText = `Synced with Sleeper Master JSON • ${leagueNames.length} Active Dynasty Leagues`;
 
             // Populate all league dropdowns
-            ['league-selector', 'power-league-selector', 'awards-league-filter', 'luck-league-filter'].forEach(id => {
+            ['league-selector', 'power-league-selector', 'awards-league-filter', 'luck-league-filter', 'records-league-filter'].forEach(id => {
                 const sel = document.getElementById(id);
                 if (!sel) return;
                 const keepFirst = id !== 'league-selector';
@@ -644,6 +659,7 @@
                 sel.innerHTML = '';
                 if (firstOpt) sel.appendChild(firstOpt);
                 leagueNames.forEach(name => {
+                    if (id === 'records-league-filter' && isAwardExcluded(name)) return;
                     sel.appendChild(new Option(name, name));
                 });
             });
@@ -656,6 +672,7 @@
             renderPlayerExposure();
             renderWeeklyAwards();
             renderLuckIndex();
+            renderRecords();
             renderDraftPicksMatrix();
             renderTrades();
             initH2HDropdowns();
@@ -701,11 +718,12 @@
                     if (!managers[master]) {
                         managers[master] = {
                             titles: 0, runnerUps: 0, thirdPlaces: 0,
-                            titleDetails: [], allLeagues: new Set()
+                            titleDetails: [], allLeagues: new Set(), aliases: new Set()
                         };
                     }
 
                     managers[master].allLeagues.add(leagueName);
+                    managers[master].aliases.add(rawTeam);
 
                     if (placement.includes('League Champion')) {
                         managers[master].titles++;
@@ -737,6 +755,7 @@
                             <div>
                                 <h3 class="text-xl font-bold text-accent">${manager}</h3>
                                 ${meta.tagline ? `<p class="text-xs text-amber-400/90 font-medium mt-0.5">"${meta.tagline}"</p>` : ''}
+                                <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliases).join(', ')}</p>
                             </div>
                             <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                                 🏆 ${data.titles} Title${data.titles > 1 ? 's' : ''}
@@ -843,7 +862,7 @@
                             <div class="flex items-center gap-3">
                                 <span class="bg-accent/20 text-accent border border-accent/30 w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm">#${idx + 1}</span>
                                 <div>
-                                    <h4 class="font-bold text-white text-base">${t.owner}
+                                    <h4 class="font-bold text-white text-base">${t.owner} <span class="text-xs text-slate-400 font-normal">(${t.rawTeam})</span></h4>
                                     <p class="text-xs text-accent font-semibold">${t.league} &bull; 2026 Record: ${t.record} (${t.pf} PF)</p>
                                 </div>
                             </div>
@@ -888,12 +907,13 @@
                         if (!unifiedOwners[masterOwner]) {
                             unifiedOwners[masterOwner] = { 
                                 leagues: new Set(), champs: 0, runnerUps: 0, thirdPlaces: 0,
-                                totalWins: 0, totalLosses: 0,
+                                totalWins: 0, totalLosses: 0, aliasesUsed: new Set(),
                                 firstRoundPicks: 0, totalFuturePicks: 0, ktcPickCapital: 0, ktcRosterCapital: 0
                             };
                         }
 
                         unifiedOwners[masterOwner].leagues.add(leagueName);
+                        unifiedOwners[masterOwner].aliasesUsed.add(rawTeamName);
 
                         const placement = String(r[4] || '');
                         if (placement.includes('League Champion')) unifiedOwners[masterOwner].champs++;
@@ -946,6 +966,7 @@
                         <div class="flex justify-between items-start gap-2">
                             <div>
                                 <h3 class="text-xl font-bold text-accent">${masterName}</h3>
+                                <p class="text-xs text-slate-400 mt-1">Aliases: ${Array.from(data.aliasesUsed).join(', ')}</p>
                             </div>
                             <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">🏆 ${data.champs} Titles</span>
                         </div>
@@ -1193,7 +1214,7 @@
                     if (seasonFilter !== 'ALL' && season !== seasonFilter) return;
                     const week = String(r[1]).trim();
                     const weekNum = parseInt(week.replace(/\D/g, ''), 10) || 1;
-                    if (weekNum > 14) return; // Regular season weeks 1-14 for true schedule luck
+                    if (weekNum >= playoffStartWeek(leagueName, season)) return; // Regular season only for true schedule luck
                     const matchupId = String(r[2]).trim();
                     if (matchupId === '0' || !matchupId) return;
 
@@ -1273,6 +1294,352 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        // --- TAB: HALL OF RECORDS ---
+        // Leagues whose name contains any of these strings are skipped on the Hall of Records tab.
+        const AWARD_EXCLUDED_LEAGUES = ['SFB16'];
+        function isAwardExcluded(name) {
+            const n = String(name || '').toUpperCase();
+            return AWARD_EXCLUDED_LEAGUES.some(k => n.includes(k.toUpperCase()));
+        }
+
+        // First playoff week for a league/season. Weeks before this are regular season.
+        // Add or change rules here if a league's schedule changes.
+        function playoffStartWeek(leagueName, season) {
+            const n = String(leagueName || '').toLowerCase();
+            const yr = parseInt(season, 10) || 0;
+            if (n.includes('fish')) return yr < 2023 ? 14 : 15;
+            if (n.includes('hail mary')) return yr < 2021 ? 14 : 15;
+            if (n.includes('andy')) return yr < 2021 ? 14 : 15;
+            return 15; // Branden's league and all others
+        }
+
+        // Backup check: a podium placement always counts as a playoff appearance.
+        // The main rule (top 6 / top 7 in All Flex Zone) is applied in collectRecordsData.
+        function madePlayoffs(placement) {
+            const p = String(placement || '').toLowerCase();
+            if (!p.trim()) return false;
+            if (/miss|did not|dnq|no playoff|non-playoff/.test(p)) return false;
+            return /champion|runner|3rd|4th|playoff/.test(p);
+        }
+
+        function collectRecordsData(leagueFilter) {
+            const games = [];
+            const standings = [];
+
+            Object.keys(globalMasterData).forEach(leagueName => {
+                if (!Array.isArray(globalMasterData[leagueName])) return;
+                if (isAwardExcluded(leagueName)) return;
+                if (leagueFilter !== 'ALL' && leagueName !== leagueFilter) return;
+                const rows = globalMasterData[leagueName] || [];
+
+                // Pass 1: find which weeks were actually played (same rule as H2H)
+                const weekStats = {};
+                let section = '';
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
+                    const key = `${r[0]}|${r[1]}`;
+                    if (!weekStats[key]) weekStats[key] = { total: 0, nonZero: 0 };
+                    weekStats[key].total += 2;
+                    if ((parseFloat(r[4]) || 0) > 0) weekStats[key].nonZero++;
+                    if ((parseFloat(r[6]) || 0) > 0) weekStats[key].nonZero++;
+                });
+
+                // Pass 2: collect games and standings
+                section = '';
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    const newSec = getSectionType(col0);
+                    if (newSec) { section = newSec; return; }
+                    if (isColumnHeaderRow(col0)) return;
+
+                    if (section === 'standings' && r[1]) {
+                        const rec = String(r[2] || '').split('-').map(n => parseInt(n, 10) || 0);
+                        standings.push({
+                            league: leagueName,
+                            season: parseInt(col0, 10) || 0,
+                            owner: getMasterOwner(String(r[1])),
+                            w: rec[0] || 0, l: rec[1] || 0, t: rec[2] || 0,
+                            pf: parseFloat(String(r[3] || '').replace(/,/g, '')) || 0,
+                            placement: String(r[4] || '')
+                        });
+                    }
+
+                    if (section === 'matchups' && r.length >= 7) {
+                        const matchupId = String(r[2]).trim();
+                        if (matchupId === '0' || !matchupId) return;
+                        const ws = weekStats[`${r[0]}|${r[1]}`];
+                        if (!ws || ws.total === 0 || (ws.nonZero / ws.total) < 0.75) return;
+                        const s1 = parseFloat(r[4]);
+                        const s2 = parseFloat(r[6]);
+                        if (isNaN(s1) || isNaN(s2) || (s1 === 0 && s2 === 0)) return;
+                        const t1 = getMasterOwner(r[3]);
+                        const t2 = getMasterOwner(r[5]);
+                        if (!t1 || !t2 || t1 === t2) return;
+                        const week = String(r[1]).trim();
+                        games.push({
+                            league: leagueName,
+                            season: parseInt(col0, 10) || 0,
+                            week,
+                            weekNum: parseInt(week.replace(/\D/g, ''), 10) || 0,
+                            t1, s1, t2, s2
+                        });
+                    }
+                });
+            });
+
+            // Work out who made the playoffs each season: top 6 by record (top 7 in All Flex Zone),
+            // ties broken by points for. Anyone with a champion/runner-up/3rd finish also counts.
+            const groups = {};
+            standings.forEach(s => { (groups[s.league + '||' + s.season] = groups[s.league + '||' + s.season] || []).push(s); });
+            const madeMap = {};
+            Object.keys(groups).forEach(k => {
+                const league = k.split('||')[0];
+                const cutoff = /all flex zone/i.test(league) ? 7 : 6;
+                const complete = groups[k].some(s => /league champion/i.test(s.placement));
+                [...groups[k]].sort((a, b) => (b.w - a.w) || (a.l - b.l) || (b.pf - a.pf)).forEach((s, i) => {
+                    s.madePlayoffs = i < cutoff || madePlayoffs(s.placement);
+                    s.complete = complete;
+                    madeMap[`${s.league}||${s.season}||${s.owner}`] = s.madePlayoffs;
+                });
+            });
+
+            // Playoff games = games in or after the league's first playoff week where both teams made the playoffs (skips consolation brackets)
+            games.forEach(g => {
+                g.playoff = g.weekNum >= playoffStartWeek(g.league, g.season) &&
+                    !!madeMap[`${g.league}||${g.season}||${g.t1}`] &&
+                    !!madeMap[`${g.league}||${g.season}||${g.t2}`];
+            });
+
+            return { games, standings };
+        }
+
+        // Longest run of consecutive wins ('W') or losses ('L') for one manager inside one league (carries across seasons)
+        function findStreaks(games, kind) {
+            const byKey = {};
+            games.forEach(g => {
+                [[g.t1, g.s1, g.s2], [g.t2, g.s2, g.s1]].forEach(([owner, my, opp]) => {
+                    const k = g.league + '||' + owner;
+                    (byKey[k] = byKey[k] || []).push({ g, res: my > opp ? 'W' : (my < opp ? 'L' : 'T') });
+                });
+            });
+
+            const best = [];
+            Object.keys(byKey).forEach(k => {
+                const [league, owner] = k.split('||');
+                const arr = byKey[k].sort((a, b) => (a.g.season - b.g.season) || (a.g.weekNum - b.g.weekNum));
+                let len = 0, start = null, last = null, top = null;
+                const close = () => { if (len > 0 && (!top || len > top.len)) top = { league, owner, len, start, end: last }; };
+                arr.forEach(x => {
+                    if (x.res === kind) {
+                        if (len === 0) start = x.g;
+                        len++; last = x.g;
+                    } else { close(); len = 0; }
+                });
+                close();
+                if (top) best.push(top);
+            });
+            return best.sort((a, b) => b.len - a.len);
+        }
+
+        function findPlayoffStreaks(standings) {
+            const byKey = {};
+            standings.forEach(s => {
+                if (!s.complete) return; // ignore seasons still in progress
+                const k = s.league + '||' + s.owner;
+                if (!byKey[k]) byKey[k] = {};
+                byKey[k][s.season] = s.madePlayoffs;
+            });
+
+            const best = [];
+            Object.keys(byKey).forEach(k => {
+                const [league, owner] = k.split('||');
+                const seasons = Object.keys(byKey[k]).map(Number).sort((a, b) => a - b);
+                let len = 0, startSeason = 0, prev = null, top = null;
+                seasons.forEach(season => {
+                    const made = byKey[k][season];
+                    if (made && prev !== null && season === prev + 1 && len > 0) {
+                        len++;
+                    } else if (made) {
+                        len = 1; startSeason = season;
+                    } else {
+                        len = 0;
+                    }
+                    if (len > 0 && (!top || len > top.len)) top = { league, owner, len, startSeason, endSeason: season };
+                    prev = season;
+                });
+                if (top) best.push(top);
+            });
+            return best.sort((a, b) => b.len - a.len);
+        }
+
+        function recordCard(icon, title, blurb, entries) {
+            const top = entries[0];
+            const rest = entries.slice(1, 3);
+            const body = top ? `
+                <div class="space-y-1">
+                    <p class="text-2xl font-extrabold text-emerald-400">${top.value}</p>
+                    <p class="font-bold text-accent text-sm">${top.name}</p>
+                    <p class="text-xs text-slate-400">${top.detail || ''}</p>
+                </div>
+                ${rest.length ? `<div class="pt-3 border-t border-slate-800 space-y-2">${rest.map((e, i) => `
+                    <div class="flex justify-between items-start gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 font-bold mr-1">#${i + 2}</span>
+                            <span class="font-semibold text-slate-200">${e.name}</span>
+                            <p class="text-slate-500 ml-5">${e.detail || ''}</p>
+                        </div>
+                        <span class="font-mono font-bold text-slate-300 whitespace-nowrap">${e.value}</span>
+                    </div>`).join('')}</div>` : ''}
+            ` : `<p class="text-xs text-slate-500">Not enough data yet.</p>`;
+
+            return `
+                <div class="bg-cardbg border border-slate-700 rounded-xl p-5 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-white">${icon} ${title}</h3>
+                        <p class="text-[11px] text-slate-500">${blurb}</p>
+                    </div>
+                    ${body}
+                </div>
+            `;
+        }
+
+        function renderRecords() {
+            const filterEl = document.getElementById('records-league-filter');
+            const grid = document.getElementById('records-grid');
+            if (!filterEl || !grid) return;
+            const { games, standings } = collectRecordsData(filterEl.value);
+            const when = g => `${g.season} ${g.week}`;
+            const range = (s, e) => (s.season === e.season && s.week === e.week) ? when(s) : `${when(s)} → ${when(e)}`;
+            const cards = [];
+
+            // --- Streaks ---
+            const winStreaks = findStreaks(games, 'W');
+            cards.push(recordCard('🔥', 'Longest Winning Streak', 'Most consecutive wins in one league (carries across seasons)',
+                winStreaks.slice(0, 3).map(s => ({ name: s.owner, value: `${s.len} wins`, detail: `${s.league} • ${range(s.start, s.end)}` }))));
+
+            const loseStreaks = findStreaks(games, 'L');
+            cards.push(recordCard('🧊', 'Longest Losing Streak', 'Most consecutive losses in one league',
+                loseStreaks.slice(0, 3).map(s => ({ name: s.owner, value: `${s.len} losses`, detail: `${s.league} • ${range(s.start, s.end)}` }))));
+
+            const playoffStreaks = findPlayoffStreaks(standings);
+            cards.push(recordCard('🎟️', 'Playoff Streak', 'Most consecutive seasons making the playoffs in one league',
+                playoffStreaks.slice(0, 3).map(s => ({ name: s.owner, value: `${s.len} seasons`, detail: `${s.league} • ${s.startSeason}–${s.endSeason}` }))));
+
+            // --- Championships ---
+            const titlesByLeague = {};
+            const titlesBySeason = {};
+            const runnerUps = {};
+            standings.forEach(s => {
+                if (s.placement.includes('League Champion')) {
+                    const k1 = s.owner + '||' + s.league;
+                    (titlesByLeague[k1] = titlesByLeague[k1] || { owner: s.owner, league: s.league, seasons: [] }).seasons.push(s.season);
+                    const k2 = s.owner + '||' + s.season;
+                    (titlesBySeason[k2] = titlesBySeason[k2] || { owner: s.owner, season: s.season, leagues: [] }).leagues.push(s.league);
+                }
+                if (s.placement.includes('Runner-Up')) runnerUps[s.owner] = (runnerUps[s.owner] || 0) + 1;
+            });
+
+            cards.push(recordCard('👑', 'Dynasty Award', 'Most championships in a single league',
+                Object.values(titlesByLeague).sort((a, b) => b.seasons.length - a.seasons.length).slice(0, 3)
+                    .map(t => ({ name: t.owner, value: `${t.seasons.length} title${t.seasons.length > 1 ? 's' : ''}`, detail: `${t.league} • ${t.seasons.sort().join(', ')}` }))));
+
+            cards.push(recordCard('🏆', 'Greatest Single Season', 'Most championships won in the same season across leagues',
+                Object.values(titlesBySeason).sort((a, b) => b.leagues.length - a.leagues.length).slice(0, 3)
+                    .map(t => ({ name: t.owner, value: `${t.leagues.length} title${t.leagues.length > 1 ? 's' : ''}`, detail: `${t.season} • ${t.leagues.join(', ')}` }))));
+
+            const titleTotals = {};
+            standings.forEach(s => { if (s.placement.includes('League Champion')) titleTotals[s.owner] = (titleTotals[s.owner] || 0) + 1; });
+            cards.push(recordCard('🥈', 'Always a Bridesmaid', 'Most runner-up finishes (fewer titles breaks ties)',
+                Object.keys(runnerUps).sort((a, b) => (runnerUps[b] - runnerUps[a]) || ((titleTotals[a] || 0) - (titleTotals[b] || 0))).slice(0, 3)
+                    .map(o => ({ name: o, value: `${runnerUps[o]} runner-up${runnerUps[o] > 1 ? 's' : ''}`, detail: `${titleTotals[o] || 0} career title${(titleTotals[o] || 0) === 1 ? '' : 's'}` }))));
+
+            // --- Single-game feats ---
+            const sides = [];
+            games.forEach(g => {
+                sides.push({ owner: g.t1, score: g.s1, opp: g.t2, oppScore: g.s2, g });
+                sides.push({ owner: g.t2, score: g.s2, opp: g.t1, oppScore: g.s1, g });
+            });
+            const sideDetail = x => `vs ${x.opp} (${x.oppScore.toFixed(2)}) • ${x.g.league} • ${when(x.g)}`;
+
+            cards.push(recordCard('💥', 'Highest Single-Game Score', 'The biggest score ever put up in a week',
+                [...sides].sort((a, b) => b.score - a.score).slice(0, 3)
+                    .map(x => ({ name: x.owner, value: `${x.score.toFixed(2)} pts`, detail: sideDetail(x) }))));
+
+            cards.push(recordCard('🪦', 'Lowest Playoff Score', 'Fewest points in a playoff game (playoff teams only)',
+                sides.filter(x => x.g.playoff && x.score > 0).sort((a, b) => a.score - b.score).slice(0, 3)
+                    .map(x => ({ name: x.owner, value: `${x.score.toFixed(2)} pts`, detail: sideDetail(x) }))));
+
+            const margins = games.filter(g => g.s1 !== g.s2).map(g => {
+                const w1 = g.s1 > g.s2;
+                return { winner: w1 ? g.t1 : g.t2, loser: w1 ? g.t2 : g.t1, ws: w1 ? g.s1 : g.s2, ls: w1 ? g.s2 : g.s1, margin: Math.abs(g.s1 - g.s2), g };
+            });
+            const marginDetail = m => `${m.ws.toFixed(2)}–${m.ls.toFixed(2)} over ${m.loser} • ${m.g.league} • ${when(m.g)}`;
+
+            cards.push(recordCard('🚜', 'Biggest Blowout', 'Largest margin of victory',
+                [...margins].sort((a, b) => b.margin - a.margin).slice(0, 3)
+                    .map(m => ({ name: m.winner, value: `+${m.margin.toFixed(2)}`, detail: marginDetail(m) }))));
+
+            cards.push(recordCard('😰', 'Nail-Biter', 'Closest finish on record',
+                [...margins].sort((a, b) => a.margin - b.margin).slice(0, 3)
+                    .map(m => ({ name: m.winner, value: `+${m.margin.toFixed(2)}`, detail: marginDetail(m) }))));
+
+            cards.push(recordCard('💔', 'Heartbreak Award', 'Most points scored in a loss',
+                sides.filter(x => x.score < x.oppScore).sort((a, b) => b.score - a.score).slice(0, 3)
+                    .map(x => ({ name: x.owner, value: `${x.score.toFixed(2)} pts (L)`, detail: sideDetail(x) }))));
+
+            cards.push(recordCard('🎭', 'Grand Larceny', 'Fewest points scored in a win',
+                sides.filter(x => x.score > x.oppScore && x.score > 0).sort((a, b) => a.score - b.score).slice(0, 3)
+                    .map(x => ({ name: x.owner, value: `${x.score.toFixed(2)} pts (W)`, detail: sideDetail(x) }))));
+
+            // --- Season-long feats ---
+            cards.push(recordCard('📈', 'Best Season Record', 'Highest win % in a season (minimum 10 games)',
+                standings.filter(s => (s.w + s.l + s.t) >= 10)
+                    .map(s => ({ ...s, pct: (s.w + 0.5 * s.t) / (s.w + s.l + s.t) }))
+                    .sort((a, b) => b.pct - a.pct || b.w - a.w).slice(0, 3)
+                    .map(s => ({ name: s.owner, value: `${s.w}-${s.l}${s.t ? '-' + s.t : ''}`, detail: `${s.league} • ${s.season} • ${s.placement || 'No placement'}` }))));
+
+            const seasonPts = {};
+            const seasonGames = {};
+            games.forEach(g => {
+                if (g.weekNum >= playoffStartWeek(g.league, g.season)) return; // regular season only
+                [[g.t1, g.s1], [g.t2, g.s2]].forEach(([o, s]) => {
+                    const k = `${o}||${g.league}||${g.season}`;
+                    seasonPts[k] = (seasonPts[k] || 0) + s;
+                    seasonGames[k] = (seasonGames[k] || 0) + 1;
+                });
+            });
+            cards.push(recordCard('🚀', 'Highest-Scoring Season', 'Most regular-season points in one year (minimum 10 games)',
+                Object.keys(seasonPts).filter(k => seasonGames[k] >= 10).sort((a, b) => seasonPts[b] - seasonPts[a]).slice(0, 3)
+                    .map(k => { const [o, lg, sn] = k.split('||'); return { name: o, value: `${seasonPts[k].toFixed(1)} pts`, detail: `${lg} • ${sn}` }; })));
+
+            // --- Rivalries ---
+            const pairs = {};
+            games.forEach(g => {
+                if (g.s1 === g.s2) return;
+                const [a, b] = [g.t1, g.t2].sort();
+                const k = a + '||' + b;
+                if (!pairs[k]) pairs[k] = { a, b, aw: 0, bw: 0 };
+                const winner = g.s1 > g.s2 ? g.t1 : g.t2;
+                if (winner === a) pairs[k].aw++; else pairs[k].bw++;
+            });
+            cards.push(recordCard('😈', 'Biggest Nemesis', 'Most lopsided head-to-head record (minimum 5 games)',
+                Object.values(pairs).filter(p => p.aw + p.bw >= 5)
+                    .sort((x, y) => Math.abs(y.aw - y.bw) - Math.abs(x.aw - x.bw)).slice(0, 3)
+                    .map(p => {
+                        const aLeads = p.aw >= p.bw;
+                        return { name: `${aLeads ? p.a : p.b} over ${aLeads ? p.b : p.a}`, value: `${Math.max(p.aw, p.bw)}-${Math.min(p.aw, p.bw)}`, detail: `${p.aw + p.bw} games played` };
+                    })));
+
+            cards.push(recordCard('⚔️', 'Greatest Rivalry', 'Most-played head-to-head matchup',
+                Object.values(pairs).sort((x, y) => (y.aw + y.bw) - (x.aw + x.bw)).slice(0, 3)
+                    .map(p => ({ name: `${p.a} vs ${p.b}`, value: `${p.aw + p.bw} games`, detail: `Series: ${p.a} ${p.aw}-${p.bw} ${p.b}` }))));
+
+            grid.innerHTML = cards.join('');
         }
 
         // --- TAB 7: DRAFT PICKS MATRIX ---

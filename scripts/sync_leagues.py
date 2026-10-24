@@ -27,7 +27,7 @@ def fetch_json(url):
 def ordinal(n):
     return f"{n}{'tsnrhtdd'[(n//10%10!=1)*(n%10<4)*n%10::4]}"
 
-def get_ player_label(pid, players_data):
+def get_player_label(pid, players_data):
     p_info = players_data.get(str(pid), {})
     p_name = p_info.get('full_name') or f"{p_info.get('first_name', '')} {p_info.get('last_name', '')}".strip() or str(pid)
     p_pos = p_info.get('position') or 'FLEX'

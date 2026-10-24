@@ -1,104 +1,538 @@
+"""
+Fleaflicker -> sleeper_leagues_master.json sync.
+
+Builds the same sections the Sleeper sync produces, so index.html treats the
+Fleaflicker league like any other league:
+
+  --- LEAGUE PROFILE ---
+  --- PAST SEASONS STANDINGS & CHAMPIONS ---     (every season since START_SEASON)
+  --- CURRENT ROSTERS & DRAFT PICKS ---
+  --- TRADE HISTORY (ALL-TIME & ALL SEASONS) --- (every completed trade)
+  --- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) --- (every game, every season)
+
+Set FLEA_DEBUG=1 to also dump the first raw response of every endpoint into
+./fleaflicker_debug/ (the workflow uploads that folder as a build artifact).
+"""
 import json
 import os
+import sys
+import time
+import urllib.error
+import urllib.parse
 import urllib.request
+from datetime import date, datetime, timedelta, timezone
 
 LEAGUES_TO_SYNC = [
     {
         "id": "165455",
         "name": "Fleaflicker Main League",
         "type": "dynasty",
-        "seasons": ["2024", "2025", "2026"]
+        "start_season": 2015,
     }
 ]
 
-def fetch_json(url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+MASTER_FILE = "sleeper_leagues_master.json"
+API_BASE = "https://www.fleaflicker.com/api/"
+REQUEST_DELAY = 0.15          # seconds between calls, be polite
+MAX_SCORING_PERIODS = 20      # upper bound if the API doesn't tell us
+FALLBACK_REG_SEASON_WEEKS = 14
+FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
+DEBUG = os.environ.get("FLEA_DEBUG") == "1"
+DEBUG_DIR = "fleaflicker_debug"
+
+# If the automatic champion / runner-up / 3rd-place detection ever gets a season
+# wrong (e.g. two-week championship), pin it here by Fleaflicker team id:
+#   PLACEMENT_OVERRIDES = {"2019": {"champion": 123456, "runner_up": 234567, "third": 345678}}
+PLACEMENT_OVERRIDES = {}
+
+BLANK = ["", "", "", "", "", "", ""]
+_debug_seen = set()
+
+
+# --------------------------------------------------------------------------- #
+# helpers
+# --------------------------------------------------------------------------- #
+def current_season():
+    now = datetime.now(timezone.utc)
+    return now.year if now.month >= 3 else now.year - 1
+
+
+def ordinal(n):
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            return json.loads(response.read().decode('utf-8'))
-    except Exception as e:
-        print(f"API Error for {url}: {e}")
+        n = int(n)
+    except (TypeError, ValueError):
+        return str(n)
+    return f"{n}{'tsnrhtdd'[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4]}"
+
+
+def num(x, default=0.0):
+    """Fleaflicker wraps numbers as {"value": 1.0, "formatted": "1"}."""
+    if isinstance(x, dict):
+        x = x.get("value", x.get("formatted"))
+    try:
+        return float(str(x).replace(",", ""))
+    except (TypeError, ValueError):
+        return default
+
+
+def api(endpoint, **params):
+    query = {"sport": "NFL"}
+    query.update({k: v for k, v in params.items() if v is not None})
+    url = API_BASE + endpoint + "?" + urllib.parse.urlencode(query)
+    data = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (dynasty-hub sync)"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as e:
+            if e.code in (400, 404):      # season/league doesn't exist - not worth retrying
+                print(f"  {endpoint} {params}: HTTP {e.code}")
+                return None
+            print(f"  {endpoint} {params}: HTTP {e.code} (attempt {attempt + 1})")
+        except Exception as e:  # network hiccup, bad JSON...
+            print(f"  {endpoint} {params}: {e} (attempt {attempt + 1})")
+        time.sleep(1.5 * (attempt + 1))
+    time.sleep(REQUEST_DELAY)
+    if data is not None and DEBUG and endpoint not in _debug_seen:
+        _debug_seen.add(endpoint)
+        os.makedirs(DEBUG_DIR, exist_ok=True)
+        with open(os.path.join(DEBUG_DIR, f"{endpoint}.json"), "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=1)
+            f.write("\n")
+    return data
+
+
+def team_label(team):
+    """'Team Name (OwnerName)' - same shape the Sleeper sync uses."""
+    team = team or {}
+    name = (team.get("name") or "").strip()
+    owners = team.get("owners") or []
+    display = ((owners[0] or {}).get("displayName") or "").strip() if owners else ""
+    if name and display and name.lower() != display.lower():
+        return f"{name} ({display})"
+    return name or display or f"Team {team.get('id', '?')}"
+
+
+def player_label(pro, with_team=False):
+    pro = pro or {}
+    name = pro.get("nameFull") or f"{pro.get('nameFirst', '')} {pro.get('nameLast', '')}".strip() or "Unknown"
+    pos = pro.get("position") or "FLEX"
+    if with_team:
+        return f"{name} ({pos} - {pro.get('proTeamAbbreviation') or 'FA'})"
+    return f"{name} ({pos})"
+
+
+def unwrap_player(p):
+    """Trade/roster entries nest the player a few different ways."""
+    p = p or {}
+    for key in ("proPlayer",):
+        if key in p:
+            return p[key]
+    lp = p.get("leaguePlayer")
+    if isinstance(lp, dict):
+        return lp.get("proPlayer") or lp
+    return p
+
+
+def epoch_to_dt(raw):
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if v <= 0:
+        return None
+    if v < 1e11:      # seconds, not ms
+        v *= 1000.0
+    return datetime.fromtimestamp(v / 1000.0, tz=timezone.utc)
+
+
+def nfl_kickoff(season):
+    d = date(season, 9, 1)
+    while d.weekday() != 0:       # Labor Day = first Monday in September
+        d += timedelta(days=1)
+    return d + timedelta(days=3)  # Thursday night opener
+
+
+def season_and_week(dt):
+    """Season a trade belongs to + NFL week (offseason = Week 1, matches Sleeper rows)."""
+    season = dt.year if dt.month >= 3 else dt.year - 1
+    kickoff = nfl_kickoff(season)
+    if dt.date() < kickoff:
+        week = 1
+    else:
+        week = min(18, (dt.date() - kickoff).days // 7 + 1)
+    return season, week
+
+
+# --------------------------------------------------------------------------- #
+# standings + scoreboard (one season)
+# --------------------------------------------------------------------------- #
+def fetch_standings(league_id, season):
+    data = api("FetchLeagueStandings", league_id=league_id, season=season)
+    if not data:
+        return []
+    teams = []
+    divisions = data.get("divisions") or []
+    for div in divisions:
+        teams.extend(div.get("teams") or [])
+    if not teams:
+        teams = data.get("teams") or []
+
+    out = []
+    for t in teams:
+        rec = t.get("recordOverall") or (t.get("record") or {}).get("overall") or t.get("record") or {}
+        out.append({
+            "id": t.get("id"),
+            "label": team_label(t),
+            "wins": int(num(rec.get("wins"))),
+            "losses": int(num(rec.get("losses"))),
+            "ties": int(num(rec.get("ties"))),
+            "pf": num(t.get("pointsFor") if t.get("pointsFor") is not None else rec.get("pointsFor")),
+            "api_rank": int(num(rec.get("rank"), 0)),
+        })
+    return out
+
+
+def fetch_scoreboard(league_id, season):
+    """Returns {period: [game, ...]} with normalised games."""
+    periods = {}
+    seen_ids = set()
+    max_period = MAX_SCORING_PERIODS
+    for p in range(1, MAX_SCORING_PERIODS + 1):
+        if p > max_period:
+            break
+        data = api("FetchLeagueScoreboard", league_id=league_id, season=season, scoring_period=p)
+        if not data:
+            break
+        if p == 1:
+            ordinals = [int(num(e.get("ordinal"), 0)) for e in (data.get("eligibleSchedulePeriods") or [])]
+            if ordinals:
+                max_period = max(ordinals)
+        games = []
+        for g in data.get("games") or []:
+            home, away = g.get("home") or {}, g.get("away") or {}
+            if not home.get("id") or not away.get("id"):
+                continue  # bye
+            hs = num((g.get("homeScore") or {}).get("score", g.get("homeScore")))
+            as_ = num((g.get("awayScore") or {}).get("score", g.get("awayScore")))
+            final = bool(g.get("isFinalScore") or g.get("isFinal"))
+            if not final and hs == 0 and as_ == 0:
+                continue  # not played yet
+            games.append({
+                "gid": str(g.get("id")),
+                "home": home, "away": away,
+                "hs": hs, "as": as_, "final": final,
+            })
+        ids = {g["gid"] for g in games}
+        if not games or ids <= seen_ids:
+            break
+        seen_ids |= ids
+        periods[p] = games
+    return periods
+
+
+def rank_teams(rows):
+    rows.sort(key=lambda r: (-r["wins"], r["losses"], -r["pf"]))
+    for i, r in enumerate(rows, 1):
+        r["rank"] = i
+    return rows
+
+
+def infer_placements(season, rows, periods, reg_weeks):
+    """champion / runner_up / third -> team id. Needs finished playoff weeks."""
+    ov = PLACEMENT_OVERRIDES.get(str(season))
+    if ov:
+        return ov
+    rank = {r["id"]: r["rank"] for r in rows}
+    playoff_periods = sorted(p for p in periods if p > reg_weeks)
+    if not playoff_periods:
+        return {}
+    last = playoff_periods[-1]
+    last_games = periods[last]
+    if not all(g["final"] for g in last_games):
+        return {}  # season still in progress
+
+    def winner_loser(g):
+        if g["hs"] == g["as"]:
+            return None, None
+        return (g["home"]["id"], g["away"]["id"]) if g["hs"] > g["as"] else (g["away"]["id"], g["home"]["id"])
+
+    prev_w, prev_l = set(), set()
+    if len(playoff_periods) > 1:
+        for g in periods[playoff_periods[-2]]:
+            w, l = winner_loser(g)
+            if w is not None:
+                prev_w.add(w)
+                prev_l.add(l)
+
+    def strength(g):
+        return rank.get(g["home"]["id"], 99) + rank.get(g["away"]["id"], 99)
+
+    if prev_w:
+        champ_c = [g for g in last_games if g["home"]["id"] in prev_w and g["away"]["id"] in prev_w]
+        third_c = [g for g in last_games if g["home"]["id"] in prev_l and g["away"]["id"] in prev_l]
+    else:
+        champ_c, third_c = list(last_games), []
+    if not champ_c:
+        champ_c = list(last_games)
+
+    champ_game = min(champ_c, key=strength)
+    w, l = winner_loser(champ_game)
+    if w is None:
+        return {}
+    result = {"champion": w, "runner_up": l}
+    third_c = [g for g in third_c if g is not champ_game]
+    if third_c:
+        w3, _ = winner_loser(min(third_c, key=strength))
+        if w3 is not None:
+            result["third"] = w3
+    return result
+
+
+def build_season(league_id, season):
+    rows = fetch_standings(league_id, season)
+    if not rows:
+        return None
+    periods = fetch_scoreboard(league_id, season)
+
+    # --- safety net: if the standings payload carried no usable record/PF,
+    # rebuild them from the scoreboard (regular-season weeks only).
+    if rows and not any(r["wins"] + r["losses"] + r["ties"] for r in rows) and periods:
+        print(f"  {season}: standings had no records, deriving from scoreboard")
+        by_id = {r["id"]: r for r in rows}
+        for p, games in periods.items():
+            if p > FALLBACK_REG_SEASON_WEEKS:
+                continue
+            for g in games:
+                if not g["final"]:
+                    continue
+                for tid, mine, theirs in ((g["home"]["id"], g["hs"], g["as"]), (g["away"]["id"], g["as"], g["hs"])):
+                    r = by_id.get(tid)
+                    if not r:
+                        continue
+                    r["pf"] += mine
+                    if mine > theirs:
+                        r["wins"] += 1
+                    elif mine < theirs:
+                        r["losses"] += 1
+                    else:
+                        r["ties"] += 1
+
+    rank_teams(rows)
+    reg_weeks = max((r["wins"] + r["losses"] + r["ties"] for r in rows), default=0) or FALLBACK_REG_SEASON_WEEKS
+    placements = infer_placements(season, rows, periods, reg_weeks)
+    return {"rows": rows, "periods": periods, "reg_weeks": reg_weeks, "placements": placements}
+
+
+def placement_label(team_id, placements):
+    if placements.get("champion") == team_id:
+        return "🏆 League Champion"
+    if placements.get("runner_up") == team_id:
+        return "🥈 Runner-Up"
+    if placements.get("third") == team_id:
+        return "🥉 3rd Place"
+    return "Regular Season"
+
+
+# --------------------------------------------------------------------------- #
+# trades
+# --------------------------------------------------------------------------- #
+def fetch_all_trades(league_id):
+    trades, offset, seen_offsets = [], None, set()
+    for _ in range(300):
+        data = api("FetchTrades", league_id=league_id, filter="TRADES_COMPLETED", result_offset=offset)
+        if not data:
+            break
+        trades.extend(data.get("trades") or [])
+        nxt = data.get("resultOffsetNext")
+        if nxt is None or nxt in seen_offsets:
+            break
+        seen_offsets.add(nxt)
+        offset = nxt
+    return trades
+
+
+def build_trade_rows(trades, season_labels, latest_label):
+    def label_for(team, season):
+        tid = (team or {}).get("id")
+        return season_labels.get(season, {}).get(tid) or latest_label.get(tid) or team_label(team)
+
+    rows = []
+    for t in trades:
+        dt = epoch_to_dt(t.get("approvedOn") or t.get("tradeTime") or t.get("createdOn"))
+        if not dt:
+            continue
+        season, week = season_and_week(dt)
+        sides = t.get("teams") or []
+        if len(sides) < 2:
+            continue
+
+        teams_involved = " & ".join(label_for(s.get("team"), season) for s in sides)
+        parts = []
+        for s in sides:
+            mgr = label_for(s.get("team"), season)
+            items = []
+            for p in s.get("playersObtained") or []:
+                items.append(player_label(unwrap_player(p)))
+            for pk in s.get("picksObtained") or []:
+                slot = pk.get("slot") or {}
+                rnd = slot.get("round") or pk.get("round") or 1
+                desc = f"{pk.get('season', '')} Round {ordinal(rnd)} Pick"
+                orig = pk.get("originalOwner") or pk.get("originalTeam")
+                if orig:
+                    desc += f" (originally from {label_for(orig, season)})"
+                items.append(desc.strip())
+            parts.append(f"{mgr} received: [{', '.join(items) if items else 'Nothing'}]")
+
+        date_str = f"{dt.month}/{dt.day}/{dt.year}"
+        rows.append((dt, [str(season), date_str, f"Week {week}", teams_involved, " <---> ".join(parts), "", ""]))
+
+    rows.sort(key=lambda x: x[0], reverse=True)   # newest first, like the Sleeper block
+    return [r for _, r in rows]
+
+
+# --------------------------------------------------------------------------- #
+# rosters + picks (current season only)
+# --------------------------------------------------------------------------- #
+def fetch_roster_str(league_id, team_id, season):
+    data = api("FetchRoster", league_id=league_id, team_id=team_id, season=season)
+    names = []
+    if data:
+        for grp in data.get("groups") or []:
+            for slot in grp.get("slots") or []:
+                lp = slot.get("leaguePlayer")
+                if lp:
+                    names.append(player_label(unwrap_player(lp), with_team=True))
+    return ", ".join(names)
+
+
+def fetch_picks_str(league_id, team_id, season):
+    data = api("FetchTeamPicks", league_id=league_id, team_id=team_id)
+    picks = []
+    if data:
+        for pk in data.get("picks") or []:
+            yr = int(num(pk.get("season"), 0))
+            slot = pk.get("slot") or {}
+            rnd = int(num(slot.get("round") or pk.get("round"), 0))
+            if yr > season and yr <= season + FUTURE_PICK_SEASONS and rnd:
+                picks.append((yr, rnd))
+    picks.sort()
+    return ", ".join(f"{y} Mid Round {r}" for y, r in picks) if picks else "None"
+
+
+# --------------------------------------------------------------------------- #
+# main
+# --------------------------------------------------------------------------- #
+def sync_league(league):
+    league_id, name = league["id"], league["name"]
+    cur = current_season()
+    print(f"== {name} ({league_id}), seasons {league['start_season']}-{cur}")
+
+    standings_rows, matchup_rows = [], []
+    season_labels, latest_label = {}, {}
+    current_rows = []
+
+    for season in range(league["start_season"], cur + 1):
+        print(f"- season {season}")
+        info = build_season(league_id, season)
+        if not info:
+            print("  no data (league didn't exist or API refused)")
+            continue
+        rows, periods, placements = info["rows"], info["periods"], info["placements"]
+        season_labels[season] = {r["id"]: r["label"] for r in rows}
+        latest_label.update(season_labels[season])
+        if season == cur:
+            current_rows = rows
+
+        for r in rows:
+            standings_rows.append([
+                str(season), r["label"], f"{r['wins']}-{r['losses']}", f"{r['pf']:.2f}",
+                placement_label(r["id"], placements), "", "",
+            ])
+
+        n_games = 0
+        for p in sorted(periods):
+            for idx, g in enumerate(periods[p], 1):
+                lab = season_labels[season]
+                h = lab.get(g["home"]["id"]) or team_label(g["home"])
+                a = lab.get(g["away"]["id"]) or team_label(g["away"])
+                matchup_rows.append([str(season), f"Week {p}", str(idx), h, f"{g['hs']:.2f}", a, f"{g['as']:.2f}"])
+                n_games += 1
+        print(f"  {len(rows)} teams, {n_games} games, regular season = {info['reg_weeks']} wks, placements = {placements or 'n/a'}")
+
+    if not standings_rows:
+        print("!! No Fleaflicker data could be loaded - leaving existing data untouched.")
         return None
 
-def parse_fleaflicker_standings(season, league_id):
-    standings_rows = []
-    url = f"https://www.fleaflicker.com/api/FetchLeagueStandings?sport=NFL&league_id={league_id}&season={season}"
-    data = fetch_json(url)
-    if not data:
-        return standings_rows
+    # newest season first (matches Sleeper block); keep original order inside a season
+    standings_rows.sort(key=lambda r: -int(r[0]))
+    matchup_rows.sort(key=lambda r: -int(r[0]))
 
-    for div in data.get('divisions', []):
-        for team in div.get('teams', []):
-            team_name = team.get('name', 'Team')
-            owners = team.get('owners', [])
-            owner_name = owners[0].get('displayName', 'Owner') if owners else 'Owner'
-            mgr_label = f"{team_name} ({owner_name})"
-            
-            # Correctly access nested overall record object
-            record_container = team.get('record', {})
-            rec_obj = record_container.get('overall', record_container)
+    print("- trades")
+    trades = fetch_all_trades(league_id)
+    trade_rows = build_trade_rows(trades, season_labels, latest_label)
+    print(f"  {len(trade_rows)} completed trades")
 
-            wins = rec_obj.get('wins', 0)
-            losses = rec_obj.get('losses', 0)
-            
-            pf_val = 0.0
-            for pf_key in ['fptsFor', 'pointsFor', 'fpts']:
-                val = rec_obj.get(pf_key) or record_container.get(pf_key)
-                if val:
-                    if isinstance(val, dict):
-                        pf_val = float(val.get('value', 0.0))
-                    else:
-                        pf_val = float(val or 0.0)
-                    break
+    print("- current rosters & picks")
+    roster_rows = []
+    for r in current_rows:
+        record = f"{r['wins']}-{r['losses']}"
+        roster_rows.append([
+            r["label"], record, f"{r['pf']:.2f}",
+            fetch_roster_str(league_id, r["id"], current_season()),
+            fetch_picks_str(league_id, r["id"], current_season()),
+            "", "",
+        ])
 
-            rank = team.get('rank', 0)
-            placement = "🏆 League Champion" if rank == 1 else ("🥈 Runner-Up" if rank == 2 else ("🥉 3rd Place" if rank == 3 else "Regular Season"))
-            
-            standings_rows.append([season, mgr_label, f"{wins}-{losses}", f"{pf_val:.2f}", placement, "", ""])
-            
-    return standings_rows
+    block = [
+        ["--- LEAGUE PROFILE ---", "", "", "", "", "", ""],
+        ["League Name", name, "", "", "", "", ""],
+        ["League ID", league_id, "", "", "", "", ""],
+        ["League Type", league["type"].capitalize(), "", "", "", "", ""],
+        ["Current Season", str(cur), "", "", "", "", ""],
+        BLANK,
+        ["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""],
+        ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""],
+    ] + standings_rows + [
+        BLANK,
+        ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
+        ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""],
+    ] + roster_rows + [
+        BLANK,
+        ["--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---", "", "", "", "", "", ""],
+        ["Season", "Date", "Week", "Teams Involved", "Trade Breakdown", "", ""],
+    ] + trade_rows + [
+        BLANK,
+        ["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
+        ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"],
+    ] + matchup_rows
+    return block
+
 
 def sync_fleaflicker():
-    if not os.path.exists('sleeper_leagues_master.json'):
-        print("sleeper_leagues_master.json not found!")
-        return
+    if not os.path.exists(MASTER_FILE):
+        print(f"{MASTER_FILE} not found!")
+        sys.exit(1)
+    with open(MASTER_FILE, "r", encoding="utf-8") as f:
+        master = json.load(f)
 
-    with open('sleeper_leagues_master.json', 'r', encoding='utf-8') as f:
-        master_data = json.load(f)
-
+    ok = False
     for league in LEAGUES_TO_SYNC:
-        league_id = league["id"]
-        league_name = league["name"]
-        league_type = league["type"]
-        seasons = league["seasons"]
+        block = sync_league(league)
+        if block:
+            master[league["name"]] = block
+            ok = True
 
-        flea_standings = []
-        for season in seasons:
-            flea_standings.extend(parse_fleaflicker_standings(season, league_id))
+    if not ok:
+        print("Fleaflicker sync FAILED: nothing was loaded.")
+        sys.exit(1)
 
-        league_blocks = [
-            ["--- LEAGUE PROFILE ---", "", "", "", "", "", ""],
-            ["League Name", league_name, "", "", "", "", ""],
-            ["League ID", league_id, "", "", "", "", ""],
-            ["League Type", league_type.capitalize(), "", "", "", "", ""],
-            ["Current Season", "2026", "", "", "", "", ""]
-        ] + [["", "", "", "", "", "", ""]] + [
-            ["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""],
-            ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""]
-        ] + flea_standings
-
-        if league_type == "dynasty":
-            league_blocks += [["", "", "", "", "", "", ""]] + [
-                ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
-                ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""]
-            ]
-
-        master_data[league_name] = league_blocks
-
-    with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
-        json.dump(master_data, f, separators=(',', ':'))
-
+    with open(MASTER_FILE, "w", encoding="utf-8") as f:
+        json.dump(master, f, separators=(",", ":"))
     print("Fleaflicker sync completed.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sync_fleaflicker()

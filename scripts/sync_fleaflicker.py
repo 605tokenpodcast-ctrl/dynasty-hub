@@ -25,7 +25,7 @@ from datetime import date, datetime, timedelta, timezone
 LEAGUES_TO_SYNC = [
     {
         "id": "165455",
-        "name": "Fleaflicker Main League",
+        "name": "Branden's League",
         "type": "dynasty",
         "start_season": 2015,
     },

@@ -49,7 +49,7 @@
                         <span class="text-2xl">🏈</span>
                         <div>
                             <h1 class="text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
-                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; 4 Active Leagues</p>
+                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; Active Dynasty Leagues</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -168,7 +168,7 @@
                             <div id="bench-blunders-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
                         </div>
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
-                            <h3 class="text-lg font-bold text-emerald-400">ベルト 2026 Weekly High-Roller Belt Winners</h3>
+                            <h3 class="text-lg font-bold text-emerald-400">🥊 2026 Weekly High-Roller Belt Winners</h3>
                             <div id="weekly-highs-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
                         </div>
                     </div>
@@ -402,6 +402,25 @@
             6: 250
         };
 
+        let normalizedKtcMap = {};
+
+        function normalizePlayerName(name) {
+            return String(name || '')
+                .toLowerCase()
+                .replace(/[.']/g, '')
+                .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function rebuildNormalizedKtcMap() {
+            normalizedKtcMap = {};
+            Object.keys(ktcPlayerValues).forEach(k => {
+                normalizedKtcMap[normalizePlayerName(k)] = ktcPlayerValues[k];
+            });
+        }
+        rebuildNormalizedKtcMap();
+
         function getMasterOwner(teamString) {
             const trimmed = String(teamString || '').trim();
             if (!trimmed) return '';
@@ -441,23 +460,36 @@
         }
 
         function scoreDraftPickKTC(pickStr) {
-            const m = String(pickStr).match(/Round\s+(\d+)/i);
-            if (m && m[1]) {
-                const rd = parseInt(m[1], 10);
-                return ktcPickValues[rd] || 200;
+            // Format: "2027 Mid Round 1"
+            const s = String(pickStr || '');
+            const yrMatch = s.match(/\b(202\d)\b/);
+            const rdMatch = s.match(/Round\s+(\d+)/i);
+            if (rdMatch && rdMatch[1]) {
+                const rd = parseInt(rdMatch[1], 10);
+                const ord = rd === 1 ? '1st' : rd === 2 ? '2nd' : rd === 3 ? '3rd' : `${rd}th`;
+                if (yrMatch) {
+                    const yr = yrMatch[1];
+                    const midKey = `${yr} ${ord} (Mid)`;
+                    const baseKey = `${yr} ${ord}`;
+                    if (ktcPlayerValues[midKey]) return ktcPlayerValues[midKey];
+                    if (ktcPlayerValues[baseKey]) return ktcPlayerValues[baseKey];
+                }
+                return ktcPickValues[rd] || ktcPickValues[String(rd)] || 250;
             }
             return 0;
         }
 
         function scorePlayerKTC(playerEntry) {
-            // Format: "Bijan Robinson (RB - ATL)"
+            // Format: "Kenneth Walker III (RB - KC)"
             const match = String(playerEntry).match(/^(.+?)\s*\(([A-Z]+)\s*-\s*([A-Z]+)\)$/);
             const cleanName = match ? match[1].trim() : String(playerEntry).trim();
             const pos = match ? match[2].trim() : 'BN';
             if (ktcPlayerValues[cleanName]) return ktcPlayerValues[cleanName];
-            if (pos === 'QB' || pos === 'RB' || pos === 'WR') return 1100;
-            if (pos === 'TE') return 900;
-            return 400; // K / DEF / deep bench baseline
+            const norm = normalizePlayerName(cleanName);
+            if (normalizedKtcMap[norm]) return normalizedKtcMap[norm];
+            if (pos === 'QB' || pos === 'RB' || pos === 'WR') return 800;
+            if (pos === 'TE') return 600;
+            return 250;
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -470,7 +502,10 @@
 
                 if (ktcRes.status === 'fulfilled' && ktcRes.value.ok) {
                     const ktcData = await ktcRes.value.json();
-                    if (ktcData.players) Object.assign(ktcPlayerValues, ktcData.players);
+                    if (ktcData.players) {
+                        Object.assign(ktcPlayerValues, ktcData.players);
+                        rebuildNormalizedKtcMap();
+                    }
                     if (ktcData.picks) Object.assign(ktcPickValues, ktcData.picks);
                 }
 

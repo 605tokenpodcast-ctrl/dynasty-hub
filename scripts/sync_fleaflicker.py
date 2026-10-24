@@ -431,21 +431,91 @@ def fetch_roster_str(league_id, team_id, season):
     return ", ".join(names)
 
 
-def fetch_picks_str(league_id, team_id, season):
+def team_id_of(x):
+    """Team id as a string from either a team dict or a bare id (None if missing)."""
+    if isinstance(x, dict):
+        x = x.get("id")
+    return str(x) if x not in (None, "") else None
+
+
+def pick_key_parts(pk):
+    """(year, round, original-owner id) for a pick record from FetchTeamPicks or a trade."""
+    yr = int(num(pk.get("season"), 0))
+    slot = pk.get("slot") or {}
+    rnd = int(num(slot.get("round") or pk.get("round"), 0))
+    orig = team_id_of(pk.get("originalOwner") or pk.get("originalTeam") or slot.get("originalOwner"))
+    return yr, rnd, orig
+
+
+def latest_pick_owners(trades):
+    """
+    Who holds each traded pick right now, according to trade history.
+    Key = (year, round, original owner id) -> id of the team that received it in the newest trade.
+    """
+    latest = {}
+    for t in trades:
+        dt = epoch_to_dt(t.get("approvedOn") or t.get("tradeTime") or t.get("createdOn"))
+        if not dt:
+            continue
+        for side in t.get("teams") or []:
+            recv = team_id_of(side.get("team"))
+            for pk in side.get("picksObtained") or []:
+                yr, rnd, orig = pick_key_parts(pk)
+                if not (yr and rnd and orig and recv):
+                    continue
+                key = (yr, rnd, orig)
+                if key not in latest or dt > latest[key][0]:
+                    latest[key] = (dt, recv)
+    return {k: v[1] for k, v in latest.items()}
+
+
+def fetch_team_picks_raw(league_id, team_id, season):
+    """Every future pick Fleaflicker lists for a team (it can include picks the team traded away)."""
     try:
         data = api("FetchTeamPicks", league_id=league_id, team_id=team_id)
     except FleaError:
-        return "None"
-    picks = []
-    if data:
-        for pk in data.get("picks") or []:
-            yr = int(num(pk.get("season"), 0))
-            slot = pk.get("slot") or {}
-            rnd = int(num(slot.get("round") or pk.get("round"), 0))
-            if yr > season and yr <= season + FUTURE_PICK_SEASONS and rnd:
-                picks.append((yr, rnd))
-    picks.sort()
-    return ", ".join(f"{y} Mid Round {r}" for y, r in picks) if picks else "None"
+        return []
+    out = []
+    for pk in (data or {}).get("picks") or []:
+        yr, rnd, orig = pick_key_parts(pk)
+        if not (rnd and season < yr <= season + FUTURE_PICK_SEASONS):
+            continue
+        owner = team_id_of(pk.get("ownedBy") or pk.get("owner") or pk.get("currentOwner"))
+        out.append({"yr": yr, "rnd": rnd, "orig": orig, "owner": owner})
+    return out
+
+
+def resolve_pick_strings(raw_by_team, trade_owner):
+    """
+    Keep each pick only on the team that actually holds it now.
+    Order of evidence: an explicit owner field on the pick, then the newest trade
+    involving that pick, then 'listed by two teams -> the original owner traded it away'.
+    """
+    listed = {}
+    for tid, picks in raw_by_team.items():
+        for pk in picks:
+            listed.setdefault((pk["yr"], pk["rnd"], pk["orig"] or tid), set()).add(tid)
+
+    result, dropped = {}, 0
+    for tid, picks in raw_by_team.items():
+        kept = {}
+        for pk in picks:
+            orig = pk["orig"] or tid
+            key = (pk["yr"], pk["rnd"], orig)
+            if pk["owner"]:
+                keep = pk["owner"] == tid
+            elif key in trade_owner:
+                keep = trade_owner[key] == tid
+            else:
+                keep = len(listed[key]) <= 1 or orig != tid
+            if keep:
+                kept[key] = (pk["yr"], pk["rnd"])
+            else:
+                dropped += 1
+        ordered = sorted(kept.values())
+        result[tid] = ", ".join(f"{y} Mid Round {r}" for y, r in ordered) if ordered else "None"
+    print(f"  picks: dropped {dropped} listing(s) of picks the team no longer holds")
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -536,11 +606,13 @@ def collect_league(league):
     roster_rows = []
     if current_rows:
         print("- current rosters & picks")
+        raw_picks = {str(r["id"]): fetch_team_picks_raw(league_id, r["id"], cur) for r in current_rows}
+        pick_strs = resolve_pick_strings(raw_picks, latest_pick_owners(trades))
         for r in current_rows:
             roster_rows.append([
                 r["label"], f"{r['wins']}-{r['losses']}", f"{r['pf']:.2f}",
                 fetch_roster_str(league_id, r["id"], cur),
-                fetch_picks_str(league_id, r["id"], cur),
+                pick_strs.get(str(r["id"]), "None"),
                 "", "",
             ])
     return {"standings": standings_rows, "matchups": matchup_rows, "trades": trade_rows,

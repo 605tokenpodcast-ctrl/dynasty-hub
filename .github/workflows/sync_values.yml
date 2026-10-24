@@ -2,8 +2,8 @@ name: Auto-Sync Dynasty Hub Data
 
 on:
   schedule:
-    # Runs automatically every Tuesday at 8:00 AM UTC
-    - cron: '0 8 * * 2'
+    # Runs automatically every Wednesday at 11:00 AM CDT (16:00 UTC)
+    - cron: '0 16 * * 3'
   workflow_dispatch: # Allows manual 1-click execution anytime
 
 permissions:

@@ -2,10 +2,6 @@ import json
 import os
 import urllib.request
 
-HISTORICAL_LEAGUE_ID = "181202"  # 2016-2020 history to merge into Hail Mary Jane
-TARGET_LEAGUE_NAME = "Hail Mary Jane Congregation"
-HISTORICAL_SEASONS = ["2016", "2017", "2018", "2019", "2020"]
-
 ACTIVE_FLEA_ID = "165455"        # Current active league (2015-Present)
 ACTIVE_FLEA_NAME = "Fleaflicker Main League"
 ACTIVE_SEASONS = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"]
@@ -36,12 +32,11 @@ def parse_fleaflicker_standings(season, league_id):
             wins = record.get('wins', 0)
             losses = record.get('losses', 0)
             
-            # Robustly catch Fleaflicker points formatting
             pf_val = 0.0
-            if 'fptsFor' in record:
-                pf_val = float(record['fptsFor'].get('value', 0.0))
-            elif 'pointsFor' in record:
-                pf_val = float(record['pointsFor'].get('value', 0.0))
+            for key in ['fptsFor', 'pointsFor', 'fpts']:
+                if key in record and isinstance(record[key], dict):
+                    pf_val = float(record[key].get('value', 0.0))
+                    break
             
             rank = team.get('rank', 0)
             placement = "🏆 League Champion" if rank == 1 else ("🥈 Runner-Up" if rank == 2 else ("🥉 3rd Place" if rank == 3 else "Regular Season"))
@@ -49,31 +44,7 @@ def parse_fleaflicker_standings(season, league_id):
             
     return standings_rows
 
-def parse_fleaflicker_matchups(season, league_id):
-    matchup_rows = []
-    for week in range(1, 18):
-        sb_data = fetch_json(f"https://www.fleaflicker.com/api/FetchLeagueScoreboard?sport=NFL&league_id={league_id}&season={season}&scoring_period={week}")
-        if sb_data and 'games' in sb_data:
-            for game in sb_data['games']:
-                h = game.get('home', {})
-                a = game.get('away', {})
-                
-                h_team = h.get('name', 'Team')
-                h_owner = h.get('owners', [{}])[0].get('displayName', 'Owner') if h.get('owners') else 'Owner'
-                h_label = f"{h_team} ({h_owner})"
-                h_score = float(h.get('points', {}).get('value', 0.0))
-                
-                a_team = a.get('name', 'Team')
-                a_owner = a.get('owners', [{}])[0].get('displayName', 'Owner') if a.get('owners') else 'Owner'
-                a_label = f"{a_team} ({a_owner})"
-                a_score = float(a.get('points', {}).get('value', 0.0))
-                
-                if h_score > 0 or a_score > 0:
-                    mid = str(game.get('id', '1'))
-                    matchup_rows.append([season, f"Week {week}", mid, h_label, f"{h_score:.2f}", a_label, f"{a_score:.2f}"])
-    return matchup_rows
-
-def build_fleaflicker_data():
+def sync_fleaflicker_active():
     if not os.path.exists('sleeper_leagues_master.json'):
         print("sleeper_leagues_master.json not found!")
         return
@@ -81,60 +52,18 @@ def build_fleaflicker_data():
     with open('sleeper_leagues_master.json', 'r', encoding='utf-8') as f:
         master_data = json.load(f)
 
-    # --- PART 1: Merge 2016-2020 into Hail Mary Jane Congregation ---
-    target_key = None
-    for k in master_data.keys():
-        if k.strip().lower() == TARGET_LEAGUE_NAME.lower():
-            target_key = k
-            break
-
-    if target_key:
-        print(f"Syncing 2016-2020 history from {HISTORICAL_LEAGUE_ID} into {target_key}...")
-        existing_rows = master_data[target_key]
-        
-        # Strip out old historical seasons entirely so we avoid duplication
-        clean_rows = [r for r in existing_rows if str(r[0] if r else '').strip() not in HISTORICAL_SEASONS]
-
-        new_hist_standings = []
-        new_hist_matchups = []
-        for season in HISTORICAL_SEASONS:
-            new_hist_standings.extend(parse_fleaflicker_standings(season, HISTORICAL_LEAGUE_ID))
-            new_hist_matchups.extend(parse_fleaflicker_matchups(season, HISTORICAL_LEAGUE_ID))
-
-        standings_header = ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""]
-        matchups_header = ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]
-        
-        other_standings = [r for r in clean_rows if len(r) > 4 and any(term in str(r[4]) for term in ["Champion", "Place", "Runner-Up", "Season"])]
-        other_matchups = [r for r in clean_rows if len(r) == 7 and str(r[1]).startswith("Week")]
-
-        master_data[target_key] = (
-            [r for r in clean_rows if not str(r[0]).upper().startswith('---')] +
-            [["", "", "", "", "", "", ""]] +
-            [["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""]] +
-            [standings_header] +
-            new_hist_standings + 
-            [r for r in other_standings if str(r[0]) not in HISTORICAL_SEASONS] +
-            [["", "", "", "", "", "", ""]] +
-            [["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""]] +
-            [matchups_header] +
-            new_hist_matchups +
-            [r for r in other_matchups if str(r[0]) not in HISTORICAL_SEASONS]
-        )
-
-    # --- PART 2: Build Active/Historical Dataset for Fleaflicker League 165455 ---
     print(f"Building dataset for active Fleaflicker league {ACTIVE_FLEA_ID}...")
     flea_standings = []
-    flea_matchups = []
 
     for season in ACTIVE_SEASONS:
         flea_standings.extend(parse_fleaflicker_standings(season, ACTIVE_FLEA_ID))
-        flea_matchups.extend(parse_fleaflicker_matchups(season, ACTIVE_FLEA_ID))
 
     flea_rosters = [
         ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
         ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""]
     ]
 
+    # Safely write or update the standalone Fleaflicker league block without affecting Sleeper leagues
     master_data[ACTIVE_FLEA_NAME] = (
         [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""],
          ["League Name", ACTIVE_FLEA_NAME, "", "", "", "", ""],
@@ -145,17 +74,13 @@ def build_fleaflicker_data():
          ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""]] +
         flea_standings +
         [["", "", "", "", "", "", ""]] +
-        flea_rosters +
-        [["", "", "", "", "", "", ""]] +
-        [["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
-         ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]] +
-        flea_matchups
+        flea_rosters
     )
 
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
 
-    print("Successfully pulled and synchronized Fleaflicker history automatically!")
+    print("Successfully updated active Fleaflicker league while keeping Sleeper leagues and trades intact!")
 
 if __name__ == '__main__':
-    build_fleaflicker_data()
+    sync_fleaflicker_active()

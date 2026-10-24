@@ -14,6 +14,7 @@ LEAGUE_IDS = [
 
 CURRENT_SEASON = "2026"
 FUTURE_PICK_SEASONS = ["2027", "2028", "2029"]
+REDRAFT_LEAGUES = ["All Flex Zone", "Roundhouse"]
 
 def fetch_json(url):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -60,6 +61,7 @@ def build_master_data():
         # Match existing key in master_data if present
         league_key = existing_key_map.get(raw_name.lower(), raw_name)
         existing_rows = master_data.get(league_key, [])
+        is_redraft = league_key in REDRAFT_LEAGUES or raw_name in REDRAFT_LEAGUES
 
         draft_rounds = league_info.get('settings', {}).get('draft_rounds', 4)
         rosters = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/rosters") or []
@@ -86,28 +88,34 @@ def build_master_data():
             uid = r.get('owner_id')
             roster_to_manager[rid] = user_map.get(uid, f"Team {rid}")
 
-        # --- 1. ACCURATE FUTURE DRAFT PICK ENGINE ---
-        # Initialize default picks: (season, round, original_roster_id) -> current_owner_roster_id
+        # --- 1. ACCURATE FUTURE DRAFT PICK ENGINE (Dynasty Only) ---
         pick_ownership = {}
-        for yr in FUTURE_PICK_SEASONS:
-            for rnd in range(1, draft_rounds + 1):
-                for rid in all_roster_ids:
-                    pick_ownership[(yr, rnd, rid)] = rid
+        if not is_redraft:
+            for yr in FUTURE_PICK_SEASONS:
+                for rnd in range(1, draft_rounds + 1):
+                    for rid in all_roster_ids:
+                        pick_ownership[(yr, rnd, rid)] = rid
 
-        # Apply Sleeper traded_picks (where 'roster_id' is original team and 'owner_id' is current owner's roster_id)
-        for tp in traded_picks:
-            yr = str(tp.get('season', ''))
-            rnd = tp.get('round')
-            orig_rid = tp.get('roster_id')
-            curr_rid = tp.get('owner_id')
-            if yr in FUTURE_PICK_SEASONS and rnd and orig_rid is not None and curr_rid is not None:
-                pick_ownership[(yr, rnd, orig_rid)] = curr_rid
+            for tp in traded_picks:
+                yr = str(tp.get('season', ''))
+                rnd = tp.get('round')
+                orig_rid = tp.get('roster_id')
+                curr_rid = tp.get('owner_id')
+                if yr in FUTURE_PICK_SEASONS and rnd and orig_rid is not None and curr_rid is not None:
+                    pick_ownership[(yr, rnd, orig_rid)] = curr_rid
 
         # --- 2. BUILD CURRENT ROSTERS & STANDINGS ---
-        new_roster_rows = [
-            ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
-            ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""]
-        ]
+        if is_redraft:
+            new_roster_rows = [
+                ["--- CURRENT ROSTERS ---", "", "", "", "", "", ""],
+                ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "", "", ""]
+            ]
+        else:
+            new_roster_rows = [
+                ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
+                ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""]
+            ]
+            
         live_standings_2026 = []
 
         for r in rosters:
@@ -127,15 +135,20 @@ def build_master_data():
                 p_name, p_pos, p_team = get_player_label(pid, players_data)
                 player_strs.append(f"{p_name} ({p_pos} - {p_team})")
 
-            owned_picks = []
-            for (yr, rnd, orig_rid), owner_rid in sorted(pick_ownership.items()):
-                if owner_rid == rid:
-                    owned_picks.append(f"{yr} Mid Round {rnd}")
+            if is_redraft:
+                new_roster_rows.append([
+                    mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", ", ".join(player_strs), "", "", ""
+                ])
+            else:
+                owned_picks = []
+                for (yr, rnd, orig_rid), owner_rid in sorted(pick_ownership.items()):
+                    if owner_rid == rid:
+                        owned_picks.append(f"{yr} Mid Round {rnd}")
 
-            picks_str = ", ".join(owned_picks) if owned_picks else "None"
-            new_roster_rows.append([
-                mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", ", ".join(player_strs), picks_str, "", ""
-            ])
+                picks_str = ", ".join(owned_picks) if owned_picks else "None"
+                new_roster_rows.append([
+                    mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", ", ".join(player_strs), picks_str, "", ""
+                ])
 
         # --- 3. FETCH LIVE 2026 WEEKLY BOX SCORES & MATCHUPS (WEEKS 1-18) ---
         new_boxscore_rows = [
@@ -260,7 +273,7 @@ def build_master_data():
                     if c0 not in ('Season', CURRENT_SEASON):
                         historical_matchups.append(row)
 
-            # Deduplicate new 2026 trades against existing trades (preserving draft lineage tags)
+            # Deduplicate new 2026 trades against existing trades
             existing_trade_sigs = {
                 (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip())
                 for r in historical_trades if len(r) >= 4
@@ -306,7 +319,7 @@ def build_master_data():
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
 
-    print("Successfully merged live Sleeper data while preserving all historical seasons!")
+    print("Successfully merged live Sleeper data while respecting redraft configurations!")
 
 if __name__ == '__main__':
     build_master_data()

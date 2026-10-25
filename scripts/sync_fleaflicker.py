@@ -18,6 +18,7 @@ Set FLEA_DEBUG=1 to also dump the first raw response of every endpoint into
 """
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -390,7 +391,111 @@ def fetch_all_trades(league_id):
     return trades
 
 
-def build_trade_rows(trades, season_labels, latest_label):
+# --------------------------------------------------------------------------- #
+# draft results (which player each traded pick turned into)
+# --------------------------------------------------------------------------- #
+PICK_RE = re.compile(r"(\d{4} Round \d+\w* Pick(?: \(originally from (?:[^()]|\([^()]*\))*\))?)( -> Resulted in drafting: [^,\]]*)?")
+
+
+def parse_draft_board(data, season):
+    """
+    (season, round, original owner id) -> "Player (POS)" from one FetchLeagueDraftBoard response.
+    The board has one row per round and one cell per pick; `team` is whoever made the pick, so the
+    original owner comes from the draft order. Cells may be listed by column or by pick order (and
+    snake rounds run backwards), so use whichever reading agrees with the picks nobody traded.
+    """
+    order = [team_id_of(t) for t in (data or {}).get("draftOrder") or []]
+    n = len(order)
+    rows = (data or {}).get("rows") or []
+    if not n or not rows:
+        return {}
+
+    def slot_of(c):
+        return int(num((c.get("slot") or {}).get("slot"), 0))
+
+    def by_column(i, c):
+        return order[i] if i < n else None
+
+    def by_slot(i, c):
+        s_ = slot_of(c)
+        return order[s_ - 1] if 1 <= s_ <= n else None
+
+    def by_snake_slot(i, c):
+        s_ = slot_of(c)
+        return (order[n - s_] if c.get("descending") else order[s_ - 1]) if 1 <= s_ <= n else None
+
+    def agreement(f):
+        return sum(1 for r in rows for i, c in enumerate(r.get("cells") or [])
+                   if c and not c.get("fromOtherTeam") and team_id_of(c.get("team"))
+                   and f(i, c) == team_id_of(c.get("team")))
+
+    orig_of = max((by_column, by_slot, by_snake_slot), key=agreement)
+    out = {}
+    for r in rows:
+        for i, c in enumerate(r.get("cells") or []):
+            if not c or not c.get("player"):
+                continue
+            pro = unwrap_player(c["player"])
+            if not (pro.get("nameFull") or pro.get("nameLast")):
+                continue
+            rnd = int(num((c.get("slot") or {}).get("round") or r.get("round"), 0))
+            orig = orig_of(i, c)
+            if rnd and orig:
+                out[(int(season), rnd, orig)] = player_label(pro)
+    return out
+
+
+def fetch_draft_results(league_id, trades, first, last):
+    """Draft boards for every season whose picks were traded (finished drafts only)."""
+    seasons = set()
+    for t in trades:
+        for side in t.get("teams") or []:
+            for pk in side.get("picksObtained") or []:
+                yr = pick_key_parts(pk)[0]
+                if first <= yr <= last:
+                    seasons.add(yr)
+    out = {}
+    for season in sorted(seasons):
+        try:
+            data = api("FetchLeagueDraftBoard", league_id=league_id, season=season)
+            got = parse_draft_board(data, season)
+        except FleaError as e:
+            print(f"  draft {season} skipped: {e}")
+            continue
+        out.update(got)
+        print(f"  draft {season}: {len(got)} picks made")
+        if not got and season < current_season() and not out:
+            # Unexpected response shape: log enough to fix the parser from the run log
+            print(f"  (draft board keys: {sorted((data or {}).keys())[:12]})")
+    return out
+
+
+def copy_lineage(kept_rows, fresh_rows):
+    """Stored trade rows (kept for their old team names) get the draft results from the
+    freshly built copy of the same trade: same date and the same picks in the same order."""
+    def picks(row):
+        return [m.group(1).split(" (originally")[0] for m in PICK_RE.finditer(str(row[4]))]
+
+    by_date = {}
+    for f in fresh_rows:
+        by_date.setdefault(f[1], []).append(f)
+    out = []
+    for k in kept_rows:
+        match = next((f for f in by_date.get(k[1], []) if picks(f) == picks(k) and picks(k)), None)
+        if not match:
+            out.append(k)
+            continue
+        lineage = iter([m.group(2) or "" for m in PICK_RE.finditer(str(match[4]))])
+
+        def fill(m):
+            fresh = next(lineage, "")   # advance for every pick so they stay paired
+            return m.group(0) if m.group(2) else m.group(1) + fresh
+        text = PICK_RE.sub(fill, str(k[4]))
+        out.append([*k[:4], text, *k[5:]])
+    return out
+
+
+def build_trade_rows(trades, season_labels, latest_label, drafted=None):
     def label_for(team, season):
         tid = (team or {}).get("id")
         return season_labels.get(season, {}).get(tid) or latest_label.get(tid) or team_label(team)
@@ -419,6 +524,9 @@ def build_trade_rows(trades, season_labels, latest_label):
                 orig = pk.get("originalOwner") or pk.get("originalTeam")
                 if orig:
                     desc += f" (originally from {label_for(orig, season)})"
+                player = (drafted or {}).get(pick_key_parts(pk))
+                if player:
+                    desc += f" -> Resulted in drafting: {player}"
                 items.append(desc.strip())
             parts.append(f"{mgr} received: [{', '.join(items) if items else 'Nothing'}]")
 
@@ -786,13 +894,15 @@ def collect_league(league, existing_rows=None, cache_rows=None):
 
     print("- trades")
     trades = fetch_all_trades(league_id)
-    trade_rows = build_trade_rows(trades, season_labels, latest_label)
+    drafted = fetch_draft_results(league_id, trades, league["start_season"], min(last, cur))
+    trade_rows = build_trade_rows(trades, season_labels, latest_label, drafted)
     # a league that has an end_season must not pick up trades from later seasons
     trade_rows = [t for t in trade_rows if int(t[0]) <= last]
     # Reused seasons keep their stored trade rows, which were labelled with that season's team names
     reused = {s for s in cached if s not in backfill}
     if reused:
-        kept = [t for t in existing_section_rows(cache_rows, "TRADE") if int(t[0]) in reused]
+        kept = copy_lineage([t for t in existing_section_rows(cache_rows, "TRADE") if int(t[0]) in reused],
+                            trade_rows)
         trade_rows = sorted([t for t in trade_rows if int(t[0]) not in reused] + kept, key=trade_date, reverse=True)
     print(f"  {len(trade_rows)} completed trades")
 

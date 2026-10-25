@@ -132,6 +132,43 @@ class FleaflickerMoves(unittest.TestCase):
                          ["2026", "Week 5", "10/7/2026", "Team", "Waiver", "New Guy (WR)", "Old Guy (RB)", "5"])
 
 
+class FleaflickerDraftLineage(unittest.TestCase):
+    BOARD = {
+        "draftOrder": [{"id": 1}, {"id": 2}, {"id": 3}],
+        "rows": [
+            {"round": 1, "cells": [
+                {"team": {"id": 1}, "slot": {"round": 1, "slot": 1}, "player": {"proPlayer": {"nameFull": "A One", "position": "RB"}}},
+                {"team": {"id": 1}, "fromOtherTeam": True, "slot": {"round": 1, "slot": 2}, "player": {"proPlayer": {"nameFull": "B Two", "position": "WR"}}},
+                {"team": {"id": 3}, "slot": {"round": 1, "slot": 3}, "player": {"proPlayer": {"nameFull": "C Three", "position": "QB"}}},
+            ]},
+            # snake round listed in pick order: team 3 picks first
+            {"round": 2, "cells": [
+                {"team": {"id": 3}, "descending": True, "slot": {"round": 2, "slot": 1}, "player": {"proPlayer": {"nameFull": "D Four", "position": "TE"}}},
+                {"team": {"id": 2}, "descending": True, "slot": {"round": 2, "slot": 2}, "player": {"proPlayer": {"nameFull": "E Five", "position": "WR"}}},
+                {"team": {"id": 1}, "descending": True, "slot": {"round": 2, "slot": 3}},
+            ]},
+        ],
+    }
+
+    def test_board_keys_picks_by_original_owner(self):
+        got = sync_fleaflicker.parse_draft_board(self.BOARD, 2024)
+        self.assertEqual(got[(2024, 1, "2")], "B Two (WR)")   # team 1 used team 2's pick
+        self.assertEqual(got[(2024, 2, "3")], "D Four (TE)")
+        self.assertNotIn((2024, 2, "1"), got)                  # not picked yet
+
+    def test_trade_rows_and_kept_rows_get_lineage(self):
+        trade = {"approvedOn": 1700000000000, "teams": [
+            {"team": {"id": 1, "name": "One"}, "picksObtained": [{"season": 2024, "slot": {"round": 1}, "originalOwner": {"id": 2}}]},
+            {"team": {"id": 2, "name": "Two"}, "playersObtained": [{"proPlayer": {"nameFull": "Vet", "position": "QB"}}]},
+        ]}
+        drafted = sync_fleaflicker.parse_draft_board(self.BOARD, 2024)
+        fresh = sync_fleaflicker.build_trade_rows([trade], {}, {}, drafted)
+        self.assertIn("2024 Round 1st Pick (originally from Team 2) -> Resulted in drafting: B Two (WR)", fresh[0][4])
+        old = [*fresh[0][:3], "Old & Names", "Old One received: [2024 Round 1st Pick (originally from Old Two)] <---> Old Two received: [Vet (QB)]", "", ""]
+        kept = sync_fleaflicker.copy_lineage([old], fresh)
+        self.assertEqual(kept[0][4], "Old One received: [2024 Round 1st Pick (originally from Old Two) -> Resulted in drafting: B Two (WR)] <---> Old Two received: [Vet (QB)]")
+
+
 class FleaflickerFinishedSeasons(unittest.TestCase):
     def test_only_seasons_with_a_champion_are_reused(self):
         rows = [SEC("PAST SEASONS STANDINGS & CHAMPIONS"), ["Season"],

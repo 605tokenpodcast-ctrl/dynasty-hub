@@ -108,6 +108,7 @@
                     <button onclick="switchTab('trades')" id="nav-trades" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
                     <button onclick="switchTab('h2h')" id="nav-h2h" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
                     <button onclick="switchTab('matchups')" id="nav-matchups" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
+                    <button onclick="switchTab('playoffs')" id="nav-playoffs" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
                     <button onclick="switchTab('synergy')" id="nav-synergy" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
                     <button onclick="switchTab('leagues')" id="nav-leagues" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
                 </nav>
@@ -349,6 +350,27 @@
                     <div id="matchups-summary"></div>
                     <div id="matchups-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
                     <p id="matchups-footnote" class="text-xs text-slate-500"></p>
+                </div>
+
+                <!-- TAB: PLAYOFF ODDS SIMULATOR -->
+                <div id="tab-playoffs" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🎲 Playoff Odds Simulator</h2>
+                            <p class="text-slate-400 text-sm">Simulates the rest of the regular season thousands of times to estimate playoff, bye and seed odds.</p>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto items-end">
+                            <div class="space-y-1 flex-1 sm:flex-none">
+                                <label class="text-xs text-slate-400 font-semibold">League</label>
+                                <select id="playoffs-league" onchange="renderPlayoffOdds()" class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                            <button onclick="delete playoffSimCache[document.getElementById('playoffs-league').value]; renderPlayoffOdds()" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">🔄 Re-run</button>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div id="playoffs-table" class="overflow-x-auto"></div>
+                    </div>
+                    <p id="playoffs-footnote" class="text-xs text-slate-500"></p>
                 </div>
 
                 <!-- TAB 10: TRADE PARTNER SYNERGY -->
@@ -698,7 +720,7 @@
 
         function switchTab(tabId, skipUrlUpdate = false) {
             currentActiveTab = tabId;
-            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'records', 'luck', 'picks', 'trades', 'h2h', 'matchups', 'synergy', 'leagues'].forEach(t => {
+            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'records', 'luck', 'picks', 'trades', 'h2h', 'matchups', 'playoffs', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -716,6 +738,7 @@
             }
             if (tabId === 'matchups') renderMatchups();
             else stopMatchupRefresh();
+            if (tabId === 'playoffs') renderPlayoffOdds();
             if (!skipUrlUpdate) updateUrlParams();
         }
 
@@ -801,6 +824,7 @@
             renderTrades();
             initH2HDropdowns();
             initMatchupsTab(params.get('owner'));
+            initPlayoffsTab();
             renderTradeSynergy();
             renderSelectedLeague();
 
@@ -2446,6 +2470,7 @@
         const matchupLeagueCache = {}; // leagueId -> { ts, labelByRoster }
         const matchupProjCache = {};   // `${season}|${week}` -> { ts, byPlayer }
         let matchupRefreshTimer = null;
+        const matchupPlayoffHints = {}; // league -> first week with bye rows (ID 0) in the latest past season
         const MATCHUP_LIVE_TTL = 60 * 1000;
 
         function escHtml(v) {
@@ -2479,7 +2504,7 @@
                 const rows = globalMasterData[league];
                 if (!Array.isArray(rows)) return;
                 let section = '', leagueId = '';
-                const raw = [];
+                const raw = [], zeroWeeks = {};
                 rows.forEach(r => {
                     const col0 = String(r[0] || '').trim();
                     if (col0 === 'League ID') leagueId = String(r[1] || '').trim();
@@ -2487,6 +2512,7 @@
                     if (sec) { section = sec; return; }
                     if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
                     const matchupId = String(r[2]).trim();
+                    if (matchupId === '0') zeroWeeks[col0] = Math.min(zeroWeeks[col0] || 99, weekNumber(r[1]));
                     if (!matchupId || matchupId === '0') return; // ID 0 = playoff byes / eliminated teams, not real games
                     const s1 = parseFloat(r[4]), s2 = parseFloat(r[6]);
                     raw.push({
@@ -2495,6 +2521,10 @@
                         s1: isNaN(s1) ? 0 : s1, s2: isNaN(s2) ? 0 : s2
                     });
                 });
+
+                const latestSeason = raw.reduce((mx, g) => (g.season > mx ? g.season : mx), '');
+                const pastHint = Object.keys(zeroWeeks).filter(se => se < latestSeason).sort().pop();
+                if (pastHint) matchupPlayoffHints[league] = zeroWeeks[pastHint];
 
                 const weekStats = {}, lastScored = {};
                 raw.forEach(g => {
@@ -2605,7 +2635,7 @@
             const n = scores.length, k = 3;
             const mean = (own.mean * n + lgMean * k) / (n + k);
             const sd = Math.sqrt(((n > 1 ? own.sd ** 2 : lgSd ** 2) * n + lgSd ** 2 * k) / (n + k));
-            return { mean, sd };
+            return { mean, sd, se: sd / Math.sqrt(n + k) }; // se = uncertainty in the team's true average
         }
 
         function headToHead(a, b, league) {
@@ -2813,6 +2843,12 @@
                         <div class="h-2 rounded-full bg-slate-700 overflow-hidden"><div class="h-full bg-accent" style="width:${(pWin * 100).toFixed(1)}%"></div></div>
                     </div>`;
 
+                const sim = final ? null : simulateLeague(g.league);
+                const simRow = sim && sim.rows.find(r => r.owner === me.owner);
+                const playoffHtml = !simRow ? '' : `
+                    <p class="text-xs text-slate-300">🎲 Playoff odds <strong class="text-white">${pct(simRow.playoff)}</strong>${sim.nextWeek === g.week && simRow.ifW !== null && simRow.ifL !== null
+                        ? ` · with a win <strong class="text-emerald-300">${pct(simRow.ifW)}</strong> · with a loss <strong class="text-rose-300">${pct(simRow.ifL)}</strong>` : ''}</p>`;
+
                 const last = leagueH2H.last;
                 const lastHtml = last ? `Last met ${last.season} Wk ${last.week}: ${last.mine > last.theirs ? 'won' : last.mine < last.theirs ? 'lost' : 'tied'} ${last.mine.toFixed(2)}-${last.theirs.toFixed(2)}` : 'First meeting in this league';
                 const allGames = allH2H.w + allH2H.l + allH2H.t;
@@ -2830,6 +2866,7 @@
                             ${side(opp, oppLive, false)}
                         </div>
                         ${oddsHtml}
+                        ${playoffHtml}
                         <div class="border-t border-slate-800 pt-3 flex flex-wrap justify-between items-center gap-2 text-xs">
                             <div class="space-y-0.5 text-slate-300">
                                 <p><strong>H2H in this league:</strong> ${leagueGames ? fmtRecord(leagueH2H) : '0-0'} · <strong>All leagues:</strong> ${allGames ? fmtRecord(allH2H) : '0-0'}</p>
@@ -2862,6 +2899,214 @@
                     }, MATCHUP_LIVE_TTL);
                 }
             }
+        }
+
+        // --- TAB: PLAYOFF ODDS SIMULATOR ---
+        const PLAYOFF_SIMS = 10000;
+        const playoffSettings = {}; // league -> { start, teams, source } from Sleeper league settings
+        const playoffSimCache = {}; // league -> simulation result
+
+        function playoffConfig(league) {
+            if (playoffSettings[league]) return playoffSettings[league];
+            const hint = matchupPlayoffHints[league];
+            return { start: hint || 15, teams: 6, source: hint ? 'inferred from past seasons' : 'default' };
+        }
+
+        // Exact playoff start week and team count from Sleeper; the simulator works without them
+        function loadPlayoffSettings() {
+            chatLeagueProfiles().filter(p => /^\d{12,}$/.test(p.id)).forEach(p => {
+                chatFetchJson(`https://api.sleeper.app/v1/league/${p.id}`).then(info => {
+                    const st = (info && info.settings) || {};
+                    if (!st.playoff_week_start || !st.playoff_teams) return;
+                    playoffSettings[p.name] = { start: Number(st.playoff_week_start), teams: Number(st.playoff_teams), source: 'Sleeper settings' };
+                    delete playoffSimCache[p.name];
+                    if (currentActiveTab === 'playoffs') renderPlayoffOdds();
+                    else if (currentActiveTab === 'matchups') renderMatchups(true);
+                }).catch(() => {});
+            });
+        }
+
+        function gaussian() {
+            let u = 0;
+            while (u === 0) u = Math.random();
+            return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+        }
+
+        function simulateLeague(league) {
+            const season = matchupCurrentSeason();
+            const cfg = playoffConfig(league);
+            const cacheKey = `${season}|${cfg.start}|${cfg.teams}|${matchupLiveState ? matchupLiveState.week : ''}`;
+            const hit = playoffSimCache[league];
+            if (hit && hit.cacheKey === cacheKey) return hit;
+
+            const regular = matchupGames.filter(g => g.league === league && g.season === season && g.week < cfg.start);
+            const remaining = regular.filter(g => !isFinal(g));
+            if (!regular.length || !remaining.length) return null; // regular season over
+            // Fleaflicker leagues only store played weeks; simulating a partial schedule would be meaningless
+            if (Math.max(...regular.map(g => g.week)) < cfg.start - 1) return null;
+
+            const { table, allScores } = seasonTable(league, season);
+            const owners = [...new Set(regular.flatMap(g => [g.o1, g.o2]))];
+            const idx = {};
+            owners.forEach((o, i) => { idx[o] = i; });
+            const n = owners.length;
+            const teamName = {};
+            regular.forEach(g => { teamName[g.o1] = g.team1; teamName[g.o2] = g.team2; });
+            const teams = owners.map(o => {
+                const t = table[o];
+                return {
+                    owner: o, team: teamName[o],
+                    w: t ? t.w + t.t / 2 : 0, pf: t ? t.pf : 0,
+                    rec: t ? fmtRecord(t) : '0-0',
+                    model: scoreModel(t, allScores)
+                };
+            });
+
+            const games = remaining.map(g => [idx[g.o1], idx[g.o2], g.week]);
+            const nextWeek = Math.min(...remaining.map(g => g.week));
+            const playoffTeams = Math.min(cfg.teams, n);
+            let bracket = 1;
+            while (bracket < playoffTeams) bracket *= 2;
+            const byes = playoffTeams > 2 ? bracket - playoffTeams : 0; // 6 teams -> top 2 get byes
+
+            const made = new Float64Array(n), bye = new Float64Array(n), top = new Float64Array(n), last = new Float64Array(n);
+            const winsSum = new Float64Array(n);
+            const seedCounts = owners.map(() => new Float64Array(n));
+            const ifW = new Float64Array(n), ifWn = new Float64Array(n), ifL = new Float64Array(n), ifLn = new Float64Array(n);
+            const wins = new Float64Array(n), pf = new Float64Array(n), nextRes = new Int8Array(n);
+            const order = owners.map((_, i) => i);
+            const seedOf = new Int32Array(n);
+            const strength = new Float64Array(n);
+
+            for (let s = 0; s < PLAYOFF_SIMS; s++) {
+                for (let i = 0; i < n; i++) {
+                    wins[i] = teams[i].w; pf[i] = teams[i].pf; nextRes[i] = 0;
+                    // Each simulated season draws the team's true average, so a few games of data aren't treated as certain
+                    strength[i] = teams[i].model.mean + teams[i].model.se * gaussian();
+                }
+                for (const [a, b, week] of games) {
+                    const sa = strength[a] + teams[a].model.sd * gaussian(), sb = strength[b] + teams[b].model.sd * gaussian();
+                    pf[a] += sa; pf[b] += sb;
+                    if (sa > sb) wins[a]++; else if (sb > sa) wins[b]++; else { wins[a] += 0.5; wins[b] += 0.5; }
+                    if (week === nextWeek) { nextRes[a] = sa > sb ? 1 : -1; nextRes[b] = sb > sa ? 1 : -1; }
+                }
+                // Sleeper's default tiebreak: record, then points for
+                order.sort((x, y) => wins[y] - wins[x] || pf[y] - pf[x]);
+                for (let seed = 0; seed < n; seed++) {
+                    const t = order[seed];
+                    seedOf[t] = seed;
+                    seedCounts[t][seed]++;
+                    if (seed < playoffTeams) made[t]++;
+                    if (seed < byes) bye[t]++;
+                }
+                top[order[0]]++;
+                last[order[n - 1]]++;
+                for (let i = 0; i < n; i++) {
+                    winsSum[i] += wins[i];
+                    const inPlayoffs = seedOf[i] < playoffTeams ? 1 : 0;
+                    if (nextRes[i] === 1) { ifWn[i]++; ifW[i] += inPlayoffs; }
+                    else if (nextRes[i] === -1) { ifLn[i]++; ifL[i] += inPlayoffs; }
+                }
+            }
+
+            const N = PLAYOFF_SIMS;
+            const rows = teams.map((t, i) => {
+                const opp = remaining.filter(g => g.o1 === t.owner || g.o2 === t.owner).map(g => teams[idx[g.o1 === t.owner ? g.o2 : g.o1]].model.mean);
+                return {
+                    owner: t.owner, team: t.team, rec: t.rec, pf: t.pf,
+                    projWins: winsSum[i] / N,
+                    playoff: made[i] / N, bye: bye[i] / N, top: top[i] / N, last: last[i] / N,
+                    ifW: ifWn[i] ? ifW[i] / ifWn[i] : null,
+                    ifL: ifLn[i] ? ifL[i] / ifLn[i] : null,
+                    sos: opp.length ? opp.reduce((a, b) => a + b, 0) / opp.length : null,
+                    left: opp.length,
+                    seeds: Array.from(seedCounts[i], c => c / N)
+                };
+            }).sort((a, b) => b.playoff - a.playoff || b.projWins - a.projWins);
+
+            const result = { cacheKey, league, season, cfg, playoffTeams, byes, nextWeek, rows, n };
+            playoffSimCache[league] = result;
+            return result;
+        }
+
+        function pct(p) {
+            if (p === null || p === undefined) return '—';
+            if (p >= 0.9995) return '100%';
+            if (p > 0 && p < 0.005) return '<1%';
+            if (p < 1 && p > 0.995) return '>99%';
+            return `${Math.round(p * 100)}%`;
+        }
+
+        function initPlayoffsTab() {
+            const sel = document.getElementById('playoffs-league');
+            const prev = sel.value || chatStore('playoffsLeague');
+            sel.innerHTML = '';
+            const season = matchupCurrentSeason();
+            const leagues = [...new Set(matchupGames.filter(g => g.season === season).map(g => g.league))]
+                .filter(lg => !isAwardExcluded(lg));
+            leagues.forEach(lg => sel.appendChild(new Option(lg, lg)));
+            if (prev && leagues.includes(prev)) sel.value = prev;
+            loadPlayoffSettings();
+        }
+
+        function renderPlayoffOdds() {
+            if (!matchupGames) return;
+            const league = document.getElementById('playoffs-league').value;
+            chatStore('playoffsLeague', league);
+            const box = document.getElementById('playoffs-table');
+            const note = document.getElementById('playoffs-footnote');
+            const sim = simulateLeague(league);
+            if (!sim) {
+                box.innerHTML = `<p class="p-6 text-sm text-slate-400">Nothing to simulate for ${escHtml(league)}: either the regular season is over or there is no future schedule in the data (Fleaflicker leagues only store played weeks).</p>`;
+                note.innerText = '';
+                return;
+            }
+
+            const heat = p => `background: rgba(59,130,246,${(0.08 + 0.8 * p).toFixed(2)})`;
+            const rowsHtml = sim.rows.map((r, i) => {
+                const chip = r.playoff >= 0.9995 ? '<span class="ml-1 text-[10px] font-bold text-emerald-300">CLINCHED*</span>'
+                    : r.playoff === 0 ? '<span class="ml-1 text-[10px] font-bold text-rose-300">OUT*</span>' : '';
+                const seeds = r.seeds.map((p, s) => `<span title="Seed ${s + 1}: ${pct(p)}" class="inline-block w-2.5 h-4 rounded-sm ${s === sim.playoffTeams - 1 ? 'mr-1' : ''}" style="background: rgba(${s < sim.playoffTeams ? '16,185,129' : '148,163,184'},${(0.05 + 0.95 * p).toFixed(2)})"></span>`).join('');
+                const swing = r.ifW !== null && r.ifL !== null
+                    ? `<span class="text-emerald-300">${pct(r.ifW)}</span> / <span class="text-rose-300">${pct(r.ifL)}</span>` : '—';
+                return `
+                    <tr class="${i === sim.playoffTeams - 1 ? 'border-b-2 border-b-accent' : ''} hover:bg-slate-800/50">
+                        <td class="p-3 text-slate-500 font-mono">${i + 1}</td>
+                        <td class="p-3"><p class="font-bold text-white">${escHtml(r.owner)}${chip}</p><p class="text-xs text-slate-400 truncate max-w-[14rem]">${escHtml(r.team)}</p></td>
+                        <td class="p-3 font-mono">${r.rec}</td>
+                        <td class="p-3 font-mono text-slate-300">${r.pf.toFixed(1)}</td>
+                        <td class="p-3 font-mono">${r.projWins.toFixed(1)}</td>
+                        <td class="p-3 font-bold text-center rounded" style="${heat(r.playoff)}">${pct(r.playoff)}</td>
+                        <td class="p-3 text-center">${sim.byes ? pct(r.bye) : '—'}</td>
+                        <td class="p-3 text-center">${pct(r.top)}</td>
+                        <td class="p-3 text-center text-slate-400">${pct(r.last)}</td>
+                        <td class="p-3 text-center text-xs whitespace-nowrap">${swing}</td>
+                        <td class="p-3 text-center font-mono text-slate-300">${r.sos === null ? '—' : r.sos.toFixed(1)}</td>
+                        <td class="p-3 whitespace-nowrap">${seeds}</td>
+                    </tr>`;
+            }).join('');
+
+            box.innerHTML = `
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-slate-900 text-slate-400 border-b border-slate-700 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="p-3"></th><th class="p-3">Team</th><th class="p-3">Record</th><th class="p-3">PF</th>
+                            <th class="p-3" title="Average final regular-season wins">Proj W</th>
+                            <th class="p-3 text-center">Playoffs</th>
+                            <th class="p-3 text-center">Bye</th>
+                            <th class="p-3 text-center">#1 Seed</th>
+                            <th class="p-3 text-center">Last</th>
+                            <th class="p-3 text-center" title="Playoff odds if they win / lose their week ${sim.nextWeek} game">Wk ${sim.nextWeek} W / L</th>
+                            <th class="p-3 text-center" title="Average expected score of remaining opponents">SOS</th>
+                            <th class="p-3">Seed odds (1 → ${sim.n})</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">${rowsHtml}</tbody>
+                </table>`;
+
+            note.innerText = `${PLAYOFF_SIMS.toLocaleString()} simulated seasons. Remaining games (weeks ${sim.nextWeek}-${sim.cfg.start - 1}) use each team's season scoring, blended toward the league average; ties broken by points for. ` +
+                `Top ${sim.playoffTeams} make the playoffs${sim.byes ? `, top ${sim.byes} get a bye` : ''} (playoffs start week ${sim.cfg.start}, ${sim.cfg.source}). ` +
+                `*Clinched / out means it happened in every simulation, not a mathematical guarantee. The line under the cutoff team marks the playoff line.`;
         }
 
         // --- TAB 10: TRADE PARTNER SYNERGY MATRIX ---

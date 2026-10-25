@@ -6,9 +6,13 @@ name = "league-chat"
 main = "index.js"
 compatibility_date = "2026-10-01"
 
-# Keep the variables set in the dashboard (ALLOWED_ORIGIN, SLEEPER_LEAGUE_ID, MODEL,
-# ENABLE_WEB_SEARCH) instead of clearing them on every deploy.
+# Keep the variables set in the dashboard (ALLOWED_ORIGIN, SLEEPER_LEAGUE_ID, ENABLE_WEB_SEARCH)
+# instead of clearing them on every deploy.
 keep_vars = true
+
+[vars]
+# Set here so a MODEL left over in the dashboard can't override it.
+MODEL = "claude-sonnet-5-5"
 
 # The grudge book. The deploy workflow fills in the id of the namespace the live worker
 # already uses, so saved grudges carry over.

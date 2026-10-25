@@ -1,7 +1,9 @@
 import json
 import os
+import sys
+import time
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 
 LEAGUE_IDS = [
     "1312263393003991040", # Dante's league
@@ -16,14 +18,35 @@ CURRENT_SEASON = "2026"
 FUTURE_PICK_SEASONS = ["2027", "2028", "2029"]
 REDRAFT_LEAGUE_IDS = ["1389343056888606720", "1329118060811927552"]
 
-def fetch_json(url):
+# URLs that still failed after all retries. Any entry here means the sync is incomplete,
+# so the run refuses to overwrite sleeper_leagues_master.json and exits non-zero.
+FAILED_URLS = []
+
+def fetch_json(url, retries=4):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            return json.loads(response.read().decode('utf-8'))
-    except Exception as e:
-        print(f"Failed to fetch {url}: {e}")
-        return None
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except Exception as e:
+            wait = 2 ** (attempt + 1)
+            print(f"Fetch failed ({attempt + 1}/{retries}) {url}: {e}")
+            if attempt < retries - 1:
+                time.sleep(wait)
+    FAILED_URLS.append(url)
+    return None
+
+def count_rows(rows, section_word, season):
+    """Count data rows for `season` inside the section whose header contains `section_word`."""
+    count, active = 0, False
+    for row in rows or []:
+        c0 = str(row[0] if row else '').strip()
+        if c0.startswith('---'):
+            active = section_word in c0.upper()
+            continue
+        if active and c0 == season:
+            count += 1
+    return count
 
 def ordinal(n):
     return f"{n}{'tsnrhtdd'[(n//10%10!=1)*(n%10<4)*n%10::4]}"
@@ -49,6 +72,9 @@ def build_master_data():
 
     print("Fetching NFL players database from Sleeper...")
     players_data = fetch_json("https://api.sleeper.app/v1/players/nfl") or {}
+    if not players_data:
+        print("ERROR: Sleeper players DB unavailable; aborting without touching the master file.")
+        sys.exit(1)
 
     for league_id in LEAGUE_IDS:
         print(f"Processing league ID: {league_id}")
@@ -212,7 +238,8 @@ def build_master_data():
             for tx in txns:
                 if tx.get('type') == 'trade' and tx.get('status') == 'complete':
                     created_ms = tx.get('created', 0)
-                    dt_str = datetime.utcfromtimestamp(created_ms / 1000.0).strftime('%-m/%-d/%Y') if created_ms else ""
+                    dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
+                    dt_str = f"{dt.month}/{dt.day}/{dt.year}" if dt else ""
                     rids = tx.get('roster_ids') or []
                     if len(rids) < 2:
                         continue
@@ -237,7 +264,8 @@ def build_master_data():
 
                     breakdown = " <---> ".join(side_strs)
                     live_trades_2026.append([
-                        CURRENT_SEASON, dt_str, f"Week {week}", teams_involved, breakdown, "", ""
+                        CURRENT_SEASON, dt_str, f"Week {week}", teams_involved, breakdown,
+                        str(tx.get('transaction_id') or ''), ""
                     ])
 
         # --- 5. MERGE WITH HISTORICAL SECTIONS SAFELY ---
@@ -276,16 +304,25 @@ def build_master_data():
                     if c0 not in ('Season', CURRENT_SEASON):
                         historical_matchups.append(row)
 
-            existing_trade_sigs = {
-                (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip())
-                for r in historical_trades if len(r) >= 4
+            # Dedupe on Sleeper's transaction_id (stored in column 6). Legacy rows written before
+            # IDs were stored fall back to (season, date, teams) and get the ID backfilled once.
+            merged_trades = [list(r) + [""] * (7 - len(r)) for r in historical_trades]
+            known_tx_ids = {str(r[5]).strip() for r in merged_trades if str(r[5]).strip()}
+            legacy_by_sig = {
+                (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip()): r
+                for r in merged_trades if not str(r[5]).strip()
             }
-            merged_trades = list(historical_trades)
             for lt in live_trades_2026:
-                sig = (lt[0], lt[1], lt[3])
-                if sig not in existing_trade_sigs:
+                tx_id = lt[5]
+                if tx_id and tx_id in known_tx_ids:
+                    continue
+                legacy = legacy_by_sig.pop((lt[0], lt[1], lt[3]), None)
+                if legacy is not None:
+                    legacy[5] = tx_id
+                else:
                     merged_trades.insert(0, lt)
-                    existing_trade_sigs.add(sig)
+                if tx_id:
+                    known_tx_ids.add(tx_id)
 
             compiled_rows = (
                 [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""]] +
@@ -308,7 +345,17 @@ def build_master_data():
                 new_matchup_rows_2026 +
                 historical_matchups
             )
-            master_data[league_key] = compiled_rows
+            # Never replace current-season data with less of it: a shrinking row count means
+            # some API call silently returned nothing.
+            shrunk = [
+                sec for sec in ('MATCHUPS', 'TRADE')
+                if count_rows(compiled_rows, sec, CURRENT_SEASON) < count_rows(existing_rows, sec, CURRENT_SEASON)
+            ]
+            if shrunk:
+                print(f"ERROR: {league_key}: {CURRENT_SEASON} rows shrank in {shrunk}; keeping existing data.")
+                FAILED_URLS.append(f"row-count guard: {league_key} {shrunk}")
+            else:
+                master_data[league_key] = compiled_rows
         else:
             master_data[league_key] = (
                 new_roster_rows +
@@ -317,6 +364,12 @@ def build_master_data():
                  ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]] +
                 new_matchup_rows_2026
             )
+
+    if FAILED_URLS:
+        print(f"ERROR: {len(FAILED_URLS)} request(s) failed; sleeper_leagues_master.json was NOT updated:")
+        for url in FAILED_URLS:
+            print(f"  - {url}")
+        sys.exit(1)
 
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))

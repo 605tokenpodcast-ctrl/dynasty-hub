@@ -674,10 +674,23 @@
                 .trim();
         }
 
+        // Pick keys from FantasyCalc look like "2027 1st", "2027 1st (Mid)" or "2028 3rd (Early)"
+        const PICK_KEY_RE = /^(20\d\d) (\d+)(?:st|nd|rd|th)(?: \((Early|Mid|Late)\))?$/;
+
         function buildValueFormat(players) {
             const norm = {};
-            Object.keys(players || {}).forEach(k => { norm[normalizePlayerName(k)] = players[k]; });
-            return { players: players || {}, norm };
+            const picks = {}; // round -> year -> { Early, Mid, Late, base }
+            Object.keys(players || {}).forEach(k => {
+                const pm = k.match(PICK_KEY_RE);
+                if (pm) {
+                    const byYear = picks[pm[2]] = picks[pm[2]] || {};
+                    const slot = byYear[pm[1]] = byYear[pm[1]] || {};
+                    slot[pm[3] || 'base'] = players[k];
+                    return;
+                }
+                norm[normalizePlayerName(k)] = players[k];
+            });
+            return { players: players || {}, norm, picks };
         }
 
         function loadValueData(data) {
@@ -740,38 +753,39 @@
         }
 
         function scoreDraftPickKTC(pickStr, leagueName) {
-            const values = getValueFormat(leagueName).players;
-            // Format: "2027 Mid Round 1"
+            // Formats: "2027 Mid Round 1" (rosters) and "2027 Round 1st Pick (originally from ...)" (trades)
             const s = String(pickStr || '');
-            const yrMatch = s.match(/\b(202\d)\b/);
             const rdMatch = s.match(/Round\s+(\d+)/i);
-            if (rdMatch && rdMatch[1]) {
-                const rd = parseInt(rdMatch[1], 10);
-                const ord = rd === 1 ? '1st' : rd === 2 ? '2nd' : rd === 3 ? '3rd' : `${rd}th`;
-                if (yrMatch) {
-                    const yr = yrMatch[1];
-                    const midKey = `${yr} ${ord} (Mid)`;
-                    const baseKey = `${yr} ${ord}`;
-                    if (values[midKey]) return values[midKey];
-                    if (values[baseKey]) return values[baseKey];
-                }
-                return ktcPickValues[rd] || ktcPickValues[String(rd)] || 250;
+            if (!rdMatch) return 0;
+            const rd = rdMatch[1];
+            const yrMatch = s.match(/\b(20\d\d)\b/);
+            const tierMatch = s.match(/\b(Early|Mid|Late)\s+Round/i);
+            const tier = tierMatch ? tierMatch[1][0].toUpperCase() + tierMatch[1].slice(1).toLowerCase() : 'Mid';
+            // Redraft formats carry no picks, so they borrow the default format's pick table
+            const byYear = getValueFormat(leagueName).picks[rd] || (valueFormats[defaultValueFormat].picks || {})[rd];
+            if (byYear) {
+                const years = Object.keys(byYear).map(Number);
+                // Exact year if FantasyCalc lists it, otherwise the closest listed year (e.g. 2030 picks use 2029)
+                const yr = yrMatch ? Number(yrMatch[1]) : Math.min(...years);
+                const best = years.reduce((a, b) => Math.abs(b - yr) < Math.abs(a - yr) ? b : a);
+                const slot = byYear[best];
+                const v = slot[tier] || slot.Mid || slot.base;
+                if (v) return v;
             }
-            return 0;
+            return ktcPickValues[rd] || 250;
         }
 
         function scorePlayerKTC(playerEntry, leagueName) {
             // Format: "Kenneth Walker III (RB - KC)"
             const match = String(playerEntry).match(/^(.+?)\s*\(([A-Z]+)\s*-\s*([A-Z]+)\)$/);
             const cleanName = match ? match[1].trim() : String(playerEntry).trim();
-            const pos = match ? match[2].trim() : 'BN';
             const values = getValueFormat(leagueName);
             if (values.players[cleanName]) return values.players[cleanName];
             const norm = normalizePlayerName(cleanName);
             if (values.norm[norm]) return values.norm[norm];
-            if (pos === 'QB' || pos === 'RB' || pos === 'WR') return 800;
-            if (pos === 'TE') return 600;
-            return 250;
+            // Not in FantasyCalc's market (deep bench, K, DEF, IDP): no trade value. A flat default here
+            // used to hand every unknown player 800, more than most players FantasyCalc does rank.
+            return 0;
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -1303,7 +1317,7 @@
                         if (!playerMap[pEntry]) {
                             playerMap[pEntry] = {
                                 entry: pEntry,
-                                ktc: scorePlayerKTC(pEntry, leagueName),
+                                ktc: scorePlayerKTC(pEntry), // default format, so it doesn't depend on which league comes first
                                 shares: []
                             };
                         }

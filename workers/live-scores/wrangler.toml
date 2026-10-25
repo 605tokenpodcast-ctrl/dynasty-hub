@@ -1,0 +1,9 @@
+# Deployed by .github/workflows/deploy-workers.yml (or `npx wrangler deploy` from this folder).
+name = "dynasty-live-scores"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+SLEEPER_LEAGUES = "1312263393003991040,1388685966092296192,1312042561786904576,1338346687445348352,1389343056888606720,1329118060811927552"
+FLEA_LEAGUES = "165455"
+ALLOWED_ORIGINS = "https://605tokenpodcast-ctrl.github.io"

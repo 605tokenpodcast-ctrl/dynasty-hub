@@ -3843,11 +3843,29 @@
         }
 
         // Live Fleaflicker scores + Fleaflicker's own projections (computed with the league's real scoring)
+        // --- LIVE SCORES WORKER ---
+        // After deploying workers/live-scores, paste its URL here. Empty = every browser calls Sleeper/Fleaflicker itself.
+        const LIVE_SCORES_ENDPOINT = '';
+        const liveSnapshotCache = {};
+        async function liveSnapshot(season, week) {
+            if (!LIVE_SCORES_ENDPOINT) return null;
+            const key = `${season}|${week}`;
+            const hit = liveSnapshotCache[key];
+            if (hit && Date.now() - hit.ts < MATCHUP_LIVE_TTL) return hit.promise;
+            const promise = chatFetchJson(`${LIVE_SCORES_ENDPOINT}?season=${season}&week=${week}`).catch(() => null);
+            liveSnapshotCache[key] = { ts: Date.now(), promise };
+            return promise;
+        }
+
         async function loadFleaLiveLeague(game) {
             const base = { league_id: game.leagueId, season: game.season, scoring_period: game.week };
-            const board = await fleaFetch('FetchLeagueScoreboard', base);
+            const snap = await liveSnapshot(game.season, game.week);
+            const cached = snap && snap.flea && snap.flea[game.leagueId];
+            const board = cached ? { games: cached.games } : await fleaFetch('FetchLeagueScoreboard', base);
             const games = board.games || [];
-            const boxes = await Promise.allSettled(games.map(g => fleaFetch('FetchLeagueBoxscore', { ...base, fantasy_game_id: g.id })));
+            const boxes = cached
+                ? games.map(g => ({ status: 'fulfilled', value: { game: { homeScore: { projected: g.projected.home }, awayScore: { projected: g.projected.away } } } }))
+                : await Promise.allSettled(games.map(g => fleaFetch('FetchLeagueBoxscore', { ...base, fantasy_game_id: g.id })));
 
             // Fleaflicker gives team names; the JSON labels are "Team Name (Owner)" or just the name
             const ownerByTeamName = {};
@@ -3884,9 +3902,11 @@
             const hit = matchupLiveCache[key];
             if (hit && Date.now() - hit.ts < MATCHUP_LIVE_TTL) return;
             if (isFleaLeagueId(game.leagueId)) return loadFleaLiveLeague(game);
+            const snap = await liveSnapshot(game.season, game.week);
+            const cached = snap && snap.sleeper && snap.sleeper[game.leagueId];
             const [labels, matchups, proj] = await Promise.all([
-                getRosterLabels(game.leagueId),
-                chatFetchJson(`https://api.sleeper.app/v1/league/${game.leagueId}/matchups/${game.week}`),
+                cached ? cached.labels : getRosterLabels(game.leagueId),
+                cached ? cached.matchups : chatFetchJson(`https://api.sleeper.app/v1/league/${game.leagueId}/matchups/${game.week}`),
                 getMatchupProjections(game.season, game.week)
             ]);
             const field = projectionField(game.league);

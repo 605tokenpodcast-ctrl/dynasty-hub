@@ -121,16 +121,18 @@ def optimal_score(roster_positions, pool, players_data):
     return total
 
 def build_player_meta(players_data):
-    """Age, position, NFL team and years in the league for every active skill player."""
-    meta = {}
-    for p in players_data.values():
+    """Age, position, NFL team and years in the league for every active skill player, plus a
+    Sleeper ID -> name map (the bot worker uses it to name players in trade alerts)."""
+    meta, ids = {}, {}
+    for pid, p in players_data.items():
         pos = p.get('position')
         name = p.get('full_name')
         if not name or pos not in ('QB', 'RB', 'WR', 'TE', 'K') or not p.get('active'):
             continue
         age = p.get('age')
         meta[name] = [age if isinstance(age, (int, float)) else None, pos, p.get('team') or 'FA', p.get('years_exp')]
-    return meta
+        ids[pid] = f"{name} ({pos})"
+    return meta, ids
 
 def lineup_row(season, week, mgr, m, roster_positions, players_data):
     """Full lineup in slot order, plus the best lineup the roster could have started.
@@ -576,9 +578,10 @@ def build_master_data():
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
 
+    meta, ids = build_player_meta(players_data)
     with open('player_meta.json', 'w', encoding='utf-8') as f:
         json.dump({"generated_at": int(time.time()), "fields": ["age", "pos", "team", "years_exp"],
-                   "players": build_player_meta(players_data)}, f, separators=(',', ':'))
+                   "players": meta, "ids": ids}, f, separators=(',', ':'))
 
     print("Successfully merged live Sleeper data while locking out future picks for redraft leagues!")
 

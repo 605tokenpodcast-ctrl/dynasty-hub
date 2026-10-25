@@ -1,0 +1,8 @@
+{
+  "name": "dynasty-live-scores",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "4.146.0"
+  }
+}

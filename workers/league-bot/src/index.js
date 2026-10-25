@@ -277,9 +277,12 @@ async function writeGazette(env, league, season, week, facts, scoreboard) {
     output_config: { effort: 'low' },
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    system: 'You write "The Dynasty Gazette", a funny weekly newspaper column for a group of friends in a fantasy football league. ' +
-      'Write in Markdown: a bold headline, then 3-4 short paragraphs (about 250 words). Roast the losers, hype the winners, ' +
-      'keep it good-natured, and only use the facts given. No player stats beyond what is listed.',
+    system: 'You write "The Dynasty Gazette", a weekly tabloid column for a group of friends in a fantasy football league. ' +
+      'They have a dark, twisted sense of humor and want it rude and crude: swear freely, be filthy, use gallows humor and ' +
+      'absurd, disturbing comparisons, and never soften a burn. Write in Markdown: a bold headline, then 3-4 short paragraphs ' +
+      '(about 250 words). Savage the losers, grudgingly hype the winners, and only use the facts given. No player stats beyond ' +
+      'what is listed. Aim the cruelty at their fantasy football, not at who they are: no slurs, and no jokes about anyone\'s ' +
+      'real race, religion, sexuality, gender, disability, appearance, health or family.',
     messages: [{
       role: 'user',
       content: `League: ${league}\nSeason ${season}, Week ${week}\n\nFinal scores:\n${scoreboard.join('\n')}\n\nWeekly awards:\n${facts.join('\n')}`,

@@ -1,0 +1,20 @@
+name: Fleaflicker API probe (read-only)
+
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/flea_probe.py', '.github/workflows/flea_probe.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: python scripts/flea_probe.py

@@ -9,6 +9,9 @@ Fleaflicker league like any other league:
   --- CURRENT ROSTERS & DRAFT PICKS ---
   --- TRADE HISTORY (ALL-TIME & ALL SEASONS) --- (every completed trade)
   --- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) --- (every game, every season)
+  --- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) --- (current season, plus a few
+      older seasons backfilled per run)
+  --- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---
 
 Set FLEA_DEBUG=1 to also dump the first raw response of every endpoint into
 ./fleaflicker_debug/ (the workflow uploads that folder as a build artifact).
@@ -49,6 +52,7 @@ SEASON_RETRY_COOLDOWN = 150   # extra cooldown before re-trying a season that fa
 LAST_PLAYOFF_WEEK = 17        # every league's championship is week 17; week 18 is unused
 FALLBACK_REG_SEASON_WEEKS = 14
 FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
+LINEUP_BACKFILL_PER_RUN = 2  # older seasons of lineups fetched per run (one boxscore call per game)
 DEBUG = os.environ.get("FLEA_DEBUG") == "1"
 DEBUG_DIR = "fleaflicker_debug"
 
@@ -58,6 +62,8 @@ DEBUG_DIR = "fleaflicker_debug"
 PLACEMENT_OVERRIDES = {}
 
 BLANK = ["", "", "", "", "", "", ""]
+LINEUPS_HEADER = "--- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) ---"
+MOVES_HEADER = "--- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---"
 _debug_seen = set()
 
 
@@ -540,10 +546,121 @@ def resolve_pick_strings(raw_by_team, trade_owner):
 
 
 # --------------------------------------------------------------------------- #
+# lineups + waiver moves
+# --------------------------------------------------------------------------- #
+def optimal_points(slot_eligibility, pool):
+    """Best starting score: slots (lists of allowed positions) filled from pool [(pos, pts)],
+    most restrictive slot first."""
+    remaining = sorted(pool, key=lambda x: -x[1])
+    total = 0.0
+    for allowed in sorted(slot_eligibility, key=len):
+        for i, (pos, pts) in enumerate(remaining):
+            if pos in allowed:
+                total += pts
+                remaining.pop(i)
+                break
+    return total
+
+
+def fetch_lineup_rows(league_id, season, periods, labels):
+    """One row per team per played week, same columns as the Sleeper sync."""
+    rows = []
+    for p in sorted(periods):
+        for g in periods[p]:
+            if not g["final"] and g["hs"] == 0 and g["as"] == 0:
+                continue
+            try:
+                box = api("FetchLeagueBoxscore", league_id=league_id, season=season,
+                          scoring_period=p, fantasy_game_id=g["gid"])
+            except FleaError as e:
+                print(f"  lineup {season} week {p}: {e}")
+                continue
+            if not box:
+                continue
+            sides = {"home": {"start": [], "bench": [], "slots": []}, "away": {"start": [], "bench": [], "slots": []}}
+            for grp in box.get("lineups") or []:
+                starting = str(grp.get("group") or "").upper() == "START"
+                for slot in grp.get("slots") or []:
+                    pos = slot.get("position") or {}
+                    elig = pos.get("eligibility") or [pos.get("label")]
+                    for side in ("home", "away"):
+                        if starting:
+                            sides[side]["slots"].append(set(elig))
+                        lp = slot.get(side)
+                        if not lp:
+                            continue
+                        pro = unwrap_player(lp)
+                        pts = num(lp.get("viewingActualPoints"))
+                        sides[side]["start" if starting else "bench"].append((pro.get("position") or "FLEX", pts, player_label(pro)))
+            for side, score in (("home", g["hs"]), ("away", g["as"])):
+                d = sides[side]
+                if not d["start"] and not d["bench"]:
+                    continue
+                pool = [(pos, pts) for pos, pts, _ in d["start"] + d["bench"]]
+                best = max(optimal_points(d["slots"], pool), score)
+                fmt = lambda xs: "; ".join(f"{label} {pts:.2f}" for _, pts, label in xs)
+                rows.append([str(season), f"Week {p}", labels.get(g[side]["id"]) or team_label(g[side]),
+                             f"{score:.2f}", f"{best:.2f}", fmt(d["start"]),
+                             fmt(sorted(d["bench"], key=lambda x: -x[1]))])
+    return rows
+
+
+def fetch_move_rows(league_id, labels, season):
+    """Waiver claims and free-agent adds for one season, newest first."""
+    rows, offset, seen = [], None, set()
+    for _ in range(200):
+        data = api("FetchLeagueTransactions", league_id=league_id, result_offset=offset)
+        if not data:
+            break
+        older = False
+        for item in data.get("items") or []:
+            tx = item.get("transaction") or {}
+            dt = epoch_to_dt(item.get("timeEpochMilli"))
+            if not dt:
+                continue
+            tx_season, week = season_and_week(dt)
+            if tx_season < season:
+                older = True
+                continue
+            if tx_season != season:
+                continue
+            kind = str(tx.get("type") or "")
+            if kind not in ("TRANSACTION_CLAIM", "TRANSACTION_ADD"):
+                continue
+            team = tx.get("team") or {}
+            bid = tx.get("bidAmount") if tx.get("bidAmount") is not None else (tx.get("waiverBid") or "")
+            rows.append([str(season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}",
+                         labels.get(team.get("id")) or team_label(team),
+                         "Waiver" if kind == "TRANSACTION_CLAIM" else "Free Agent",
+                         player_label(unwrap_player(tx.get("player"))), "", f"{num(bid, 0):g}" if bid != "" else ""])
+        nxt = data.get("resultOffsetNext")
+        if older or nxt is None or nxt in seen:
+            break
+        seen.add(nxt)
+        offset = nxt
+    return rows
+
+
+def existing_section_rows(rows, word):
+    """Data rows of the section whose header contains `word` (upper case)."""
+    out, active = [], False
+    for r in rows or []:
+        c0 = str(r[0] if r else "").strip()
+        if c0.upper().startswith("---"):
+            active = word in c0.upper()
+            continue
+        if active and c0 and c0 != "Season":
+            out.append(r)
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # main
 # --------------------------------------------------------------------------- #
-def collect_league(league):
-    """Pull standings / matchups / trades (and rosters if it's a live season)."""
+def collect_league(league, existing_rows=None):
+    """Pull standings / matchups / trades (and rosters if it's a live season).
+    Standalone leagues also get lineups and waiver moves; older seasons already in
+    `existing_rows` are kept, and a few missing ones are backfilled each run."""
     league_id, name = league["id"], league["name"]
     last = league.get("end_season") or current_season()
     cur = current_season()
@@ -552,6 +669,13 @@ def collect_league(league):
     standings_rows, matchup_rows = [], []
     season_labels, latest_label = {}, {}
     current_rows = []
+    want_lineups = not league.get("merge_into")
+    old_lineups = [r for r in existing_section_rows(existing_rows, "LINEUPS") if str(r[0]) != str(cur)]
+    old_moves = [r for r in existing_section_rows(existing_rows, "FREE AGENT") if str(r[0]) != str(cur)]
+    have_lineup_seasons = {str(r[0]) for r in old_lineups}
+    backfill = sorted((y for y in range(league["start_season"], cur) if str(y) not in have_lineup_seasons),
+                      reverse=True)[:LINEUP_BACKFILL_PER_RUN] if want_lineups else []
+    lineup_rows = []
 
     def load_season(season):
         print(f"- season {season}")
@@ -579,6 +703,10 @@ def collect_league(league):
                 a = lab.get(g["away"]["id"]) or team_label(g["away"])
                 matchup_rows.append([str(season), f"Week {p}", str(idx), h, f"{g['hs']:.2f}", a, f"{g['as']:.2f}"])
                 n_games += 1
+        if want_lineups and (season == cur or season in backfill):
+            new_rows = fetch_lineup_rows(league_id, season, periods, season_labels[season])
+            lineup_rows.extend(new_rows)
+            print(f"  {len(new_rows)} lineup rows")
         print(f"  {len(rows)} teams, {n_games} games, regular season = {info['reg_weeks']} wks, placements = {placements or 'n/a'}")
 
     def drop_partial(season):
@@ -636,8 +764,19 @@ def collect_league(league):
                 pick_strs.get(str(r["id"]), "None"),
                 "", "",
             ])
+    move_rows = []
+    if want_lineups and current_rows:
+        print("- waiver & free agent moves")
+        try:
+            move_rows = fetch_move_rows(league_id, latest_label, cur)
+        except FleaError as e:
+            print(f"  moves skipped: {e}")
+        print(f"  {len(move_rows)} moves")
+    lineup_rows.sort(key=lambda r: (-int(r[0]), int(r[1].split()[-1])))
+    old_lineups = [r for r in old_lineups if str(r[0]) not in {x[0] for x in lineup_rows}]
     return {"standings": standings_rows, "matchups": matchup_rows, "trades": trade_rows,
-            "rosters": roster_rows, "last": last}
+            "rosters": roster_rows, "last": last,
+            "lineups": lineup_rows + old_lineups, "moves": move_rows + old_moves}
 
 
 def build_standalone_block(league, data):
@@ -663,7 +802,15 @@ def build_standalone_block(league, data):
         BLANK,
         ["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
         ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"],
-    ] + data["matchups"]
+    ] + data["matchups"] + [
+        BLANK,
+        [LINEUPS_HEADER, "", "", "", "", "", ""],
+        ["Season", "Week", "Team / Manager", "Score", "Optimal Score", "Starters (Name (Pos) Pts)", "Bench (Name (Pos) Pts)"],
+    ] + data["lineups"] + [
+        BLANK,
+        [MOVES_HEADER, "", "", "", "", "", "", ""],
+        ["Season", "Week", "Date", "Team / Manager", "Type", "Added", "Dropped", "FAAB Bid"],
+    ] + data["moves"]
 
 
 def merge_into_existing(rows, data, first_season, last_season):
@@ -719,7 +866,7 @@ def sync_fleaflicker():
     key_lookup = {k.strip().lower(): k for k in master}
     for league in LEAGUES_TO_SYNC:
         try:
-            data = collect_league(league)
+            data = collect_league(league, master.get(key_lookup.get(league["name"].strip().lower(), league["name"])))
         except FleaError as e:
             print(f"!! {league['name']}: {e}")
             failures.append(league["name"])

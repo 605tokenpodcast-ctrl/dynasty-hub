@@ -18,6 +18,8 @@ LEAGUE_IDS = [
 CURRENT_SEASON = "2026"
 FUTURE_PICK_SEASONS = ["2027", "2028", "2029"]
 LAST_PLAYOFF_WEEK = 17  # every league's championship is week 17; week 18 is unused
+LINEUPS_HEADER = "--- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) ---"
+MOVES_HEADER = "--- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---"
 REDRAFT_LEAGUE_IDS = ["1389343056888606720", "1329118060811927552"]
 
 # URLs that still failed after all retries. Any entry here means the sync is incomplete,
@@ -83,6 +85,131 @@ def drop_duplicate_trades(trades):
 
 def ordinal(n):
     return f"{n}{'tsnrhtdd'[(n//10%10!=1)*(n%10<4)*n%10::4]}"
+
+# Lineup slots each roster position can hold. Fixed slots are filled first, then flex slots
+# from the most to the least restrictive, which gives the best possible lineup for these slot types.
+SLOT_ELIGIBILITY = {
+    "QB": {"QB"}, "RB": {"RB"}, "WR": {"WR"}, "TE": {"TE"}, "K": {"K"}, "DEF": {"DEF"},
+    "DL": {"DL"}, "LB": {"LB"}, "DB": {"DB"},
+    "REC_FLEX": {"WR", "TE"}, "WRRB_FLEX": {"WR", "RB"}, "FLEX": {"RB", "WR", "TE"},
+    "IDP_FLEX": {"DL", "LB", "DB"}, "SUPER_FLEX": {"QB", "RB", "WR", "TE"},
+}
+NON_LINEUP_SLOTS = {"BN", "IR", "TAXI"}
+
+def player_positions(pid, players_data):
+    p_info = players_data.get(str(pid), {})
+    positions = set(p_info.get('fantasy_positions') or [])
+    if p_info.get('position'):
+        positions.add(p_info['position'])
+    if not positions and not str(pid).isdigit():
+        positions.add('DEF')  # team defenses use the team abbreviation as their ID
+    return positions
+
+def optimal_score(roster_positions, pool, players_data):
+    """Best possible starting score from `pool` ({pid: points}) for the league's roster slots."""
+    slots = [s for s in roster_positions if s not in NON_LINEUP_SLOTS]
+    slots.sort(key=lambda s: len(SLOT_ELIGIBILITY.get(s, {s})))
+    remaining = sorted(pool.items(), key=lambda kv: -kv[1])
+    total = 0.0
+    for slot in slots:
+        allowed = SLOT_ELIGIBILITY.get(slot, {slot})
+        for i, (pid, pts) in enumerate(remaining):
+            if player_positions(pid, players_data) & allowed:
+                total += pts
+                remaining.pop(i)
+                break
+    return total
+
+def build_player_meta(players_data):
+    """Age, position, NFL team and years in the league for every active skill player."""
+    meta = {}
+    for p in players_data.values():
+        pos = p.get('position')
+        name = p.get('full_name')
+        if not name or pos not in ('QB', 'RB', 'WR', 'TE', 'K') or not p.get('active'):
+            continue
+        age = p.get('age')
+        meta[name] = [age if isinstance(age, (int, float)) else None, pos, p.get('team') or 'FA', p.get('years_exp')]
+    return meta
+
+def lineup_row(season, week, mgr, m, roster_positions, players_data):
+    """Full lineup in slot order, plus the best lineup the roster could have started.
+    Starters and bench are "Name (Pos) Pts" entries joined by "; "."""
+    players_pts = m.get('players_points') or {}
+    if not players_pts:
+        return None
+    pts = float(m.get('points') or 0.0)
+    def entry(pid):
+        p_name, p_pos, _ = get_player_label(pid, players_data)
+        return f"{p_name} ({p_pos}) {float(players_pts.get(pid) or 0.0):.2f}"
+    starter_ids = [pid for pid in (m.get('starters') or []) if pid and pid != '0']
+    bench_ids = sorted((pid for pid in players_pts if pid not in starter_ids),
+                       key=lambda pid: -float(players_pts.get(pid) or 0.0))
+    pool = {pid: float(v or 0.0) for pid, v in players_pts.items()}
+    best = max(optimal_score(roster_positions, pool, players_data), pts)
+    return [str(season), f"Week {week}", mgr, f"{pts:.2f}", f"{best:.2f}",
+            "; ".join(entry(pid) for pid in starter_ids),
+            "; ".join(entry(pid) for pid in bench_ids)]
+
+def move_row(season, week, tx, roster_to_manager, players_data):
+    """A completed waiver claim or free-agent pickup, or None for anything else."""
+    if tx.get('type') not in ('waiver', 'free_agent') or tx.get('status') != 'complete':
+        return None
+    created_ms = tx.get('created', 0)
+    dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
+    rid = (tx.get('roster_ids') or [None])[0]
+    def names(d):
+        return ", ".join("{} ({})".format(*get_player_label(pid, players_data)[:2]) for pid in (d or {}))
+    bid = (tx.get('settings') or {}).get('waiver_bid')
+    return [str(season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}" if dt else "",
+            roster_to_manager.get(rid, f"Team {rid}"),
+            "Waiver" if tx.get('type') == 'waiver' else "Free Agent",
+            names(tx.get('adds')), names(tx.get('drops')),
+            str(bid) if bid is not None else ""]
+
+def manager_labels(league_id):
+    """roster_id -> "Team Name (display)" for one Sleeper league."""
+    rosters = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/rosters") or []
+    users = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/users") or []
+    user_map = {}
+    for u in users:
+        display = u.get('display_name', 'Unknown').strip()
+        team_name = ((u.get('metadata') or {}).get('team_name') or '').strip()
+        user_map[u.get('user_id')] = f"{team_name} ({display})" if team_name and team_name.lower() != display.lower() else display
+    return {r.get('roster_id'): user_map.get(r.get('owner_id'), f"Team {r.get('roster_id')}") for r in rosters}
+
+def backfill_past_seasons(league_info, have_seasons, players_data):
+    """Lineups and waiver moves for earlier Sleeper seasons of this league (via previous_league_id).
+    Runs once per season: seasons already in the master file are skipped. Old seasons are a
+    nice-to-have, so their failed requests are logged but don't block the sync."""
+    failed_before = len(FAILED_URLS)
+    lineups, moves = [], []
+    prev_id = league_info.get('previous_league_id')
+    while prev_id and prev_id != '0':
+        prev = fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}")
+        if not prev:
+            break
+        season = str(prev.get('season', ''))
+        if season and season not in have_seasons:
+            print(f"  backfilling {season} lineups and moves from league {prev_id}")
+            labels = manager_labels(prev_id)
+            positions = prev.get('roster_positions') or []
+            for week in range(1, LAST_PLAYOFF_WEEK + 1):
+                for m in fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}/matchups/{week}") or []:
+                    row = lineup_row(season, week, labels.get(m.get('roster_id'), f"Team {m.get('roster_id')}"), m, positions, players_data)
+                    if row and float(row[3]) > 0:
+                        lineups.append(row)
+            for week in range(1, 19):
+                for tx in fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}/transactions/{week}") or []:
+                    row = move_row(season, week, tx, labels, players_data)
+                    if row:
+                        moves.append(row)
+        prev_id = prev.get('previous_league_id')
+    if len(FAILED_URLS) > failed_before:
+        print(f"  WARNING: {len(FAILED_URLS) - failed_before} backfill request(s) failed; dropping this backfill and retrying next run")
+        del FAILED_URLS[failed_before:]
+        return [], []
+    return lineups, moves
 
 def get_player_label(pid, players_data):
     p_info = players_data.get(str(pid), {})
@@ -218,6 +345,8 @@ def build_master_data():
             ["Week", "Team / Manager", "Total Score", "Top Starting Scorer", "Best Bench Scorer", "", ""]
         ]
         new_matchup_rows_2026 = []
+        new_lineup_rows = []
+        roster_positions = league_info.get('roster_positions') or []
 
         for week in range(1, LAST_PLAYOFF_WEEK + 1):
             matchups = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/matchups/{week}") or []
@@ -253,6 +382,10 @@ def build_master_data():
                     f"Week {week}", mgr, f"{pts:.2f}", top_st_str, top_bn_str, "", ""
                 ])
 
+                row = lineup_row(CURRENT_SEASON, week, mgr, m, roster_positions, players_data)
+                if row:
+                    new_lineup_rows.append(row)
+
                 if mid is not None:
                     matchup_map.setdefault(mid, []).append({'mgr': mgr, 'pts': pts})
 
@@ -266,9 +399,13 @@ def build_master_data():
 
         # --- 4. FETCH LIVE 2026 TRADES ---
         live_trades_2026 = []
+        new_move_rows = []
         for week in range(1, 19):
             txns = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/transactions/{week}") or []
             for tx in txns:
+                row = move_row(CURRENT_SEASON, week, tx, roster_to_manager, players_data)
+                if row:
+                    new_move_rows.append(row)
                 if tx.get('type') == 'trade' and tx.get('status') == 'complete':
                     created_ms = tx.get('created', 0)
                     dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
@@ -307,6 +444,8 @@ def build_master_data():
         historical_standings = []
         historical_trades = []
         historical_matchups = []
+        historical_lineups = []
+        historical_moves = []
         profile_rows = []
 
         if existing_rows:
@@ -319,6 +458,8 @@ def build_master_data():
                     elif 'STANDINGS' in u0: active_sec = 'standings'
                     elif 'ROSTERS' in u0: active_sec = 'rosters'
                     elif 'TRADE' in u0: active_sec = 'trades'
+                    elif 'LINEUPS' in u0: active_sec = 'lineups'
+                    elif 'FREE AGENT' in u0: active_sec = 'moves'
                     elif 'BOX SCORES' in u0: active_sec = 'boxscores'
                     elif 'MATCHUPS' in u0: active_sec = 'matchups'
                     else: active_sec = 'other'
@@ -338,6 +479,17 @@ def build_master_data():
                 elif active_sec == 'matchups':
                     if c0 not in ('Season', CURRENT_SEASON):
                         historical_matchups.append(row)
+                elif active_sec == 'lineups':
+                    if c0 not in ('Season', CURRENT_SEASON):
+                        historical_lineups.append(row)
+                elif active_sec == 'moves':
+                    if c0 not in ('Season', CURRENT_SEASON):
+                        historical_moves.append(row)
+
+        have_seasons = {str(r[0]).strip() for r in historical_lineups}
+        past_lineups, past_moves = backfill_past_seasons(league_info, have_seasons, players_data)
+        historical_lineups = past_lineups + historical_lineups
+        historical_moves = past_moves + historical_moves
 
         if not profile_rows:
             profile_rows = [
@@ -389,13 +541,23 @@ def build_master_data():
              ["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
              ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]] +
             new_matchup_rows_2026 +
-            historical_matchups
+            historical_matchups +
+            [["", "", "", "", "", "", ""],
+             [LINEUPS_HEADER, "", "", "", "", "", ""],
+             ["Season", "Week", "Team / Manager", "Score", "Optimal Score", "Starters (Name (Pos) Pts)", "Bench (Name (Pos) Pts)"]] +
+            new_lineup_rows +
+            historical_lineups +
+            [["", "", "", "", "", "", ""],
+             [MOVES_HEADER, "", "", "", "", "", "", ""],
+             ["Season", "Week", "Date", "Team / Manager", "Type", "Added", "Dropped", "FAAB Bid"]] +
+            new_move_rows +
+            historical_moves
         )
         # Never replace current-season data with less of it: a shrinking row count means
         # some API call silently returned nothing.
         # Trades count only ID-backed rows, so removing legacy duplicates doesn't trip the guard.
         shrunk = [
-            sec for sec, ids_only in (('MATCHUPS', False), ('TRADE', True))
+            sec for sec, ids_only in (('MATCHUPS', False), ('TRADE', True), ('LINEUPS', False), ('FREE AGENT', False))
             if count_rows(compiled_rows, sec, CURRENT_SEASON, ids_only)
             < count_rows(existing_rows, sec, CURRENT_SEASON, ids_only)
         ]
@@ -413,6 +575,10 @@ def build_master_data():
 
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
+
+    with open('player_meta.json', 'w', encoding='utf-8') as f:
+        json.dump({"generated_at": int(time.time()), "fields": ["age", "pos", "team", "years_exp"],
+                   "players": build_player_meta(players_data)}, f, separators=(',', ':'))
 
     print("Successfully merged live Sleeper data while locking out future picks for redraft leagues!")
 

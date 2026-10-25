@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -36,17 +37,48 @@ def fetch_json(url, retries=4):
     FAILED_URLS.append(url)
     return None
 
-def count_rows(rows, section_word, season):
-    """Count data rows for `season` inside the section whose header contains `section_word`."""
+def count_rows(rows, section_word, season, with_tx_id=False):
+    """Count data rows for `season` inside the section whose header contains `section_word`.
+    With with_tx_id, only rows carrying a Sleeper transaction_id (column 6) are counted."""
     count, active = 0, False
     for row in rows or []:
         c0 = str(row[0] if row else '').strip()
         if c0.startswith('---'):
             active = section_word in c0.upper()
             continue
-        if active and c0 == season:
+        if active and c0 == season and (not with_tx_id or (len(row) > 5 and str(row[5]).strip())):
             count += 1
     return count
+
+LINEAGE_RE = re.compile(r' -> Resulted in drafting:[^,\]]*')
+
+def trade_content_key(row):
+    """Season + breakdown with lineage notes, whitespace and item order normalized."""
+    breakdown = re.sub(r'\s+', ' ', LINEAGE_RE.sub('', str(row[4]))).strip()
+    sides = []
+    for side in breakdown.split(' <---> '):
+        m = re.match(r'^(.*? received: )\[(.*)\]$', side)
+        sides.append(m.group(1) + ', '.join(sorted(m.group(2).split(', '))) if m else side)
+    return (str(row[0]).strip(), ' <---> '.join(sides))
+
+def drop_duplicate_trades(trades):
+    """Remove ID-less legacy copies of trades that also exist with a Sleeper transaction_id.
+
+    The old sync re-added the same trade with a shifted date or a renamed team, so its copies
+    can't be matched by date. A copy is only dropped when its season and full breakdown match an
+    ID-backed row exactly; its "Resulted in drafting" lineage is kept on the surviving row.
+    """
+    with_id = {trade_content_key(r): r for r in trades if str(r[5]).strip()}
+    kept, removed = [], 0
+    for r in trades:
+        twin = None if str(r[5]).strip() else with_id.get(trade_content_key(r))
+        if twin is None:
+            kept.append(r)
+            continue
+        if 'Resulted in drafting:' in str(r[4]) and 'Resulted in drafting:' not in str(twin[4]):
+            twin[4] = r[4]
+        removed += 1
+    return kept, removed
 
 def ordinal(n):
     return f"{n}{'tsnrhtdd'[(n//10%10!=1)*(n%10<4)*n%10::4]}"
@@ -323,6 +355,9 @@ def build_master_data():
                     merged_trades.insert(0, lt)
                 if tx_id:
                     known_tx_ids.add(tx_id)
+            merged_trades, dupes = drop_duplicate_trades(merged_trades)
+            if dupes:
+                print(f"{league_key}: removed {dupes} duplicate legacy trade row(s)")
 
             compiled_rows = (
                 [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""]] +
@@ -347,9 +382,11 @@ def build_master_data():
             )
             # Never replace current-season data with less of it: a shrinking row count means
             # some API call silently returned nothing.
+            # Trades count only ID-backed rows, so removing legacy duplicates doesn't trip the guard.
             shrunk = [
-                sec for sec in ('MATCHUPS', 'TRADE')
-                if count_rows(compiled_rows, sec, CURRENT_SEASON) < count_rows(existing_rows, sec, CURRENT_SEASON)
+                sec for sec, ids_only in (('MATCHUPS', False), ('TRADE', True))
+                if count_rows(compiled_rows, sec, CURRENT_SEASON, ids_only)
+                < count_rows(existing_rows, sec, CURRENT_SEASON, ids_only)
             ]
             if shrunk:
                 print(f"ERROR: {league_key}: {CURRENT_SEASON} rows shrank in {shrunk}; keeping existing data.")

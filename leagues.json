@@ -1,0 +1,103 @@
+{
+  "_about": [
+    "Every league the hub tracks, read by the sync scripts, index.html and the deploy-workers workflow.",
+    "name: must match the league's name on the site. id: the CURRENT season's league ID. The Sleeper sync",
+    "updates the id itself when a league renews for a new season, so this rarely needs a hand edit.",
+    "playoff_start_week: first playoff week, keyed by the first season it applies to (the latest key <= season wins).",
+    "playoff_teams: teams that make the playoffs. third_place_game: false when the league plays no 3rd-place game.",
+    "exclude_from_records: true leaves the league out of Hall of Records, Playoff Odds and award tabs.",
+    "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league)."
+  ],
+  "leagues": [
+    {
+      "name": "Dante's league",
+      "platform": "sleeper",
+      "id": "1312263393003991040",
+      "type": "dynasty",
+      "playoff_start_week": {
+        "2015": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": true
+    },
+    {
+      "name": "Andys league",
+      "platform": "sleeper",
+      "id": "1388685966092296192",
+      "type": "dynasty",
+      "playoff_start_week": {
+        "2015": 14,
+        "2021": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": true
+    },
+    {
+      "name": "Hail Mary Jane Congregation",
+      "platform": "sleeper",
+      "id": "1312042561786904576",
+      "type": "dynasty",
+      "playoff_start_week": {
+        "2015": 14,
+        "2021": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": true
+    },
+    {
+      "name": "Fish's League",
+      "platform": "sleeper",
+      "id": "1338346687445348352",
+      "type": "dynasty",
+      "playoff_start_week": {
+        "2015": 14,
+        "2023": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": true
+    },
+    {
+      "name": "Roundhouse",
+      "platform": "sleeper",
+      "id": "1389343056888606720",
+      "type": "redraft",
+      "playoff_start_week": {
+        "2015": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": false
+    },
+    {
+      "name": "All Flex Zone",
+      "platform": "sleeper",
+      "id": "1329118060811927552",
+      "type": "redraft",
+      "playoff_start_week": {
+        "2015": 15
+      },
+      "playoff_teams": 7,
+      "third_place_game": false
+    },
+    {
+      "name": "Branden's League",
+      "platform": "fleaflicker",
+      "id": "165455",
+      "type": "dynasty",
+      "start_season": 2015,
+      "playoff_start_week": {
+        "2015": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": true
+    },
+    {
+      "name": "Hail Mary Jane Congregation (Fleaflicker era)",
+      "platform": "fleaflicker",
+      "id": "181202",
+      "type": "dynasty",
+      "start_season": 2016,
+      "end_season": 2020,
+      "merge_into": "Hail Mary Jane Congregation"
+    }
+  ]
+}

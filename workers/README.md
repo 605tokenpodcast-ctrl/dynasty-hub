@@ -47,6 +47,6 @@ Each one is optional: left empty, the site works exactly as before for that piec
 
 ## Changing things
 
-- **Leagues:** each worker's `wrangler.toml` lists the league IDs. When a Sleeper league rolls over to a new season ID, update it there as well as in `scripts/sync_leagues.py`.
+- **Leagues:** the league list lives in `leagues.json` at the repo root. The deploy workflow copies it into each worker's `wrangler.toml` before deploying. When a Sleeper league renews for a new season, the data sync finds the new ID, saves it to `leagues.json` and starts this deploy on its own.
 - **Schedule:** the bot's cron times are in `league-bot/wrangler.toml` (UTC).
 - **First trade-alert run:** the bot remembers the trades that already exist without announcing them, so the chat doesn't get flooded with old trades.

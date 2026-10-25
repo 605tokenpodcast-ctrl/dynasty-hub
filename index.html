@@ -195,12 +195,12 @@
                     <div id="exposure-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
 
-                <!-- TAB 5: 2026 BENCH BLUNDERS & WEEKLY AWARDS -->
+                <!-- TAB 5: THIS SEASON'S BENCH BLUNDERS & WEEKLY AWARDS -->
                 <div id="tab-awards" class="hidden space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold">🔥 2026 Weekly High-Rollers & Bench Blunders</h2>
-                            <p class="text-slate-400 text-sm">Tracking weekly high-score belts, nuclear starters, and the biggest benchwarmer regrets of 2026.</p>
+                            <h2 class="text-2xl font-bold">🔥 <span class="season-label">This Season's</span> Weekly High-Rollers & Bench Blunders</h2>
+                            <p class="text-slate-400 text-sm">Tracking weekly high-score belts, nuclear starters, and the biggest benchwarmer regrets of <span class="season-label">the season</span>.</p>
                         </div>
                         <select id="awards-league-filter" onchange="renderWeeklyAwards()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent">
                             <option value="ALL">All Leagues</option>
@@ -209,11 +209,11 @@
                     <div id="awards-summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
-                            <h3 class="text-lg font-bold text-amber-400">🪑 The 2026 Benchwarmer Hall of Shame (Biggest Bench Explosions)</h3>
+                            <h3 class="text-lg font-bold text-amber-400">🪑 The <span class="season-label">Season's</span> Benchwarmer Hall of Shame (Biggest Bench Explosions)</h3>
                             <div id="bench-blunders-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
                         </div>
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
-                            <h3 class="text-lg font-bold text-emerald-400">🥊 2026 Weekly High-Roller Belt Winners</h3>
+                            <h3 class="text-lg font-bold text-emerald-400">🥊 <span class="season-label">Season</span> Weekly High-Roller Belt Winners</h3>
                             <div id="weekly-highs-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
                         </div>
                     </div>
@@ -231,11 +231,7 @@
                                 <option value="ALL">All Leagues Combined</option>
                             </select>
                             <select id="luck-season-filter" onchange="renderLuckIndex()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200">
-                                <option value="2026">2026 Season</option>
                                 <option value="ALL">All-Time Career</option>
-                                <option value="2025">2025 Season</option>
-                                <option value="2024">2024 Season</option>
-                                <option value="2023">2023 Season</option>
                             </select>
                         </div>
                     </div>
@@ -560,7 +556,7 @@
 
     <!-- Footer -->
     <footer class="bg-cardbg border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        Multi-League Fantasy Command Center &bull; Powered by Sleeper & Google Sheets
+        Multi-League Fantasy Command Center &bull; Powered by Sleeper & Fleaflicker
     </footer>
 
     <!-- JavaScript Engine -->
@@ -790,12 +786,17 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const [masterRes, ktcRes, mgrRes, metaRes] = await Promise.allSettled([
+                const [masterRes, ktcRes, mgrRes, metaRes, leaguesRes] = await Promise.allSettled([
                     fetch('sleeper_leagues_master.json'),
                     fetch('ktc_values.json'),
                     fetch('managers_config.json'),
-                    fetch('player_meta.json')
+                    fetch('player_meta.json'),
+                    fetch('leagues.json')
                 ]);
+
+                if (leaguesRes.status === 'fulfilled' && leaguesRes.value.ok) {
+                    try { loadLeagueConfig(await leaguesRes.value.json()); } catch (e) { /* defaults apply */ }
+                }
 
                 if (metaRes.status === 'fulfilled' && metaRes.value.ok) {
                     try { playerMeta = (await metaRes.value.json()).players || {}; } catch (e) { /* ages are optional */ }
@@ -920,7 +921,19 @@
             document.getElementById('app-container').classList.remove('hidden');
 
             const leagueNames = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]));
-            document.getElementById('sync-banner').innerText = `Synced with Sleeper Master JSON • ${leagueNames.length} Active Dynasty Leagues`;
+            Object.keys(leagueProfileCache).forEach(k => delete leagueProfileCache[k]);
+            allSeasonsCache = null;
+            document.getElementById('sync-banner').innerText = `Synced with Sleeper Master JSON • ${leagueNames.length} Active Leagues`;
+
+            // Season labels and the Luck tab's season list come from the data, not a hardcoded year
+            const hubSeason = latestSeason();
+            document.querySelectorAll('.season-label').forEach(el => { if (hubSeason) el.textContent = hubSeason; });
+            const luckSeason = document.getElementById('luck-season-filter');
+            allSeasons().forEach((yr, i) => {
+                const opt = new Option(`${yr} Season`, yr);
+                if (i === 0) luckSeason.insertBefore(opt, luckSeason.firstChild); else luckSeason.appendChild(opt);
+            });
+            luckSeason.value = allSeasons()[0] || 'ALL';
 
             // Populate all league dropdowns
             ['league-selector', 'power-league-selector', 'awards-league-filter', 'luck-league-filter', 'records-league-filter'].forEach(id => {
@@ -1063,7 +1076,7 @@
                 };
                 card.innerHTML = `
                     <div>
-                        <span class="text-xs text-accent font-bold uppercase tracking-wider">Dynasty League</span>
+                        <span class="text-xs text-accent font-bold uppercase tracking-wider">${leagueRules(name).type === 'redraft' ? 'Redraft' : 'Dynasty'} League</span>
                         <h4 class="font-bold text-white mt-1">${escHtml(name)}</h4>
                     </div>
                     <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
@@ -1138,7 +1151,7 @@
                                 <span class="bg-accent/20 text-accent border border-accent/30 w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm">#${idx + 1}</span>
                                 <div>
                                     <h4 class="font-bold text-white text-base">${escHtml(t.owner)}</h4>
-                                    <p class="text-xs text-accent font-semibold">${escHtml(t.league)} &bull; 2026 Record: ${escHtml(t.record)} (${escHtml(t.pf)} PF)</p>
+                                    <p class="text-xs text-accent font-semibold">${escHtml(t.league)} &bull; ${escHtml(leagueCurrentSeason(t.league))} Record: ${escHtml(t.record)} (${escHtml(t.pf)} PF)</p>
                                 </div>
                             </div>
                             <div class="text-left sm:text-right">
@@ -1363,7 +1376,7 @@
             }).join('');
         }
 
-        // --- TAB 5: 2026 BENCH BLUNDERS & WEEKLY AWARDS ---
+        // --- TAB 5: THIS SEASON'S BENCH BLUNDERS & WEEKLY AWARDS ---
         function renderWeeklyAwards() {
             const leagueFilter = document.getElementById('awards-league-filter').value;
             const benchList = [];
@@ -1425,7 +1438,7 @@
 
             document.getElementById('awards-summary-cards').innerHTML = `
                 <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-1">
-                    <p class="text-xs text-slate-400 font-bold uppercase">🏆 2026 Single-Week High Score</p>
+                    <p class="text-xs text-slate-400 font-bold uppercase">🏆 ${escHtml(latestSeason())} Single-Week High Score</p>
                     <p class="text-2xl font-extrabold text-emerald-400">${highestSingleWeek ? highestSingleWeek.totalScore.toFixed(2) + ' pts' : 'N/A'}</p>
                     <p class="text-xs text-slate-300">${highestSingleWeek ? escHtml(`${highestSingleWeek.owner} (${highestSingleWeek.league} • ${highestSingleWeek.week})`) : ''}</p>
                 </div>
@@ -1570,26 +1583,93 @@
             }).join('');
         }
 
+        // --- LEAGUE RULES (leagues.json) ---
+        // Playoff week, playoff spots and 3rd-place games per league. Edit leagues.json, not this code.
+        const DEFAULT_LEAGUE_RULES = { type: 'dynasty', playoff_start_week: { '0': 15 }, playoff_teams: 6, third_place_game: true };
+        let leagueRulesByName = {};
+
+        function loadLeagueConfig(cfg) {
+            leagueRulesByName = {};
+            (cfg.leagues || []).forEach(lg => {
+                if (lg.merge_into) return; // history-only entries use the rules of the league they merge into
+                leagueRulesByName[String(lg.name || '').trim().toLowerCase()] = { ...DEFAULT_LEAGUE_RULES, ...lg };
+            });
+        }
+
+        function leagueRules(leagueName) {
+            return leagueRulesByName[String(leagueName || '').trim().toLowerCase()] || DEFAULT_LEAGUE_RULES;
+        }
+
+        // "League Profile" key/value rows, e.g. League ID, Current Season, Playoff Start Week (written by the syncs)
+        const leagueProfileCache = {};
+        function leagueProfile(leagueName) {
+            if (leagueProfileCache[leagueName]) return leagueProfileCache[leagueName];
+            const out = {};
+            let section = '';
+            (globalMasterData[leagueName] || []).some(r => {
+                const sec = getSectionType(r[0]);
+                if (sec) { if (section === 'profile') return true; section = sec; return false; }
+                if (section === 'profile' && String(r[0] || '').trim()) out[String(r[0]).trim()] = String(r[1] ?? '').trim();
+                return false;
+            });
+            return (leagueProfileCache[leagueName] = out);
+        }
+
+        function leagueCurrentSeason(leagueName) {
+            return leagueProfile(leagueName)['Current Season'] || latestSeason();
+        }
+
+        // Every season in the standings, newest first
+        let allSeasonsCache = null;
+        function allSeasons() {
+            if (allSeasonsCache) return allSeasonsCache;
+            const set = new Set();
+            Object.values(globalMasterData).forEach(rows => {
+                if (!Array.isArray(rows)) return;
+                let section = '';
+                rows.forEach(r => {
+                    const sec = getSectionType(r[0]);
+                    if (sec) { section = sec; return; }
+                    const yr = String(r[0] || '').trim();
+                    if (section === 'standings' && /^\d{4}$/.test(yr)) set.add(yr);
+                });
+            });
+            return (allSeasonsCache = [...set].sort().reverse());
+        }
+
+        function latestSeason() {
+            return allSeasons()[0] || '';
+        }
+
+        // This season's playoff settings come from Sleeper (League Profile); earlier seasons from leagues.json
+        function currentSeasonProfileNumber(leagueName, season, key) {
+            const prof = leagueProfile(leagueName);
+            if (String(prof['Current Season'] || '') !== String(season)) return 0;
+            return parseInt(prof[key], 10) || 0;
+        }
+
         // --- TAB: HALL OF RECORDS ---
-        // Leagues whose name contains any of these strings are skipped on the Hall of Records tab.
-        const AWARD_EXCLUDED_LEAGUES = ['SFB16'];
+        // Leagues marked exclude_from_records in leagues.json are skipped on the records and odds tabs.
         function isAwardExcluded(name) {
-            const n = String(name || '').toUpperCase();
-            return AWARD_EXCLUDED_LEAGUES.some(k => n.includes(k.toUpperCase()));
+            return !!leagueRules(name).exclude_from_records;
         }
 
         // Every league plays its championship in week 17; week 18 is unused.
         const LAST_PLAYOFF_WEEK = 17;
 
         // First playoff week for a league/season. Weeks before this are regular season.
-        // Add or change rules here if a league's schedule changes.
         function playoffStartWeek(leagueName, season) {
-            const n = String(leagueName || '').toLowerCase();
+            const live = currentSeasonProfileNumber(leagueName, season, 'Playoff Start Week');
+            if (live) return live;
+            const bySeason = leagueRules(leagueName).playoff_start_week || {};
             const yr = parseInt(season, 10) || 0;
-            if (n.includes('fish')) return yr < 2023 ? 14 : 15;
-            if (n.includes('hail mary')) return yr < 2021 ? 14 : 15;
-            if (n.includes('andy')) return yr < 2021 ? 14 : 15;
-            return 15; // Branden's league and all others
+            const from = Object.keys(bySeason).map(Number).filter(k => k <= yr).sort((a, b) => b - a)[0];
+            return from === undefined ? 15 : bySeason[String(from)];
+        }
+
+        // How many teams make the playoffs in a league/season
+        function playoffTeamCount(leagueName, season) {
+            return currentSeasonProfileNumber(leagueName, season, 'Playoff Teams') || leagueRules(leagueName).playoff_teams || 6;
         }
 
         // Backup check: a podium placement always counts as a playoff appearance.
@@ -1669,14 +1749,14 @@
                 });
             });
 
-            // Work out who made the playoffs each season: top 6 by record (top 7 in All Flex Zone),
+            // Work out who made the playoffs each season: the top playoffTeamCount() teams by record,
             // ties broken by points for. Anyone with a champion/runner-up/3rd finish also counts.
             const groups = {};
             standings.forEach(s => { (groups[s.league + '||' + s.season] = groups[s.league + '||' + s.season] || []).push(s); });
             const madeMap = {};
             Object.keys(groups).forEach(k => {
-                const league = k.split('||')[0];
-                const cutoff = /all flex zone/i.test(league) ? 7 : 6;
+                const [league, season] = k.split('||');
+                const cutoff = playoffTeamCount(league, season);
                 const complete = groups[k].some(s => /league champion/i.test(s.placement));
                 [...groups[k]].sort((a, b) => (b.w - a.w) || (a.l - b.l) || (b.pf - a.pf)).forEach((s, i) => {
                     s.madePlayoffs = i < cutoff || madePlayoffs(s.placement);
@@ -1694,7 +1774,7 @@
 
             // Filter out 3rd/5th place games from the playoff pool. Only the final playoff week has them:
             //  - the championship game (involves the champion or runner-up) always counts
-            //  - the 3rd place game (involves the 3rd place finisher) counts, except in All Flex Zone and Roundhouse
+            //  - the 3rd place game (involves the 3rd place finisher) counts, unless leagues.json says the league has none
             //  - any other final-week game between playoff teams (5th place) never counts
             const finishInfo = {};
             standings.forEach(s => {
@@ -1718,7 +1798,7 @@
                 if (!inf.champ || g.weekNum !== finalWeek[k]) return; // earlier round, or season not finished
                 const teams = [g.t1, g.t2];
                 if (teams.includes(inf.champ) || teams.includes(inf.runner)) return; // championship game
-                const hasThirdPlaceGame = !/all flex zone|roundhouse/i.test(g.league);
+                const hasThirdPlaceGame = leagueRules(g.league).third_place_game !== false;
                 g.playoffCounts = hasThirdPlaceGame && teams.includes(inf.third);
             });
 
@@ -4137,9 +4217,9 @@
         const PLAYOFF_SIMS = 10000;
         const playoffSimCache = {}; // league -> simulation result
 
-        // Same rules as Records / Luck: playoffStartWeek() and top 6 (top 7 in All Flex Zone)
+        // Same rules as Records / Luck: playoffStartWeek() and playoffTeamCount()
         function playoffConfig(league, season) {
-            return { start: playoffStartWeek(league, season), teams: /all flex zone/i.test(league) ? 7 : 6 };
+            return { start: playoffStartWeek(league, season), teams: playoffTeamCount(league, season) };
         }
 
         function gaussian() {

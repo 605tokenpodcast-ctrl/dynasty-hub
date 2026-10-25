@@ -15,6 +15,8 @@ on:
       - 'workers/live-scores/**'
       - 'workers/award-cards/**'
       - '.github/workflows/deploy-workers.yml'
+      - 'leagues.json'
+      - 'scripts/worker_config.py'
 
 concurrency:
   group: deploy-workers
@@ -44,6 +46,10 @@ jobs:
         if: steps.creds.outputs.ok == 'true'
         with:
           node-version: '22'
+
+      - name: Copy league IDs from leagues.json into the workers
+        if: steps.creds.outputs.ok == 'true'
+        run: python3 scripts/worker_config.py
 
       - name: Deploy live score cache
         if: steps.creds.outputs.ok == 'true'

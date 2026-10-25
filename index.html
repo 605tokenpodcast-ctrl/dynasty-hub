@@ -460,8 +460,9 @@
             "lilfishy": { tagline: "Multi-League Dynasty Veteran", color: "#ec4899" }
         };
 
-        // Built-in KeepTradeCut 1QB/Dynasty Reference Values (Merged with ktc_values.json if present)
-        let ktcPlayerValues = {
+        // Offline fallback only: used when ktc_values.json can't be fetched. Live values REPLACE this table
+        // (never merge), otherwise stale entries like "Marvin Harrison Jr." shadow the live "Marvin Harrison Jr".
+        const FALLBACK_PLAYER_VALUES = {
             "Bijan Robinson": 9999, "Ja'Marr Chase": 9950, "Justin Jefferson": 9850, "CeeDee Lamb": 9600,
             "Jahmyr Gibbs": 9550, "Malik Nabers": 9450, "Amon-Ra St. Brown": 9400, "Puka Nacua": 9250,
             "Ashton Jeanty": 9200, "Brock Bowers": 9150, "Josh Allen": 9100, "Jayden Daniels": 9000,
@@ -511,7 +512,10 @@
             6: 250
         };
 
-        let normalizedKtcMap = {};
+        // Values per FantasyCalc format: { formatKey: { players: {name: value}, norm: {normalizedName: value} } }
+        let valueFormats = {};
+        let defaultValueFormat = 'default';
+        let leagueValueFormats = {}; // lowercased league name -> format key
 
         function normalizePlayerName(name) {
             return String(name || '')
@@ -522,13 +526,31 @@
                 .trim();
         }
 
-        function rebuildNormalizedKtcMap() {
-            normalizedKtcMap = {};
-            Object.keys(ktcPlayerValues).forEach(k => {
-                normalizedKtcMap[normalizePlayerName(k)] = ktcPlayerValues[k];
-            });
+        function buildValueFormat(players) {
+            const norm = {};
+            Object.keys(players || {}).forEach(k => { norm[normalizePlayerName(k)] = players[k]; });
+            return { players: players || {}, norm };
         }
-        rebuildNormalizedKtcMap();
+
+        function loadValueData(data) {
+            valueFormats = {};
+            leagueValueFormats = {};
+            defaultValueFormat = data.default_format || 'default';
+            Object.entries(data.formats || {}).forEach(([key, fmt]) => {
+                valueFormats[key] = buildValueFormat(fmt.players);
+            });
+            if (!valueFormats[defaultValueFormat]) valueFormats[defaultValueFormat] = buildValueFormat(data.players);
+            Object.entries(data.league_formats || {}).forEach(([league, key]) => {
+                leagueValueFormats[String(league).trim().toLowerCase()] = key;
+            });
+            if (data.picks) Object.assign(ktcPickValues, data.picks);
+        }
+        loadValueData({ players: FALLBACK_PLAYER_VALUES });
+
+        function getValueFormat(leagueName) {
+            const key = leagueValueFormats[String(leagueName || '').trim().toLowerCase()];
+            return valueFormats[key] || valueFormats[defaultValueFormat];
+        }
 
         function getMasterOwner(teamString) {
             const trimmed = String(teamString || '').trim();
@@ -567,7 +589,8 @@
             return c === 'Season' || c === 'Team / Manager' || c === 'Week' || c === 'League Name';
         }
 
-        function scoreDraftPickKTC(pickStr) {
+        function scoreDraftPickKTC(pickStr, leagueName) {
+            const values = getValueFormat(leagueName).players;
             // Format: "2027 Mid Round 1"
             const s = String(pickStr || '');
             const yrMatch = s.match(/\b(202\d)\b/);
@@ -579,22 +602,23 @@
                     const yr = yrMatch[1];
                     const midKey = `${yr} ${ord} (Mid)`;
                     const baseKey = `${yr} ${ord}`;
-                    if (ktcPlayerValues[midKey]) return ktcPlayerValues[midKey];
-                    if (ktcPlayerValues[baseKey]) return ktcPlayerValues[baseKey];
+                    if (values[midKey]) return values[midKey];
+                    if (values[baseKey]) return values[baseKey];
                 }
                 return ktcPickValues[rd] || ktcPickValues[String(rd)] || 250;
             }
             return 0;
         }
 
-        function scorePlayerKTC(playerEntry) {
+        function scorePlayerKTC(playerEntry, leagueName) {
             // Format: "Kenneth Walker III (RB - KC)"
             const match = String(playerEntry).match(/^(.+?)\s*\(([A-Z]+)\s*-\s*([A-Z]+)\)$/);
             const cleanName = match ? match[1].trim() : String(playerEntry).trim();
             const pos = match ? match[2].trim() : 'BN';
-            if (ktcPlayerValues[cleanName]) return ktcPlayerValues[cleanName];
+            const values = getValueFormat(leagueName);
+            if (values.players[cleanName]) return values.players[cleanName];
             const norm = normalizePlayerName(cleanName);
-            if (normalizedKtcMap[norm]) return normalizedKtcMap[norm];
+            if (values.norm[norm]) return values.norm[norm];
             if (pos === 'QB' || pos === 'RB' || pos === 'WR') return 800;
             if (pos === 'TE') return 600;
             return 250;
@@ -610,11 +634,7 @@
 
                 if (ktcRes.status === 'fulfilled' && ktcRes.value.ok) {
                     const ktcData = await ktcRes.value.json();
-                    if (ktcData.players) {
-                        Object.assign(ktcPlayerValues, ktcData.players);
-                        rebuildNormalizedKtcMap();
-                    }
-                    if (ktcData.picks) Object.assign(ktcPickValues, ktcData.picks);
+                    if (ktcData.players || ktcData.formats) loadValueData(ktcData);
                 }
 
                 if (mgrRes.status === 'fulfilled' && mgrRes.value.ok) {
@@ -897,11 +917,11 @@
 
                     const scoredPlayers = rosterList.map(p => ({
                         raw: p,
-                        val: scorePlayerKTC(p)
+                        val: scorePlayerKTC(p, leagueName)
                     })).sort((a, b) => b.val - a.val);
 
                     const rosterValue = scoredPlayers.reduce((sum, item) => sum + item.val, 0);
-                    const pickValue = picksList.reduce((sum, p) => sum + scoreDraftPickKTC(p), 0);
+                    const pickValue = picksList.reduce((sum, p) => sum + scoreDraftPickKTC(p, leagueName), 0);
                     const firstRdCount = picksList.filter(p => /Round\s+1\b/i.test(p)).length;
 
                     teams.push({
@@ -1003,14 +1023,14 @@
                         if (unifiedOwners[masterOwner]) {
                             const players = String(r[3] || '').split(',').map(s => s.trim()).filter(Boolean);
                             players.forEach(p => {
-                                unifiedOwners[masterOwner].ktcRosterCapital += scorePlayerKTC(p);
+                                unifiedOwners[masterOwner].ktcRosterCapital += scorePlayerKTC(p, leagueName);
                             });
 
                             const picksRaw = String(r[4] || '').split(',').map(s => s.trim()).filter(Boolean);
                             picksRaw.forEach(p => {
                                 if (p.toLowerCase() !== 'none') {
                                     unifiedOwners[masterOwner].totalFuturePicks++;
-                                    unifiedOwners[masterOwner].ktcPickCapital += scoreDraftPickKTC(p);
+                                    unifiedOwners[masterOwner].ktcPickCapital += scoreDraftPickKTC(p, leagueName);
                                     if (/Round\s+1\b/i.test(p)) unifiedOwners[masterOwner].firstRoundPicks++;
                                 }
                             });
@@ -1113,7 +1133,7 @@
                         if (!playerMap[pEntry]) {
                             playerMap[pEntry] = {
                                 entry: pEntry,
-                                ktc: scorePlayerKTC(pEntry),
+                                ktc: scorePlayerKTC(pEntry, leagueName),
                                 shares: []
                             };
                         }
@@ -2103,7 +2123,7 @@
                     ownerPicks[owner].byLeague[leagueName] = picksList;
                     picksList.forEach(p => {
                         ownerPicks[owner].totalPicks++;
-                        ownerPicks[owner].ktcValue += scoreDraftPickKTC(p);
+                        ownerPicks[owner].ktcValue += scoreDraftPickKTC(p, leagueName);
                         if (/Round\s+1\b/i.test(p)) ownerPicks[owner].firstRoundCount++;
                     });
                 });

@@ -25,24 +25,12 @@ import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 
-LEAGUES_TO_SYNC = [
-    {
-        "id": "165455",
-        "name": "Branden's League",
-        "type": "dynasty",
-        "start_season": 2015,
-    },
-    {
-        # Ran on Fleaflicker 2016-2020, then moved to Sleeper. Its history is spliced
-        # into the existing Sleeper block (key below) instead of getting its own block.
-        "id": "181202",
-        "name": "Hail Mary Jane Congregation (Fleaflicker era)",
-        "type": "dynasty",
-        "start_season": 2016,
-        "end_season": 2020,
-        "merge_into": "Hail Mary Jane Congregation",
-    }
-]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import league_config  # noqa: E402
+
+# From leagues.json. A league with merge_into ran on Fleaflicker and then moved to Sleeper: its
+# history is spliced into that existing block instead of getting its own.
+LEAGUES_TO_SYNC = league_config.leagues("fleaflicker")
 
 MASTER_FILE = "sleeper_leagues_master.json"
 API_BASE = "https://www.fleaflicker.com/api/"

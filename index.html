@@ -3290,10 +3290,12 @@
                 lines.push(`## ${p.name}`);
                 if (current.length) lines.push('Current records: ' + current.join('; '));
                 // The JSON is not in date order, so sort before picking the newest
-                const recent = trades.sort((a, b) => tradeTimestamp(b) - tradeTimestamp(a)).slice(0, 5)
-                    .map(r => `${r[0]} ${r[1]}: ${r[4]}`.slice(0, 350));
-                if (recent.length) lines.push('Recent trades (newest first): ' + recent.join(' | '));
+                const recent = trades.sort((a, b) => tradeTimestamp(b) - tradeTimestamp(a)).slice(0, 8)
+                    .map(r => `${r[1]}: ${chatTradeText(r[4], p.name)}`);
+                if (recent.length) lines.push('Recent trades (newest first; each item shows its FantasyCalc value today, drafted picks count as the player taken):\n' + recent.join('\n'));
             });
+
+            lines.push(...chatPickValueLines());
 
             lines.push('## All-time manager stats (titles, runner-ups, record)');
             Object.keys(owners).forEach(o => {
@@ -3309,6 +3311,48 @@
                 });
             }
             return lines.join('\n');
+        }
+
+        // "2027 Round 3rd Pick (originally from Team (user)) -> Resulted in drafting: X (WR)" -> "2027 Rd 3 pick -> drafted X (WR)"
+        function shortTradeItem(label) {
+            return String(label || '')
+                .replace(/\s*\(originally from (?:[^()]|\([^()]*\))*\)/, '')
+                .replace(/ Round (\d+)\w* Pick/i, ' Rd $1 pick')
+                .replace(/\s*-> Resulted in drafting:\s*/, ' -> drafted ');
+        }
+
+        // Whole trade in one compact line with values, so multi-pick trades are never cut off
+        function chatTradeText(breakdown, leagueName) {
+            const sides = hindsightTrade(breakdown, leagueName);
+            if (!sides.length) return String(breakdown || '');
+            return sides.map(sd => `${sd.owner} got ${sd.items.length
+                ? sd.items.map(i => `${shortTradeItem(i.label)} [${Math.round(i.value)}]`).join(', ')
+                : 'nothing'} (total ${Math.round(sd.value)})`).join(' / ');
+        }
+
+        // Future draft pick values per value format, by year, round and early/mid/late slot
+        function chatPickValueLines() {
+            const byFormat = {};
+            chatLeagueProfiles().forEach(p => {
+                const picks = getValueFormat(p.name).picks || {};
+                if (!Object.keys(picks).length) return;
+                const key = leagueValueFormats[p.name.trim().toLowerCase()] || defaultValueFormat;
+                (byFormat[key] = byFormat[key] || { picks, leagues: [] }).leagues.push(p.name);
+            });
+            const lines = [];
+            Object.values(byFormat).forEach(({ picks, leagues }) => {
+                const years = [...new Set(Object.values(picks).flatMap(y => Object.keys(y)))].sort();
+                const rounds = Object.keys(picks).sort((a, b) => a - b).slice(0, 4);
+                const rows = years.map(yr => `${yr}: ` + rounds.map(rd => {
+                    const slot = (picks[rd] || {})[yr];
+                    if (!slot) return null;
+                    const v = ['Early', 'Mid', 'Late'].map(t => slot[t]).filter(Boolean);
+                    return `Rd ${rd} ${v.length ? v.map(Math.round).join('/') : Math.round(slot.base || 0)}`;
+                }).filter(Boolean).join(', '));
+                lines.push(`Draft pick values for ${leagues.join(', ')} (early/mid/late; picks further out than listed use the last year): ` + rows.join(' | '));
+            });
+            if (lines.length) lines.unshift('## Future draft pick values (FantasyCalc, same scale as player values)');
+            return lines;
         }
 
         async function getChatPlayers() {

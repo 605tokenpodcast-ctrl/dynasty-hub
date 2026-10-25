@@ -6,8 +6,9 @@
 | Live score cache | `live-scores/` | One cached live-score snapshot for every league, refreshed at most once a minute, so each visitor's browser stops calling Sleeper and Fleaflicker on its own. Cloudflare ignores its cache on `workers.dev` addresses, so the worker also keeps the snapshot in memory; moving it to a custom domain would make the shared cache work too. |
 | Award cards | `award-cards/` | Turns any award into a 1200×630 image with a share link whose preview shows the card in group chats. |
 | Fleaflicker proxy | `fleaflicker-proxy/` | The `dawn-pine-2ee2` worker: a CORS proxy so the browser can read Fleaflicker. Now deployed by the workflow like the others, under the same name, so its URL doesn't change. |
+| League chat | `league-chat/` | The site's Trash Talk Bot (`league-chat` worker): moods, trade tables, live FantasyCalc values and the grudge book. Deployed under the same name, so its URL doesn't change. It keeps the passcode, API key and dashboard variables you already set, and reuses its existing grudge book. |
 
-All four workers fit in Cloudflare's free plan.
+All five workers fit in Cloudflare's free plan.
 
 ## One-time setup
 

@@ -1,6 +1,6 @@
 name: Deploy Cloudflare Workers
 
-# Deploys the league bot, live score cache, award card and Fleaflicker proxy workers in workers/.
+# Deploys the league bot, live score cache, award card, Fleaflicker proxy and league chat workers in workers/.
 # Needs two repository secrets: CLOUDFLARE_API_TOKEN (template "Edit Cloudflare Workers") and
 # CLOUDFLARE_ACCOUNT_ID. Optional secrets are copied into the league bot as worker secrets:
 # DISCORD_WEBHOOK_URL, GROUPME_BOT_ID, ANTHROPIC_API_KEY, BOT_ADMIN_KEY.
@@ -15,6 +15,7 @@ on:
       - 'workers/live-scores/**'
       - 'workers/award-cards/**'
       - 'workers/fleaflicker-proxy/**'
+      - 'workers/league-chat/**'
       - '.github/workflows/deploy-workers.yml'
       - 'leagues.json'
       - 'scripts/worker_config.py'
@@ -66,6 +67,33 @@ jobs:
         if: steps.creds.outputs.ok == 'true'
         working-directory: workers/award-cards
         run: npm ci && npx wrangler deploy
+
+      - name: Find the league chat's grudge book (KV namespace)
+        if: steps.creds.outputs.ok == 'true'
+        working-directory: workers/league-chat
+        run: |
+          npm ci
+          # Reuse the namespace the live worker is already bound to, so saved grudges carry over.
+          ID=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/league-chat/settings" 2>/dev/null \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const b=(JSON.parse(s).result||{}).bindings||[];const k=b.find(x=>x.type==='kv_namespace'&&x.name==='LEAGUE_MEMORY');process.stdout.write(k?k.namespace_id:'')}catch(e){}})" || true)
+          if [ -z "$ID" ]; then
+            NS=league-chat-memory
+            find_id() { npx wrangler kv namespace list 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=JSON.parse(s.slice(s.indexOf('[')));const n=a.find(x=>x.title===process.argv[1]||x.title.endsWith('-'+process.argv[1]));process.stdout.write(n?n.id:'')})" "$NS"; }
+            ID=$(find_id)
+            if [ -z "$ID" ]; then
+              npx wrangler kv namespace create "$NS"
+              ID=$(find_id)
+            fi
+          fi
+          if [ -z "$ID" ]; then echo "::error::Could not find or create the league chat's KV namespace"; exit 1; fi
+          sed -i "s/REPLACED_BY_DEPLOY_WORKFLOW/$ID/" wrangler.toml
+          echo "Using KV namespace $ID"
+
+      - name: Deploy league chat
+        if: steps.creds.outputs.ok == 'true'
+        working-directory: workers/league-chat
+        run: npx wrangler deploy
 
       - name: Create the league bot's KV namespace (first run only)
         if: steps.creds.outputs.ok == 'true'

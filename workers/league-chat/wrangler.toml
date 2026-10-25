@@ -1,0 +1,17 @@
+# The site's Trash Talk Bot (league-chat.605tokenpodcast.workers.dev).
+# Deployed by .github/workflows/deploy-workers.yml (or `npx wrangler deploy` from this folder).
+# CHAT_PASSCODE and ANTHROPIC_API_KEY are worker secrets set in the Cloudflare dashboard;
+# deploys never touch them.
+name = "league-chat"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+# Keep the variables set in the dashboard (ALLOWED_ORIGIN, SLEEPER_LEAGUE_ID, MODEL,
+# ENABLE_WEB_SEARCH) instead of clearing them on every deploy.
+keep_vars = true
+
+# The grudge book. The deploy workflow fills in the id of the namespace the live worker
+# already uses, so saved grudges carry over.
+[[kv_namespaces]]
+binding = "LEAGUE_MEMORY"
+id = "REPLACED_BY_DEPLOY_WORKFLOW"

@@ -6,23 +6,10 @@
     <title>Multi-League Dynasty Hub</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Built from styles/tailwind.css by `npm run build:css` (the build-css workflow keeps it current) -->
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        darkbg: '#0f172a',
-                        cardbg: '#1e293b',
-                        accent: '#3b82f6'
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         body.broadcast-mode header,
         body.broadcast-mode footer,
@@ -855,6 +842,7 @@
             });
             const targetEl = document.getElementById(`tab-${tabId}`);
             if (targetEl) targetEl.classList.remove('hidden');
+            ensureTabRendered(tabId);
             const activeNav = document.getElementById(`nav-${tabId}`);
             if (activeNav) {
                 activeNav.classList.add('bg-accent', 'text-white');
@@ -950,25 +938,14 @@
             });
 
             const params = new URLSearchParams(window.location.search);
-            renderTrophyRoom(leagueNames);
-            renderDashboardLeagues(leagueNames);
-            renderPowerRankings();
-            renderOwners();
+            // Shared state other tabs rely on; each tab's own content renders the first time it is
+            // opened (see TAB_RENDERERS)
             initExposureFilter();
-            renderPlayerExposure();
-            renderWeeklyAwards();
-            renderLuckIndex();
-            renderRecords();
-            recordsSnapshot = recordsDetailStore.slice(); // all-league records, used by the chatbot
-            renderDraftPicksMatrix();
-            renderTrades();
             initH2HDropdowns();
             initMatchupsTab(params.get('owner'));
             initPlayoffsTab();
-            renderTradeSynergy();
-            renderSelectedLeague();
-            renderSackoWall();
             initAnalyticsTab();
+            renderedTabs.clear();
 
             // Check deep link params on initial load
             const tabParam = params.get('tab');
@@ -981,7 +958,46 @@
                 document.getElementById('h2h-mgr-2').value = m2Param;
             }
             if (m1Param || m2Param) calculateH2H();
-            if (tabParam) switchTab(tabParam, true);
+            switchTab(tabParam || currentActiveTab, true);
+
+            // All-league records for the chatbot, built right after the first paint
+            setTimeout(() => {
+                const filter = document.getElementById('records-league-filter');
+                if (!renderedTabs.has('records') || filter.value !== 'ALL') {
+                    filter.value = 'ALL';
+                    renderedTabs.add('records');
+                    renderRecords();
+                }
+                recordsSnapshot = recordsDetailStore.slice();
+            }, 0);
+        }
+
+        // Tabs whose content is built the first time they are opened instead of all at page load.
+        // A tab's dropdowns re-render it directly, so each one only needs building once per data load.
+        const TAB_RENDERERS = {
+            dashboard: () => {
+                const names = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]));
+                renderTrophyRoom(names);
+                renderDashboardLeagues(names);
+                renderSackoWall();
+            },
+            power: () => renderPowerRankings(),
+            owners: () => renderOwners(),
+            exposure: () => renderPlayerExposure(),
+            awards: () => renderWeeklyAwards(),
+            records: () => renderRecords(),
+            luck: () => renderLuckIndex(),
+            picks: () => renderDraftPicksMatrix(),
+            trades: () => renderTrades(),
+            synergy: () => renderTradeSynergy(),
+            leagues: () => renderSelectedLeague()
+        };
+        const renderedTabs = new Set();
+
+        function ensureTabRendered(tabId) {
+            if (renderedTabs.has(tabId) || !TAB_RENDERERS[tabId]) return;
+            renderedTabs.add(tabId);
+            TAB_RENDERERS[tabId]();
         }
 
         // --- TAB 1: TROPHY ROOM ---

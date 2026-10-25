@@ -1,0 +1,11 @@
+{
+  "name": "dynasty-hub",
+  "private": true,
+  "description": "Builds styles.css for index.html. The site itself needs no build step.",
+  "scripts": {
+    "build:css": "tailwindcss -i styles/tailwind.css -o styles.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.19"
+  }
+}

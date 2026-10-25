@@ -17,6 +17,7 @@ LEAGUE_IDS = [
 
 CURRENT_SEASON = "2026"
 FUTURE_PICK_SEASONS = ["2027", "2028", "2029"]
+LAST_PLAYOFF_WEEK = 17  # every league's championship is week 17; week 18 is unused
 REDRAFT_LEAGUE_IDS = ["1389343056888606720", "1329118060811927552"]
 
 # URLs that still failed after all retries. Any entry here means the sync is incomplete,
@@ -211,14 +212,14 @@ def build_master_data():
                     mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", ", ".join(player_strs), picks_str, "", ""
                 ])
 
-        # --- 3. FETCH LIVE 2026 WEEKLY BOX SCORES & MATCHUPS (WEEKS 1-18) ---
+        # --- 3. FETCH LIVE 2026 WEEKLY BOX SCORES & MATCHUPS (WEEKS 1-17) ---
         new_boxscore_rows = [
             ["--- 2026 WEEKLY PLAYER BOX SCORES & TOP PERFORMERS ---", "", "", "", "", "", ""],
             ["Week", "Team / Manager", "Total Score", "Top Starting Scorer", "Best Bench Scorer", "", ""]
         ]
         new_matchup_rows_2026 = []
 
-        for week in range(1, 19):
+        for week in range(1, LAST_PLAYOFF_WEEK + 1):
             matchups = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/matchups/{week}") or []
             matchup_map = {}
             for m in matchups:

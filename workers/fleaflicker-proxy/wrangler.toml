@@ -1,0 +1,10 @@
+# Deployed by .github/workflows/deploy-workers.yml (or `npx wrangler deploy` from this folder).
+# The name matches the worker first created by hand in the Cloudflare dashboard, so the site's
+# FLEA_PROXY URL stays the same.
+name = "dawn-pine-2ee2"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Filled in from leagues.json by scripts/worker_config.py before each deploy
+FLEA_LEAGUES = "165455"

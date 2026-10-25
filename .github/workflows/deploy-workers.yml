@@ -1,6 +1,6 @@
 name: Deploy Cloudflare Workers
 
-# Deploys the league bot, live score cache and award card workers in workers/.
+# Deploys the league bot, live score cache, award card and Fleaflicker proxy workers in workers/.
 # Needs two repository secrets: CLOUDFLARE_API_TOKEN (template "Edit Cloudflare Workers") and
 # CLOUDFLARE_ACCOUNT_ID. Optional secrets are copied into the league bot as worker secrets:
 # DISCORD_WEBHOOK_URL, GROUPME_BOT_ID, ANTHROPIC_API_KEY, BOT_ADMIN_KEY.
@@ -14,6 +14,7 @@ on:
       - 'workers/league-bot/**'
       - 'workers/live-scores/**'
       - 'workers/award-cards/**'
+      - 'workers/fleaflicker-proxy/**'
       - '.github/workflows/deploy-workers.yml'
       - 'leagues.json'
       - 'scripts/worker_config.py'
@@ -54,6 +55,11 @@ jobs:
       - name: Deploy live score cache
         if: steps.creds.outputs.ok == 'true'
         working-directory: workers/live-scores
+        run: npm ci && npx wrangler deploy
+
+      - name: Deploy Fleaflicker proxy
+        if: steps.creds.outputs.ok == 'true'
+        working-directory: workers/fleaflicker-proxy
         run: npm ci && npx wrangler deploy
 
       - name: Deploy award cards

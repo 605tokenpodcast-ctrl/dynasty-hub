@@ -2,9 +2,16 @@ name: Auto-Sync Dynasty Hub Data
 
 on:
   schedule:
-    # Runs automatically every Wednesday at 11:00 AM CDT (16:00 UTC)
-    - cron: '0 16 * * 3'
+    # Every day at 11:00 AM CDT (16:00 UTC) during the season (September-January)...
+    - cron: '0 16 * 9-12,1 *'
+    # ...and every Wednesday the rest of the year
+    - cron: '0 16 * 2-8 3'
   workflow_dispatch: # Allows manual 1-click execution anytime
+    inputs:
+      full_refresh:
+        description: 'Re-fetch finished Fleaflicker seasons too (normally reused from the file)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -39,9 +46,11 @@ jobs:
         run: python scripts/sync_leagues.py
 
       - name: Run Fleaflicker League History Sync
+        id: flea
         continue-on-error: true   # a Fleaflicker outage shouldn't block KTC/Sleeper updates
         env:
-          FLEA_DEBUG: "1"
+          FLEA_DEBUG: "0"         # "1" saves raw API samples as a build artifact (see the next step)
+          FLEA_FULL_REFRESH: ${{ inputs.full_refresh && '1' || '0' }}
         run: python scripts/sync_fleaflicker.py
 
       - name: Upload Fleaflicker raw API samples (for debugging)
@@ -69,7 +78,7 @@ jobs:
           fi
 
       - name: Fail run if a sync step failed
-        if: steps.values.outcome == 'failure' || steps.leagues.outcome == 'failure'
+        if: steps.values.outcome == 'failure' || steps.leagues.outcome == 'failure' || steps.flea.outcome == 'failure'
         run: |
-          echo "values sync: ${{ steps.values.outcome }}, leagues sync: ${{ steps.leagues.outcome }}"
+          echo "values sync: ${{ steps.values.outcome }}, leagues sync: ${{ steps.leagues.outcome }}, fleaflicker sync: ${{ steps.flea.outcome }}"
           exit 1

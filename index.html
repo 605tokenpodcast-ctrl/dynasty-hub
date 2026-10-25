@@ -2217,7 +2217,7 @@
 
         // --- SHAREABLE AWARD CARDS ---
         // After deploying workers/award-cards, paste its URL here. Empty = no share links.
-        const AWARD_CARD_ENDPOINT = '';
+        const AWARD_CARD_ENDPOINT = 'https://dynasty-award-cards.605tokenpodcast.workers.dev';
         function awardShareUrl(icon, title, entry) {
             const qs = new URLSearchParams({ icon, title, name: entry.name, value: entry.value, detail: entry.detail || '' });
             return `${AWARD_CARD_ENDPOINT}/share?${qs}`;
@@ -2800,7 +2800,7 @@
 
         // --- TAB: SEASON IN REVIEW ---
         // After deploying workers/league-bot, paste its URL here to show the weekly Gazette articles.
-        const LEAGUE_BOT_ENDPOINT = '';
+        const LEAGUE_BOT_ENDPOINT = 'https://dynasty-league-bot.605tokenpodcast.workers.dev';
 
         function onReviewLeagueChange() {
             populateSeasonSelect('review-season', 'review-league', false);
@@ -3845,7 +3845,7 @@
         // Live Fleaflicker scores + Fleaflicker's own projections (computed with the league's real scoring)
         // --- LIVE SCORES WORKER ---
         // After deploying workers/live-scores, paste its URL here. Empty = every browser calls Sleeper/Fleaflicker itself.
-        const LIVE_SCORES_ENDPOINT = '';
+        const LIVE_SCORES_ENDPOINT = 'https://dynasty-live-scores.605tokenpodcast.workers.dev/';
         const liveSnapshotCache = {};
         async function liveSnapshot(season, week) {
             if (!LIVE_SCORES_ENDPOINT) return null;

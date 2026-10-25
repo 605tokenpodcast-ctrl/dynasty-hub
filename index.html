@@ -84,24 +84,25 @@
                 </div>
 
                 <!-- Navigation Tabs -->
-                <nav class="flex flex-wrap gap-1 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-2.5 py-1.5 rounded-md font-medium bg-accent text-white transition">🏆 Trophy Room</button>
-                    <button onclick="switchTab('power')" id="nav-power" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
-                    <button onclick="switchTab('owners')" id="nav-owners" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
-                    <button onclick="switchTab('exposure')" id="nav-exposure" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
-                    <button onclick="switchTab('awards')" id="nav-awards" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
-                    <button onclick="switchTab('awardcenter')" id="nav-awardcenter" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎖️ Awards Center</button>
-                    <button onclick="switchTab('analytics')" id="nav-analytics" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📊 Analytics</button>
-                    <button onclick="switchTab('review')" id="nav-review" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📰 Season Review</button>
-                    <button onclick="switchTab('records')" id="nav-records" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
-                    <button onclick="switchTab('luck')" id="nav-luck" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
-                    <button onclick="switchTab('picks')" id="nav-picks" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
-                    <button onclick="switchTab('trades')" id="nav-trades" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
-                    <button onclick="switchTab('h2h')" id="nav-h2h" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
-                    <button onclick="switchTab('matchups')" id="nav-matchups" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
-                    <button onclick="switchTab('playoffs')" id="nav-playoffs" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
-                    <button onclick="switchTab('synergy')" id="nav-synergy" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
-                    <button onclick="switchTab('leagues')" id="nav-leagues" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
+                <!-- One scrollable row on phones, wrapped rows from the sm breakpoint up -->
+                <nav class="flex flex-nowrap sm:flex-wrap overflow-x-auto gap-1 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium bg-accent text-white transition">🏆 Trophy Room</button>
+                    <button onclick="switchTab('power')" id="nav-power" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
+                    <button onclick="switchTab('owners')" id="nav-owners" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
+                    <button onclick="switchTab('exposure')" id="nav-exposure" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
+                    <button onclick="switchTab('awards')" id="nav-awards" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
+                    <button onclick="switchTab('awardcenter')" id="nav-awardcenter" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎖️ Awards Center</button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📊 Analytics</button>
+                    <button onclick="switchTab('review')" id="nav-review" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📰 Season Review</button>
+                    <button onclick="switchTab('records')" id="nav-records" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
+                    <button onclick="switchTab('luck')" id="nav-luck" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
+                    <button onclick="switchTab('picks')" id="nav-picks" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
+                    <button onclick="switchTab('h2h')" id="nav-h2h" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
+                    <button onclick="switchTab('matchups')" id="nav-matchups" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
+                    <button onclick="switchTab('playoffs')" id="nav-playoffs" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
+                    <button onclick="switchTab('synergy')" id="nav-synergy" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
                 </nav>
             </div>
         </header>
@@ -831,6 +832,8 @@
 
         function switchTab(tabId, skipUrlUpdate = false) {
             currentActiveTab = tabId;
+            // Before rendering: some tabs update the URL while they render, which must not replace this entry
+            if (!skipUrlUpdate) updateUrlParams(true);
             ['dashboard', 'power', 'owners', 'exposure', 'awards', 'awardcenter', 'analytics', 'review', 'records', 'luck', 'picks', 'trades', 'h2h', 'matchups', 'playoffs', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
@@ -847,6 +850,9 @@
             if (activeNav) {
                 activeNav.classList.add('bg-accent', 'text-white');
                 activeNav.classList.remove('hover:bg-slate-800');
+                // On phones the tab bar scrolls sideways; keep the active tab in view
+                const bar = activeNav.parentElement;
+                if (bar.scrollWidth > bar.clientWidth) bar.scrollLeft = activeNav.offsetLeft - (bar.clientWidth - activeNav.offsetWidth) / 2;
             }
             if (tabId === 'matchups') renderMatchups();
             else stopMatchupRefresh();
@@ -854,8 +860,19 @@
             if (tabId === 'analytics') renderAnalytics();
             if (tabId === 'awardcenter') renderAwardsCenter();
             if (tabId === 'review') renderSeasonReview();
-            if (!skipUrlUpdate) updateUrlParams();
         }
+
+        // Back / forward buttons move between tabs (each tab switch adds a history entry)
+        window.addEventListener('popstate', () => {
+            if (!Object.keys(globalMasterData).length) return;
+            switchTab(new URLSearchParams(window.location.search).get('tab') || 'dashboard', true);
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            closeRecordModal();
+            closeTradeModal();
+        });
 
         function toggleBroadcastMode() {
             document.body.classList.toggle('broadcast-mode');
@@ -863,7 +880,8 @@
             exitBtn.classList.toggle('hidden');
         }
 
-        function updateUrlParams() {
+        // newEntry adds a browser history entry (a tab switch) instead of replacing the current one
+        function updateUrlParams(newEntry = false) {
             const url = new URL(window.location);
             url.searchParams.set('tab', currentActiveTab);
             if (currentActiveTab === 'h2h') {
@@ -878,7 +896,8 @@
             const mOwner = document.getElementById('matchups-owner')?.value;
             if (currentActiveTab === 'matchups' && mOwner) url.searchParams.set('owner', mOwner);
             else url.searchParams.delete('owner');
-            window.history.replaceState({}, '', url);
+            if (newEntry && url.href !== window.location.href) window.history.pushState({}, '', url);
+            else window.history.replaceState({}, '', url);
         }
 
         function copyDeepLink() {

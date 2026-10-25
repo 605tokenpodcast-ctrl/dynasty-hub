@@ -20,6 +20,61 @@
             max-width: 1600px !important;
             padding-top: 1.5rem !important;
         }
+        /* Phones: tab menu behind a button, wide tables as stacked cards */
+        @media (max-width: 639px) {
+            #main-nav { display: none; }
+            #main-nav.open {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            #main-nav.open button { white-space: normal; text-align: left; padding: 0.6rem; font-size: 0.8rem; }
+            main table.phone-cards,
+            main table.phone-cards tbody,
+            main table.phone-cards tr,
+            main table.phone-cards td { display: block; width: 100%; }
+            main table.phone-cards thead,
+            main table.phone-cards tr.pc-head { display: none; }
+            main table.phone-cards tr {
+                border: 1px solid #334155;
+                border-radius: 0.75rem;
+                margin-bottom: 0.75rem;
+                padding: 0.5rem 0.75rem;
+                background: rgba(15, 23, 42, 0.6);
+            }
+            main table.phone-cards td {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 0.75rem;
+                padding: 0.3rem 0 !important;
+                border: 0 !important;
+                text-align: right;
+                white-space: normal !important;
+                max-width: none !important;
+                overflow-wrap: anywhere;
+                font-size: 0.85rem;
+            }
+            main table.phone-cards td::before {
+                content: attr(data-label);
+                flex-shrink: 0;
+                max-width: 45%;
+                text-align: left;
+                color: #94a3b8;
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+            main table.phone-cards td[data-label=""]::before { content: none; }
+            main table.phone-cards td.pc-block { display: block; text-align: left; }
+            main table.phone-cards td.pc-block::before { display: block; max-width: none; margin-bottom: 0.25rem; }
+            main table.phone-cards td:empty { display: none; }
+            main table.phone-cards tr.pc-kv { display: flex; justify-content: space-between; gap: 0.75rem; }
+            main table.phone-cards tr.pc-kv td { width: auto; display: block; }
+            main table.phone-cards tr.pc-kv td:first-child { text-align: left; color: #94a3b8; }
+        }
         /* Markdown & Table Styling for Chat Bubbles */
         #chat-messages table {
             width: 100%;
@@ -65,44 +120,47 @@
         <!-- Navigation Header -->
         <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-40 shadow-md">
             <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex flex-row justify-between items-center gap-3">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">🏈</span>
                         <div>
-                            <h1 class="text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
+                            <h1 class="text-base sm:text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
                             <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; Active Dynasty Leagues</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="copyDeepLink()" id="copy-link-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
-                            🔗 Copy View Link
+                            🔗<span class="hidden sm:inline"> Copy View Link</span>
                         </button>
-                        <button onclick="toggleBroadcastMode()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                        <button onclick="toggleBroadcastMode()" class="hidden sm:inline-block bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                             📺 Broadcast Mode
                         </button>
                     </div>
                 </div>
 
                 <!-- Navigation Tabs -->
-                <!-- One scrollable row on phones, wrapped rows from the sm breakpoint up -->
-                <nav class="flex flex-nowrap sm:flex-wrap overflow-x-auto gap-1 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium bg-accent text-white transition">🏆 Trophy Room</button>
-                    <button onclick="switchTab('power')" id="nav-power" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
-                    <button onclick="switchTab('owners')" id="nav-owners" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
-                    <button onclick="switchTab('exposure')" id="nav-exposure" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
-                    <button onclick="switchTab('awards')" id="nav-awards" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
-                    <button onclick="switchTab('awardcenter')" id="nav-awardcenter" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎖️ Awards Center</button>
-                    <button onclick="switchTab('analytics')" id="nav-analytics" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📊 Analytics</button>
-                    <button onclick="switchTab('review')" id="nav-review" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📰 Season Review</button>
-                    <button onclick="switchTab('records')" id="nav-records" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
-                    <button onclick="switchTab('luck')" id="nav-luck" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
-                    <button onclick="switchTab('picks')" id="nav-picks" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
-                    <button onclick="switchTab('trades')" id="nav-trades" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
-                    <button onclick="switchTab('h2h')" id="nav-h2h" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
-                    <button onclick="switchTab('matchups')" id="nav-matchups" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
-                    <button onclick="switchTab('playoffs')" id="nav-playoffs" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
-                    <button onclick="switchTab('synergy')" id="nav-synergy" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
-                    <button onclick="switchTab('leagues')" id="nav-leagues" class="shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
+                <!-- Phones: a button that opens every tab as a two-column menu. Wrapped rows from the sm breakpoint up -->
+                <button type="button" id="nav-toggle" onclick="toggleNavMenu()" aria-expanded="false" class="sm:hidden flex justify-between items-center w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm font-semibold text-white">
+                    <span id="nav-current">🏆 Trophy Room</span><span class="text-slate-400 text-xs">☰ All tabs</span>
+                </button>
+                <nav id="main-nav" class="flex flex-wrap gap-1 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium bg-accent text-white transition">🏆 Trophy Room</button>
+                    <button onclick="switchTab('power')" id="nav-power" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
+                    <button onclick="switchTab('owners')" id="nav-owners" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
+                    <button onclick="switchTab('exposure')" id="nav-exposure" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
+                    <button onclick="switchTab('awards')" id="nav-awards" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
+                    <button onclick="switchTab('awardcenter')" id="nav-awardcenter" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎖️ Awards Center</button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📊 Analytics</button>
+                    <button onclick="switchTab('review')" id="nav-review" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📰 Season Review</button>
+                    <button onclick="switchTab('records')" id="nav-records" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
+                    <button onclick="switchTab('luck')" id="nav-luck" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
+                    <button onclick="switchTab('picks')" id="nav-picks" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
+                    <button onclick="switchTab('h2h')" id="nav-h2h" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
+                    <button onclick="switchTab('matchups')" id="nav-matchups" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
+                    <button onclick="switchTab('playoffs')" id="nav-playoffs" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
+                    <button onclick="switchTab('synergy')" id="nav-synergy" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
                 </nav>
             </div>
         </header>
@@ -503,7 +561,7 @@
     </div>
 
     <!-- LEAGUE CHATBOT -->
-    <button id="chat-fab" onclick="toggleChat()" class="hide-on-broadcast fixed bottom-4 right-4 z-40 bg-accent hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-full shadow-2xl border border-blue-300/30 text-sm transition">🎙️ Trash Talk Bot</button>
+    <button id="chat-fab" onclick="toggleChat()" class="hide-on-broadcast fixed bottom-4 right-4 z-40 bg-accent hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-full shadow-2xl border border-blue-300/30 text-sm transition">🎙️<span class="hidden sm:inline"> Trash Talk Bot</span></button>
     <div id="chat-panel" class="hide-on-broadcast hidden fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:w-96 h-[34rem] max-h-[85vh] bg-cardbg border border-slate-700 rounded-xl shadow-2xl flex-col overflow-hidden">
         <div class="p-3 bg-slate-900 border-b border-slate-800 space-y-2">
             <div class="flex justify-between items-center">
@@ -835,6 +893,54 @@
             reader.readAsText(file);
         });
 
+        function toggleNavMenu(force) {
+            const nav = document.getElementById('main-nav');
+            const btn = document.getElementById('nav-toggle');
+            if (!nav || !btn) return;
+            const open = nav.classList.toggle('open', force);
+            btn.setAttribute('aria-expanded', String(open));
+        }
+
+        // Phones show wide tables as one card per row: each cell gets its column name as a label.
+        // Runs after any render (see the observer below), skipping rows it has already labeled.
+        function labelPhoneTables() {
+            document.querySelectorAll('main table:not(.keep-table)').forEach(table => {
+                if (!table.classList.contains('phone-cards')) {
+                    // Only tables much wider than the phone; a slightly wide one just scrolls a little.
+                    // Hidden tables are measured when their tab opens (switchTab calls this again).
+                    if (window.innerWidth >= 640 || table.offsetParent === null) return;
+                    if (table.scrollWidth < window.innerWidth * 1.15) return;
+                    table.classList.add('phone-cards');
+                }
+                let heads = table.tHead && table.tHead.rows.length
+                    ? [...table.tHead.rows[table.tHead.rows.length - 1].cells].map(c => c.textContent.trim()) : [];
+                [...table.tBodies].forEach(tb => [...tb.rows].forEach(row => {
+                    const cells = [...row.cells];
+                    // Column-name rows inside the body (League Browser) set the labels for the rows below them
+                    if (row.dataset.pcHead || (cells.length > 1 && cells.every(c => c.tagName === 'TH'))) {
+                        heads = cells.map(c => c.textContent.trim());
+                        row.classList.add('pc-head');
+                        return;
+                    }
+                    if (row.dataset.pc) return;
+                    row.dataset.pc = '1';
+                    if (row.classList.contains('pc-kv')) return;
+                    let col = 0;
+                    cells.forEach(c => {
+                        c.setAttribute('data-label', c.colSpan > 1 ? '' : (heads[col] || ''));
+                        col += c.colSpan;
+                        if (c.querySelector('div, ul, p, br, table')) c.classList.add('pc-block');
+                    });
+                }));
+            });
+        }
+        let phoneTablesQueued = false;
+        new MutationObserver(() => {
+            if (phoneTablesQueued) return;
+            phoneTablesQueued = true;
+            requestAnimationFrame(() => { phoneTablesQueued = false; labelPhoneTables(); });
+        }).observe(document.querySelector('main'), { childList: true, subtree: true });
+
         function switchTab(tabId, skipUrlUpdate = false) {
             currentActiveTab = tabId;
             // Before rendering: some tabs update the URL while they render, which must not replace this entry
@@ -855,10 +961,11 @@
             if (activeNav) {
                 activeNav.classList.add('bg-accent', 'text-white');
                 activeNav.classList.remove('hover:bg-slate-800');
-                // On phones the tab bar scrolls sideways; keep the active tab in view
-                const bar = activeNav.parentElement;
-                if (bar.scrollWidth > bar.clientWidth) bar.scrollLeft = activeNav.offsetLeft - (bar.clientWidth - activeNav.offsetWidth) / 2;
+                const current = document.getElementById('nav-current');
+                if (current) current.textContent = activeNav.textContent.trim();
             }
+            toggleNavMenu(false);
+            requestAnimationFrame(labelPhoneTables);
             if (tabId === 'matchups') renderMatchups();
             else stopMatchupRefresh();
             if (tabId === 'playoffs') renderPlayoffOdds();
@@ -2565,7 +2672,7 @@
                 return { w, l };
             };
             box.innerHTML = `
-                <table class="text-xs border-collapse">
+                <table class="keep-table text-xs border-collapse">
                     <thead><tr><th class="p-2 text-left text-slate-400">Team ↓ / Schedule →</th>${owners.map(o => `<th class="p-2 text-slate-400 font-semibold whitespace-nowrap">${escHtml(o)}</th>`).join('')}</tr></thead>
                     <tbody>${owners.map(a => `<tr class="border-t border-slate-800"><td class="p-2 font-bold text-accent whitespace-nowrap">${escHtml(a)}</td>${owners.map(b => {
                         const r = cell(a, b);
@@ -3066,14 +3173,14 @@
                         </div>
                         <div class="bg-cardbg border border-slate-700 rounded-xl p-4 max-h-80 overflow-y-auto">
                             <h3 class="font-bold text-white mb-2">📅 Week by Week</h3>
-                            <table class="w-full text-xs">${weekly}</table>
+                            <table class="keep-table w-full text-xs">${weekly}</table>
                         </div>
                     </div>
                 </div>
                 <div><h3 class="font-bold text-white mb-3">🎖️ Season Awards</h3><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${awardCards}</div></div>
                 <div class="bg-cardbg border border-slate-700 rounded-xl p-4">
                     <h3 class="font-bold text-white mb-2">📜 Trades (${trades.length})</h3>
-                    ${trades.length ? trades.map(t => `<div class="py-2 border-t border-slate-800 first:border-0 text-xs"><span class="text-slate-400">${escHtml(t.date)}</span> ${hindsightBadge(t)}<p class="text-slate-300 mt-1">${formatTradeBreakdown(t.raw)}</p></div>`).join('') : '<p class="text-xs text-slate-500">No trades this season.</p>'}
+                    ${trades.length ? trades.map(t => `<div class="py-2 border-t border-slate-800 first:border-0 text-xs"><span class="text-slate-400">${escHtml(t.date)}</span> ${hindsightBadge(t)}<div class="text-slate-300 mt-1">${formatTradeBreakdown(t.raw)}</div></div>`).join('') : '<p class="text-xs text-slate-500">No trades this season.</p>'}
                 </div>
                 <div id="review-gazette"></div>`;
             loadGazette(league, season);
@@ -3629,10 +3736,34 @@
         }
 
         // --- TAB 8: STRICT TRADE LOG & DRAFT PICK LINEAGE ---
+        // "2027 Round 3rd Pick (originally from Team (user)) -> Resulted in drafting: X (WR)" or "George Kittle (TE)" -> one list item
+        function formatTradeItem(item) {
+            const s = String(item || '').trim();
+            const pick = s.match(/^(\d{4})\s+Round\s+(\d+)\w*\s+Pick\s*(?:\(originally from ((?:[^()]|\([^()]*\))*)\))?\s*(?:-> Resulted in drafting:\s*(.+))?$/i);
+            if (pick) {
+                const via = pick[3] ? `<span class="text-slate-500"> via ${escHtml(getMasterOwner(pick[3]) || pick[3])}</span>` : '';
+                const drafted = pick[4] ? ` <span class="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 rounded font-bold text-[11px]">🌱 ${escHtml(pick[4])}</span>` : '';
+                return `<li>🎟️ <span class="text-white font-semibold">${pick[1]} Round ${pick[2]} pick</span>${via}${drafted}</li>`;
+            }
+            const pl = s.match(/^(.*?)\s*\(([A-Z/]+)(?:\s*-\s*([A-Z]+))?\)$/);
+            if (pl) return `<li><span class="text-white font-semibold">${escHtml(pl[1])}</span> <span class="text-slate-400">${escHtml(pl[2])}${pl[3] ? ' · ' + escHtml(pl[3]) : ''}</span></li>`;
+            return `<li class="text-white">${escHtml(s)}</li>`;
+        }
+
+        // One labeled box per side with one asset per line, so long multi-pick trades stay readable
         function formatTradeBreakdown(text) {
-            return escHtml(text)
-                .replace(/-&gt; Resulted in drafting:\s*([^\],]+)/g, '<span class="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold text-[11px] mx-0.5">🌱 Drafted: $1</span>')
-                .replace(/&lt;---&gt;/g, '<span class="text-accent font-bold mx-2">⇄</span>');
+            const sides = String(text || '').split(' <---> ').map(side => {
+                const m = side.match(/^(.*?) received: \[(.*)\]$/);
+                return m ? { team: m[1].trim(), items: m[2] === 'Nothing' ? [] : m[2].split(/,\s*(?![^()]*\))/) } : null;
+            });
+            if (!sides.length || sides.some(sd => !sd)) {
+                return escHtml(text).replace(/&lt;---&gt;/g, '<span class="text-accent font-bold mx-2">⇄</span>');
+            }
+            return '<div class="grid gap-2 sm:grid-cols-2">' + sides.map(sd => `
+                <div class="rounded-lg border border-slate-800 bg-slate-950/60 p-2">
+                    <p class="text-accent font-bold text-[11px] uppercase tracking-wide mb-1">${escHtml(getMasterOwner(sd.team) || sd.team)} gets</p>
+                    <ul class="space-y-1">${sd.items.length ? sd.items.map(formatTradeItem).join('') : '<li class="text-slate-500">Nothing</li>'}</ul>
+                </div>`).join('') + '</div>';
         }
 
         function toggleLineageOnly() {
@@ -4643,7 +4774,7 @@
                         <span>${escHtml(t.season)} &bull; ${escHtml(t.week)} (${escHtml(t.date)})</span>
                     </div>
                     <p class="font-bold text-white text-xs">${escHtml(t.teams)}</p>
-                    <p class="text-slate-300 text-xs bg-slate-950 p-3 rounded border border-slate-800/80 leading-relaxed">${formatTradeBreakdown(t.breakdown)}</p>
+                    <div class="text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(t.breakdown)}</div>
                 </div>
             `).join('');
 
@@ -4707,7 +4838,7 @@
                             : '';
                         parts.push(`<tr class="bg-slate-900 border-t border-b border-slate-700"><td colspan="8" class="p-4 font-bold text-accent tracking-wide">${escHtml(col0)}${fold}</td></tr>`);
                     } else if (!folded) {
-                        parts.push(`<tr class="border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`);
+                        parts.push(`<tr${activeSection === 'profile' ? '' : isSubHeader ? ' data-pc-head="1"' : ''} class="${activeSection === 'profile' ? 'pc-kv ' : ''}border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`);
                         row.forEach(cell => {
                             const cellVal = cell !== undefined && cell !== null ? cell : '';
                             parts.push(`<td class="p-3 text-xs leading-relaxed max-w-sm break-words">${escHtml(cellVal)}</td>`);

@@ -176,11 +176,12 @@ async function tradeAlerts(lg, state, env, say, dry) {
   fresh.forEach(t => {
     const lines = t.sides.map(s => {
       const v = s.items.reduce((a, i) => a + value(i), 0);
-      return { text: `**${s.team}** gets: ${s.items.join(', ') || 'nothing'} _(value ${Math.round(v).toLocaleString()})_`, v };
+      const items = s.items.length ? s.items.map(i => `• ${i}`).join('\n') : '• nothing';
+      return { text: `**${s.team}** gets (value ${Math.round(v).toLocaleString()}):\n${items}`, v };
     });
     const top = [...lines].sort((x, y) => y.v - x.v);
     const swing = top.length > 1 && top[0].v ? ` Value swing: ${Math.round(top[0].v - top[1].v).toLocaleString()}.` : '';
-    say(`🚨 **TRADE ALERT** • ${lg.name}\n${lines.map(l => l.text).join('\n')}\n${swing.trim()} ${env.SITE_URL}?tab=trades`);
+    say(`🚨 **TRADE ALERT** • ${lg.name}\n\n${lines.map(l => l.text).join('\n\n')}\n\n${swing.trim()} ${env.SITE_URL}?tab=trades`);
   });
   if (!dry) await env.BOT_KV.put(seenKey, JSON.stringify([...fresh.map(t => t.id), ...seen].slice(0, 300)));
 }

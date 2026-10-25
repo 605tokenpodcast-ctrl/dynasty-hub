@@ -125,16 +125,33 @@ function siteJson(env, file) {
   return once(`site:${file}`, () => getJson(new URL(file, env.SITE_URL).toString()).catch(() => null));
 }
 
-async function valueOf(env) {
-  const data = await siteJson(env, 'ktc_values.json');
-  const players = (data && data.players) || {};
+// Same rules as the site: the league's own FantasyCalc format, picks valued by their draft year
+async function valueOf(env, leagueName) {
+  const data = (await siteJson(env, 'ktc_values.json')) || {};
+  const formats = data.formats || {};
+  const fmtKey = Object.entries(data.league_formats || {})
+    .find(([name]) => name.trim().toLowerCase() === String(leagueName || '').trim().toLowerCase());
+  const players = (fmtKey && formats[fmtKey[1]] && formats[fmtKey[1]].players) || data.players || {};
   const norm = s => String(s).toLowerCase().replace(/[.']/g, '').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
   const byNorm = {};
   Object.entries(players).forEach(([k, v]) => { byNorm[norm(k)] = v; });
-  const picks = (data && data.picks) || {};
+  const picks = data.picks || {};
+  const ord = r => (r === '1' ? '1st' : r === '2' ? '2nd' : r === '3' ? '3rd' : `${r}th`);
+  const pickValue = (year, round) => {
+    // Redraft formats have no picks; borrow the default (dynasty) table, then the nearest listed year
+    const pools = [players, data.players || {}];
+    for (const pool of pools) {
+      const years = [...new Set(Object.keys(pool).filter(k => new RegExp(`^20\\d\\d ${ord(round)}( |$)`).test(k)).map(k => Number(k.slice(0, 4))))];
+      if (!years.length) continue;
+      const best = years.reduce((a, b) => (Math.abs(b - year) < Math.abs(a - year) ? b : a));
+      const v = pool[`${best} ${ord(round)} (Mid)`] || pool[`${best} ${ord(round)}`];
+      if (v) return v;
+    }
+    return picks[round] || 0;
+  };
   return item => {
     const pick = item.match(/^(\d{4}) Round (\d+)/);
-    if (pick) return picks[pick[2]] || 0;
+    if (pick) return pickValue(Number(pick[1]), pick[2]);
     const name = item.replace(/\s*\([^)]*\)\s*$/, '');
     return players[name] || byNorm[norm(name)] || 0;
   };
@@ -152,7 +169,7 @@ async function tradeAlerts(lg, state, env, say, dry) {
   }
   const fresh = trades.filter(t => !seen.includes(t.id));
   if (!fresh.length) return;
-  const value = await valueOf(env);
+  const value = await valueOf(env, lg.name);
   fresh.forEach(t => {
     const lines = t.sides.map(s => {
       const v = s.items.reduce((a, i) => a + value(i), 0);

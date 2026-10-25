@@ -10,6 +10,7 @@ settings. The output keeps the legacy top-level "players"/"picks" keys
 """
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -20,6 +21,7 @@ from sync_leagues import LEAGUE_IDS, REDRAFT_LEAGUE_IDS  # noqa: E402
 OUTPUT = 'ktc_values.json'
 DEFAULT_FORMAT = {'isDynasty': True, 'numQbs': 1, 'numTeams': 12, 'ppr': 0.5}
 MIN_PLAYERS = 100  # sanity floor: anything smaller is a broken response
+PICK_KEY_RE = re.compile(r'^20\d\d \d+(st|nd|rd|th)( \((Early|Mid|Late)\))?$')
 
 
 def fetch_json(url, retries=4):
@@ -82,8 +84,18 @@ def fetch_values(fmt):
 
 
 def pick_values(players):
+    """Fallback value per round for the UI, from the nearest draft class FantasyCalc lists.
+
+    The year is read from the data rather than hardcoded, so the table keeps working after each
+    rookie draft (a fixed "2027" would silently fall back to the old 6500/3200 guesses in 2028).
+    """
+    years = sorted({int(k[:4]) for k in players if PICK_KEY_RE.match(k)})
+    year = years[0] if years else None
+
     def get(rnd, fallback):
-        return players.get(f"2027 {rnd} (Mid)") or players.get(f"2027 {rnd}") or fallback
+        if year is None:
+            return fallback
+        return players.get(f"{year} {rnd} (Mid)") or players.get(f"{year} {rnd}") or fallback
     return {"1": get('1st', 6500), "2": get('2nd', 3200), "3": get('3rd', 1500),
             "4": get('4th', 750), "5": 400, "6": 250}
 

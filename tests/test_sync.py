@@ -156,6 +156,27 @@ class FleaflickerDraftLineage(unittest.TestCase):
         self.assertEqual(got[(2024, 2, "3")], "D Four (TE)")
         self.assertNotIn((2024, 2, "1"), got)                  # not picked yet
 
+    def test_ordered_selections_without_draft_order(self):
+        def pick(rnd, slot, team, name, traded=False):
+            c = {"slot": {"round": rnd, "slot": slot, "overall": (rnd - 1) * 3 + slot}, "team": {"id": team},
+                 "player": {"proPlayer": {"nameFull": name, "position": "RB"}}}
+            if traded:
+                c["fromOtherTeam"] = True
+            return c
+        # linear draft, slots owned by 7, 8, 9; team 9 used team 7's 3rd-round pick
+        data = {"draftIndex": 9, "orderedSelections": [
+            pick(1, 1, 7, "A"), pick(1, 2, 8, "B"), pick(1, 3, 9, "C"),
+            pick(2, 1, 7, "D"), pick(2, 2, 8, "E"), pick(2, 3, 9, "F"),
+            pick(3, 1, 9, "G", traded=True), pick(3, 2, 8, "H"), pick(3, 3, 9, "I"),
+        ]}
+        got = sync_fleaflicker.parse_draft_board(data, 2019)
+        self.assertEqual(got[(2019, 3, "7")], "G (RB)")
+        self.assertEqual(got[(2019, 3, "9")], "I (RB)")
+        self.assertEqual(len(got), 9)
+
+    def test_empty_board(self):
+        self.assertEqual(sync_fleaflicker.parse_draft_board({}, 2017), {})
+
     def test_trade_rows_and_kept_rows_get_lineage(self):
         trade = {"approvedOn": 1700000000000, "teams": [
             {"team": {"id": 1, "name": "One"}, "picksObtained": [{"season": 2024, "slot": {"round": 1}, "originalOwner": {"id": 2}}]},

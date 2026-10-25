@@ -3073,7 +3073,7 @@
                 <div><h3 class="font-bold text-white mb-3">🎖️ Season Awards</h3><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${awardCards}</div></div>
                 <div class="bg-cardbg border border-slate-700 rounded-xl p-4">
                     <h3 class="font-bold text-white mb-2">📜 Trades (${trades.length})</h3>
-                    ${trades.length ? trades.map(t => `<div class="py-2 border-t border-slate-800 first:border-0 text-xs"><span class="text-slate-400">${escHtml(t.date)}</span> ${hindsightBadge(t)}<p class="text-slate-300 mt-1">${formatTradeBreakdown(t.raw)}</p></div>`).join('') : '<p class="text-xs text-slate-500">No trades this season.</p>'}
+                    ${trades.length ? trades.map(t => `<div class="py-2 border-t border-slate-800 first:border-0 text-xs"><span class="text-slate-400">${escHtml(t.date)}</span> ${hindsightBadge(t)}<div class="text-slate-300 mt-1">${formatTradeBreakdown(t.raw)}</div></div>`).join('') : '<p class="text-xs text-slate-500">No trades this season.</p>'}
                 </div>
                 <div id="review-gazette"></div>`;
             loadGazette(league, season);
@@ -3629,10 +3629,34 @@
         }
 
         // --- TAB 8: STRICT TRADE LOG & DRAFT PICK LINEAGE ---
+        // "2027 Round 3rd Pick (originally from Team (user)) -> Resulted in drafting: X (WR)" or "George Kittle (TE)" -> one list item
+        function formatTradeItem(item) {
+            const s = String(item || '').trim();
+            const pick = s.match(/^(\d{4})\s+Round\s+(\d+)\w*\s+Pick\s*(?:\(originally from ((?:[^()]|\([^()]*\))*)\))?\s*(?:-> Resulted in drafting:\s*(.+))?$/i);
+            if (pick) {
+                const via = pick[3] ? `<span class="text-slate-500"> via ${escHtml(getMasterOwner(pick[3]) || pick[3])}</span>` : '';
+                const drafted = pick[4] ? ` <span class="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 rounded font-bold text-[11px]">🌱 ${escHtml(pick[4])}</span>` : '';
+                return `<li>🎟️ <span class="text-white font-semibold">${pick[1]} Round ${pick[2]} pick</span>${via}${drafted}</li>`;
+            }
+            const pl = s.match(/^(.*?)\s*\(([A-Z/]+)(?:\s*-\s*([A-Z]+))?\)$/);
+            if (pl) return `<li><span class="text-white font-semibold">${escHtml(pl[1])}</span> <span class="text-slate-400">${escHtml(pl[2])}${pl[3] ? ' · ' + escHtml(pl[3]) : ''}</span></li>`;
+            return `<li class="text-white">${escHtml(s)}</li>`;
+        }
+
+        // One labeled box per side with one asset per line, so long multi-pick trades stay readable
         function formatTradeBreakdown(text) {
-            return escHtml(text)
-                .replace(/-&gt; Resulted in drafting:\s*([^\],]+)/g, '<span class="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold text-[11px] mx-0.5">🌱 Drafted: $1</span>')
-                .replace(/&lt;---&gt;/g, '<span class="text-accent font-bold mx-2">⇄</span>');
+            const sides = String(text || '').split(' <---> ').map(side => {
+                const m = side.match(/^(.*?) received: \[(.*)\]$/);
+                return m ? { team: m[1].trim(), items: m[2] === 'Nothing' ? [] : m[2].split(/,\s*(?![^()]*\))/) } : null;
+            });
+            if (!sides.length || sides.some(sd => !sd)) {
+                return escHtml(text).replace(/&lt;---&gt;/g, '<span class="text-accent font-bold mx-2">⇄</span>');
+            }
+            return '<div class="grid gap-2 sm:grid-cols-2">' + sides.map(sd => `
+                <div class="rounded-lg border border-slate-800 bg-slate-950/60 p-2">
+                    <p class="text-accent font-bold text-[11px] uppercase tracking-wide mb-1">${escHtml(getMasterOwner(sd.team) || sd.team)} gets</p>
+                    <ul class="space-y-1">${sd.items.length ? sd.items.map(formatTradeItem).join('') : '<li class="text-slate-500">Nothing</li>'}</ul>
+                </div>`).join('') + '</div>';
         }
 
         function toggleLineageOnly() {
@@ -4643,7 +4667,7 @@
                         <span>${escHtml(t.season)} &bull; ${escHtml(t.week)} (${escHtml(t.date)})</span>
                     </div>
                     <p class="font-bold text-white text-xs">${escHtml(t.teams)}</p>
-                    <p class="text-slate-300 text-xs bg-slate-950 p-3 rounded border border-slate-800/80 leading-relaxed">${formatTradeBreakdown(t.breakdown)}</p>
+                    <div class="text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(t.breakdown)}</div>
                 </div>
             `).join('');
 

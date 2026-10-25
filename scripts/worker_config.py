@@ -34,6 +34,7 @@ def main():
     live = os.path.join(ROOT, 'workers', 'live-scores', 'wrangler.toml')
     set_var(live, 'SLEEPER_LEAGUES', json.dumps(','.join(sleeper)))
     set_var(live, 'FLEA_LEAGUES', json.dumps(','.join(flea)))
+    set_var(os.path.join(ROOT, 'workers', 'fleaflicker-proxy', 'wrangler.toml'), 'FLEA_LEAGUES', json.dumps(','.join(flea)))
 
     bot_leagues = [{"name": lg['name'], "id": lg['id'], "platform": lg['platform']} for lg in active]
     body = ',\n'.join('  ' + json.dumps(lg, ensure_ascii=False) for lg in bot_leagues)

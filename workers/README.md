@@ -5,9 +5,9 @@
 | League bot | `league-bot/` | Trade alerts every 15 minutes, a weekly recap every Tuesday, matchup previews every Thursday, all posted to Discord and/or GroupMe. Writes the weekly "Dynasty Gazette" article for the Season Review tab when it has an Anthropic API key. |
 | Live score cache | `live-scores/` | One cached live-score snapshot for every league, refreshed at most once a minute, so each visitor's browser stops calling Sleeper and Fleaflicker on its own. |
 | Award cards | `award-cards/` | Turns any award into a 1200×630 image with a share link whose preview shows the card in group chats. |
-| Fleaflicker proxy | `fleaflicker-proxy.js` | Existing `dawn-pine-2ee2` worker, deployed by hand. Unchanged. |
+| Fleaflicker proxy | `fleaflicker-proxy/` | The `dawn-pine-2ee2` worker: a CORS proxy so the browser can read Fleaflicker. Now deployed by the workflow like the others, under the same name, so its URL doesn't change. |
 
-All three new workers fit in Cloudflare's free plan.
+All four workers fit in Cloudflare's free plan.
 
 ## One-time setup
 

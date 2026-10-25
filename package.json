@@ -1,11 +1,13 @@
 {
   "name": "dynasty-hub",
   "private": true,
-  "description": "Builds styles.css for index.html. The site itself needs no build step.",
+  "description": "Builds styles.css and runs the tests. The site itself needs no build step.",
   "scripts": {
-    "build:css": "tailwindcss -i styles/tailwind.css -o styles.css --minify"
+    "build:css": "tailwindcss -i styles/tailwind.css -o styles.css --minify",
+    "test:page": "node tests/smoke.mjs"
   },
   "devDependencies": {
+    "playwright": "1.63.0",
     "tailwindcss": "3.4.19"
   }
 }

@@ -1,0 +1,38 @@
+name: Tests
+
+# Sync logic unit tests and a page smoke test (every tab opens without errors, names are escaped).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'sleeper_leagues_master.json'
+      - 'ktc_values.json'
+      - 'player_meta.json'
+      - 'styles.css'
+
+jobs:
+  sync-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Unit tests
+        run: python -m unittest discover tests -v
+
+  page:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        run: npm ci && npx playwright install --with-deps chromium
+      - name: Build CSS
+        run: npm run build:css
+      - name: Page smoke test
+        run: npm run test:page

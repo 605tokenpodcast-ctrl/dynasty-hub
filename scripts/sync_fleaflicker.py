@@ -42,6 +42,7 @@ FALLBACK_REG_SEASON_WEEKS = 14
 FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
 LINEUP_BACKFILL_PER_RUN = 2  # older seasons of lineups fetched per run (one boxscore call per game)
 DEBUG = os.environ.get("FLEA_DEBUG") == "1"
+FULL_REFRESH = os.environ.get("FLEA_FULL_REFRESH") == "1"  # re-fetch finished seasons too
 DEBUG_DIR = "fleaflicker_debug"
 
 # If the automatic champion / runner-up / 3rd-place detection ever gets a season
@@ -645,10 +646,32 @@ def existing_section_rows(rows, word):
 # --------------------------------------------------------------------------- #
 # main
 # --------------------------------------------------------------------------- #
-def collect_league(league, existing_rows=None):
+def finished_seasons(rows, first, last):
+    """{season: (standings rows, matchup rows)} for seasons in `rows` that already have a champion.
+    A finished season never changes, so the sync reuses these rows instead of re-fetching them."""
+    standings = existing_section_rows(rows, "STANDINGS")
+    matchups = existing_section_rows(rows, "MATCHUPS")
+    out = {}
+    for season in range(first, last + 1):
+        st = [r for r in standings if str(r[0]).strip() == str(season)]
+        mu = [r for r in matchups if str(r[0]).strip() == str(season)]
+        if st and mu and any("League Champion" in str(r[4]) for r in st):
+            out[season] = (st, mu)
+    return out
+
+
+def trade_date(row):
+    try:
+        return datetime.strptime(str(row[1]), "%m/%d/%Y")
+    except ValueError:
+        return datetime(int(row[0]), 1, 1)
+
+
+def collect_league(league, existing_rows=None, cache_rows=None):
     """Pull standings / matchups / trades (and rosters if it's a live season).
     Standalone leagues also get lineups and waiver moves; older seasons already in
-    `existing_rows` are kept, and a few missing ones are backfilled each run."""
+    `existing_rows` are kept, and a few missing ones are backfilled each run.
+    Finished seasons found in `cache_rows` (this league's current block) are reused, not re-fetched."""
     league_id, name = league["id"], league["name"]
     last = league.get("end_season") or current_season()
     cur = current_season()
@@ -664,8 +687,15 @@ def collect_league(league, existing_rows=None):
     backfill = sorted((y for y in range(league["start_season"], cur) if str(y) not in have_lineup_seasons),
                       reverse=True)[:LINEUP_BACKFILL_PER_RUN] if want_lineups else []
     lineup_rows = []
+    cached = {} if FULL_REFRESH else finished_seasons(cache_rows, league["start_season"], min(last, cur - 1))
+    if cached:
+        print(f"  reusing {len(cached)} finished season(s) already in the file: {sorted(cached)}")
 
     def load_season(season):
+        if season in cached and season not in backfill:
+            standings_rows.extend(cached[season][0])
+            matchup_rows.extend(cached[season][1])
+            return
         print(f"- season {season}")
         info = build_season(league_id, season)
         if not info:
@@ -738,6 +768,11 @@ def collect_league(league, existing_rows=None):
     trade_rows = build_trade_rows(trades, season_labels, latest_label)
     # a league that has an end_season must not pick up trades from later seasons
     trade_rows = [t for t in trade_rows if int(t[0]) <= last]
+    # Reused seasons keep their stored trade rows, which were labelled with that season's team names
+    reused = {s for s in cached if s not in backfill}
+    if reused:
+        kept = [t for t in existing_section_rows(cache_rows, "TRADE") if int(t[0]) in reused]
+        trade_rows = sorted([t for t in trade_rows if int(t[0]) not in reused] + kept, key=trade_date, reverse=True)
     print(f"  {len(trade_rows)} completed trades")
 
     roster_rows = []
@@ -854,7 +889,9 @@ def sync_fleaflicker():
     key_lookup = {k.strip().lower(): k for k in master}
     for league in LEAGUES_TO_SYNC:
         try:
-            data = collect_league(league, master.get(key_lookup.get(league["name"].strip().lower(), league["name"])))
+            own_rows = master.get(key_lookup.get(league["name"].strip().lower(), league["name"]))
+            target_key = key_lookup.get((league.get("merge_into") or "").strip().lower())
+            data = collect_league(league, own_rows, master.get(target_key) if league.get("merge_into") else own_rows)
         except FleaError as e:
             print(f"!! {league['name']}: {e}")
             failures.append(league["name"])

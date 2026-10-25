@@ -302,12 +302,14 @@ def build_master_data():
                     ])
 
         # --- 5. MERGE WITH HISTORICAL SECTIONS SAFELY ---
-        if existing_rows:
-            historical_standings = []
-            historical_trades = []
-            historical_matchups = []
-            profile_rows = []
+        # A league that isn't in the master file yet starts with empty history and a generated
+        # profile, so it gets the same sections (and League ID) as every other league.
+        historical_standings = []
+        historical_trades = []
+        historical_matchups = []
+        profile_rows = []
 
+        if existing_rows:
             active_sec = None
             for row in existing_rows:
                 c0 = str(row[0] if row else '').strip()
@@ -337,71 +339,71 @@ def build_master_data():
                     if c0 not in ('Season', CURRENT_SEASON):
                         historical_matchups.append(row)
 
-            # Dedupe on Sleeper's transaction_id (stored in column 6). Legacy rows written before
-            # IDs were stored fall back to (season, date, teams) and get the ID backfilled once.
-            merged_trades = [list(r) + [""] * (7 - len(r)) for r in historical_trades]
-            known_tx_ids = {str(r[5]).strip() for r in merged_trades if str(r[5]).strip()}
-            legacy_by_sig = {
-                (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip()): r
-                for r in merged_trades if not str(r[5]).strip()
-            }
-            for lt in live_trades_2026:
-                tx_id = lt[5]
-                if tx_id and tx_id in known_tx_ids:
-                    continue
-                legacy = legacy_by_sig.pop((lt[0], lt[1], lt[3]), None)
-                if legacy is not None:
-                    legacy[5] = tx_id
-                else:
-                    merged_trades.insert(0, lt)
-                if tx_id:
-                    known_tx_ids.add(tx_id)
-            merged_trades, dupes = drop_duplicate_trades(merged_trades)
-            if dupes:
-                print(f"{league_key}: removed {dupes} duplicate legacy trade row(s)")
-
-            compiled_rows = (
-                [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""]] +
-                profile_rows +
-                [["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""],
-                 ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""]] +
-                live_standings_2026 +
-                historical_standings +
-                [["", "", "", "", "", "", ""]] +
-                new_roster_rows +
-                [["", "", "", "", "", "", ""],
-                 ["--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---", "", "", "", "", "", ""],
-                 ["Season", "Date", "Week", "Teams Involved", "Trade Breakdown", "", ""]] +
-                merged_trades +
-                [["", "", "", "", "", "", ""]] +
-                new_boxscore_rows +
-                [["", "", "", "", "", "", ""],
-                 ["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
-                 ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]] +
-                new_matchup_rows_2026 +
-                historical_matchups
-            )
-            # Never replace current-season data with less of it: a shrinking row count means
-            # some API call silently returned nothing.
-            # Trades count only ID-backed rows, so removing legacy duplicates doesn't trip the guard.
-            shrunk = [
-                sec for sec, ids_only in (('MATCHUPS', False), ('TRADE', True))
-                if count_rows(compiled_rows, sec, CURRENT_SEASON, ids_only)
-                < count_rows(existing_rows, sec, CURRENT_SEASON, ids_only)
+        if not profile_rows:
+            profile_rows = [
+                ["League Name", raw_name, "", "", "", "", ""],
+                ["League ID", league_id, "", "", "", "", ""],
+                ["League Type", "Redraft" if is_redraft else "Dynasty", "", "", "", "", ""],
+                ["Current Season", CURRENT_SEASON, "", "", "", "", ""],
             ]
-            if shrunk:
-                print(f"ERROR: {league_key}: {CURRENT_SEASON} rows shrank in {shrunk}; keeping existing data.")
-                FAILED_URLS.append(f"row-count guard: {league_key} {shrunk}")
+
+        # Dedupe on Sleeper's transaction_id (stored in column 6). Legacy rows written before
+        # IDs were stored fall back to (season, date, teams) and get the ID backfilled once.
+        merged_trades = [list(r) + [""] * (7 - len(r)) for r in historical_trades]
+        known_tx_ids = {str(r[5]).strip() for r in merged_trades if str(r[5]).strip()}
+        legacy_by_sig = {
+            (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip()): r
+            for r in merged_trades if not str(r[5]).strip()
+        }
+        for lt in live_trades_2026:
+            tx_id = lt[5]
+            if tx_id and tx_id in known_tx_ids:
+                continue
+            legacy = legacy_by_sig.pop((lt[0], lt[1], lt[3]), None)
+            if legacy is not None:
+                legacy[5] = tx_id
             else:
-                master_data[league_key] = compiled_rows
+                merged_trades.insert(0, lt)
+            if tx_id:
+                known_tx_ids.add(tx_id)
+        merged_trades, dupes = drop_duplicate_trades(merged_trades)
+        if dupes:
+            print(f"{league_key}: removed {dupes} duplicate legacy trade row(s)")
+
+        compiled_rows = (
+            [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""]] +
+            profile_rows +
+            [["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""],
+             ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""]] +
+            live_standings_2026 +
+            historical_standings +
+            [["", "", "", "", "", "", ""]] +
+            new_roster_rows +
+            [["", "", "", "", "", "", ""],
+             ["--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---", "", "", "", "", "", ""],
+             ["Season", "Date", "Week", "Teams Involved", "Trade Breakdown", "", ""]] +
+            merged_trades +
+            [["", "", "", "", "", "", ""]] +
+            new_boxscore_rows +
+            [["", "", "", "", "", "", ""],
+             ["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
+             ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]] +
+            new_matchup_rows_2026 +
+            historical_matchups
+        )
+        # Never replace current-season data with less of it: a shrinking row count means
+        # some API call silently returned nothing.
+        # Trades count only ID-backed rows, so removing legacy duplicates doesn't trip the guard.
+        shrunk = [
+            sec for sec, ids_only in (('MATCHUPS', False), ('TRADE', True))
+            if count_rows(compiled_rows, sec, CURRENT_SEASON, ids_only)
+            < count_rows(existing_rows, sec, CURRENT_SEASON, ids_only)
+        ]
+        if shrunk:
+            print(f"ERROR: {league_key}: {CURRENT_SEASON} rows shrank in {shrunk}; keeping existing data.")
+            FAILED_URLS.append(f"row-count guard: {league_key} {shrunk}")
         else:
-            master_data[league_key] = (
-                new_roster_rows +
-                new_boxscore_rows +
-                [["--- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) ---", "", "", "", "", "", ""],
-                 ["Season", "Week", "Matchup ID", "Team 1", "Team 1 Score", "Team 2", "Team 2 Score"]] +
-                new_matchup_rows_2026
-            )
+            master_data[league_key] = compiled_rows
 
     if FAILED_URLS:
         print(f"ERROR: {len(FAILED_URLS)} request(s) failed; sleeper_leagues_master.json was NOT updated:")

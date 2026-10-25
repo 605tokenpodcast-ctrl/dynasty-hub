@@ -36,7 +36,9 @@ def main():
     set_var(live, 'FLEA_LEAGUES', json.dumps(','.join(flea)))
     set_var(os.path.join(ROOT, 'workers', 'fleaflicker-proxy', 'wrangler.toml'), 'FLEA_LEAGUES', json.dumps(','.join(flea)))
 
-    bot_leagues = [{"name": lg['name'], "id": lg['id'], "platform": lg['platform']} for lg in active]
+    # The bot can only read Sleeper and Fleaflicker; an RSO league has no API it could poll
+    bot_leagues = [{"name": lg['name'], "id": lg['id'], "platform": lg['platform']} for lg in active
+                   if lg['platform'] in ('sleeper', 'fleaflicker')]
     body = ',\n'.join('  ' + json.dumps(lg, ensure_ascii=False) for lg in bot_leagues)
     set_var(os.path.join(ROOT, 'workers', 'league-bot', 'wrangler.toml'), 'LEAGUES', f"'''[\n{body}\n]'''")
     print(f"workers configured for {len(sleeper)} Sleeper and {len(flea)} Fleaflicker leagues")

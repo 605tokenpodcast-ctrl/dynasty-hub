@@ -6,7 +6,8 @@
     "playoff_start_week: first playoff week, keyed by the first season it applies to (the latest key <= season wins).",
     "playoff_teams: teams that make the playoffs. third_place_game: false when the league plays no 3rd-place game.",
     "exclude_from_records: true leaves the league out of Hall of Records, Playoff Odds and award tabs.",
-    "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league)."
+    "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league).",
+    "RSO-only (platform \"rso\"): no public API, so scripts/build_rso.py rebuilds it from the snapshot in rso/; the syncs and workers skip it."
   ],
   "leagues": [
     {
@@ -86,6 +87,17 @@
       "start_season": 2015,
       "playoff_start_week": {
         "2015": 15
+      },
+      "playoff_teams": 6,
+      "third_place_game": true
+    },
+    {
+      "name": "South Dakota Auction League",
+      "platform": "rso",
+      "id": "3466",
+      "type": "dynasty",
+      "playoff_start_week": {
+        "2017": 15
       },
       "playoff_teams": 6,
       "third_place_game": true

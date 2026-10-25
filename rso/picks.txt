@@ -1,0 +1,50 @@
+# RSO DraftPickPortfolio (3 rounds; 2027 and 2028 shown). Format: team -> round -> picks
+Smokers Haven|1|2027 Original;2028 Original
+Smokers Haven|2|2027 Original;2027 from No Rings Just Bling;2028 Original
+Smokers Haven|3|2027 Original;2028 Original
+No Rings Just Bling|1|
+No Rings Just Bling|2|2028 Original
+No Rings Just Bling|3|2027 from Burnt Cookies;2027 Original;2028 Original
+Fish|1|2027 Original;2028 Original
+Fish|2|2027 Original;2028 Original
+Fish|3|2027 Original;2028 Original
+Russini's rumor mills|1|2027 Original;2028 Original
+Russini's rumor mills|2|2027 Original;2028 Original
+Russini's rumor mills|3|2028 Original
+Burnt Cookies|1|2027 Original;2028 Original
+Burnt Cookies|2|2027 Original;2028 Original
+Burnt Cookies|3|2028 Original
+Straight trash|1|2027 Original;2028 Original
+Straight trash|2|2027 Original;2028 Original
+Straight trash|3|2027 from Bend over and Goff;2027 Original;2028 Original
+Inside Insight|1|2027 Original;2028 Original
+Inside Insight|2|2027 Original;2028 Original
+Inside Insight|3|2027 Original;2028 Original
+DarkStar Dragons|1|2027 Original;2028 Original
+DarkStar Dragons|2|2027 Original;2028 Original
+DarkStar Dragons|3|2027 from Russini's rumor mills;2027 Original;2028 Original
+Leno|1|2027 Original;2027 from No Rings Just Bling;2028 Original;2028 from No Rings Just Bling
+Leno|2|2027 Original;2028 Original
+Leno|3|2027 Original;2028 Original
+Jarvis|1|2027 Original;2028 Original
+Jarvis|2|2027 Original;2028 Original
+Jarvis|3|2027 Original;2028 Original
+Kronik|1|2027 Original;2028 Original
+Kronik|2|2027 Original;2028 Original
+Kronik|3|2027 Original;2028 Original
+Bend over and Goff|1|2027 Original;2028 Original
+Bend over and Goff|2|2027 Original;2028 Original
+Bend over and Goff|3|2028 Original
+# Final Standings After Playoffs (2025 season, old team names): team|seed|final
+Kronik|1|2
+DarkStar Dragons|2|1
+Fish|3|3
+No Rings Just Bling|4|4
+Leno|5|5
+Inside Insight|6|6
+Smokers Haven|7|7
+Jarvis|8|8
+Unsolicited Penix pics|9|9
+Burnt Cookies|10|10
+Won't you be my naber|11|11
+Bend over and Goff|12|12

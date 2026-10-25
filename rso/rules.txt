@@ -1,0 +1,20 @@
+League Name: South Dakota Auction League
+League ID: 3466
+Platform: Reality Sports Online (RSO), salary-cap contract dynasty
+Number of Teams: 12 (1 division: South Dakota)
+Regular Season Length: 14 weeks, start week 1
+Scoring Type: Head-to-Head; ties allowed; standings tiebreak: total points, then H2H, then division points
+Playoffs: 6 teams over 3 weeks, one-week matchups
+Salary Cap: $301,200,000 (2026)
+Roster Size: 30; IR 0; IR-DFR 0; practice squad 0
+Starters: QB 1, RB 2, WR 2, TE 2, FLEX (RB/WR/TE) 2, FLEX (OPEN / superflex) 1; no K, no DEF, no IDP
+Position max: QB 5, RB 20, WR 20, TE 20
+Contracts: max per team 3 four-year, 6 three-year, 6 two-year FA auction contracts; franchise tags yes; extensions 0
+Rookie contracts: 4 years, rookie option yes
+Scoring: pass yd 0.04, pass TD 4, INT -2, pass 2pt 2; rush yd 0.1, rush TD 6, rush 2pt 2; rec yd 0.1, rec 0.5 (half PPR), rec TD 6, rec 2pt 2; fumble -2; KR/PR TD 6 (same for all positions)
+Waivers: waiver wait 1 day; FA wait 1 day; FAAB report exists
+Trades: official on acceptance; no trades after 11/18/2026; no limit; offseason trades allowed
+Rookie draft: 3 rounds, live online, 2026 draft 5/3/2026, 24h per pick
+Free agent auction: 8/23/2026 15:00, nomination 45s, offer 10s
+2026 rookie draft order: Bend over and Goff, Straight trash, Jarvis, Russini's rumor mills, Burnt Cookies, Inside Insight, Leno, Leno, No Rings Just Bling, Fish, Kronik, DarkStar Dragons
+Owners (short names on draft order): Bend over and Goff=Dante, Straight trash=Wade, Jarvis=Jarvis, Russini's rumor mills=Steve, Burnt Cookies=Aaron, Inside Insight=Matt, Leno=Leno, No Rings Just Bling=Branden, Fish=Fish, Kronik=Andy, DarkStar Dragons=Shane, Smokers Haven=Anthony

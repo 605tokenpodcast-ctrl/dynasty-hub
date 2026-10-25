@@ -7,6 +7,7 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts'))
 import sync_fleaflicker  # noqa: E402
 import sync_leagues  # noqa: E402
+import build_rso  # noqa: E402
 
 SEC = lambda title: [f"--- {title} ---", "", "", "", "", "", ""]  # noqa: E731
 
@@ -100,6 +101,30 @@ class FleaflickerFinishedSeasons(unittest.TestCase):
         self.assertEqual(len(out[2025][0]), 2)
         self.assertEqual(len(out[2025][1]), 1)
         self.assertEqual(sync_fleaflicker.finished_seasons(None, 2023, 2025), {})
+
+
+class RsoParsing(unittest.TestCase):
+    def test_player_names(self):
+        self.assertEqual(build_rso.clean_player("Michael Wilson ARI  (WR)"), ("Michael Wilson", "WR"))
+        self.assertEqual(build_rso.clean_player("Smith-Njigba, Jaxon SEA (WR)"), ("Jaxon Smith-Njigba", "WR"))
+        self.assertEqual(build_rso.clean_player("Erick All Jr. CIN (TE)"), ("Erick All Jr.", "TE"))
+
+    def test_picks_and_weeks(self):
+        self.assertEqual(build_rso.ordinal_pick("2027 2nd Round Draft Pick"), ("2027", "2nd"))
+        self.assertEqual(build_rso.ordinal_pick("Michael Wilson ARI (WR)"), (None, None))
+        from datetime import date
+        self.assertEqual(build_rso.week_of(date(2026, 5, 7)), "Week 1")
+        self.assertEqual(build_rso.week_of(date(2026, 9, 16)), "Week 1")
+        self.assertEqual(build_rso.week_of(date(2026, 10, 18)), "Week 6")
+        self.assertEqual(build_rso.week_of(date(2026, 10, 21)), "Week 6")
+
+    def test_description_keeps_its_separators(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(build_rso, "SNAP", d):
+            with open(os.path.join(d, "t.psv"), "w", encoding="utf-8") as f:
+                f.write("id|description\n1|Dropped A NO (WR) || Add Player to Roster B SEA (RB)\n")
+            self.assertEqual(build_rso.read_psv("t.psv")[0]["description"],
+                             "Dropped A NO (WR) || Add Player to Roster B SEA (RB)")
 
 
 if __name__ == '__main__':

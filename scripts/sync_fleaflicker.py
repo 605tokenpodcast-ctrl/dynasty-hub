@@ -231,7 +231,8 @@ def fetch_scoreboard(league_id, season, keep_unplayed=False):
         if not data:
             break
         if p == 1:
-            ordinals = [int(num(e.get("ordinal"), 0)) for e in (data.get("eligibleSchedulePeriods") or [])]
+            ordinals = [int(num(e.get("ordinal", e.get("value")), 0)) for e in (data.get("eligibleSchedulePeriods") or [])]
+            ordinals = [o for o in ordinals if o > 0]
             if ordinals:
                 max_period = min(max(ordinals), LAST_PLAYOFF_WEEK)
         games = []
@@ -248,6 +249,9 @@ def fetch_scoreboard(league_id, season, keep_unplayed=False):
                 "gid": str(g.get("id") or f"{p}-{home.get('id')}-{away.get('id')}"),
                 "home": home, "away": away,
                 "hs": hs, "as": as_, "final": final,
+                # Only present on playoff games; used to pin champion / 3rd place exactly
+                "champ_game": bool(g.get("isChampionshipGame")),
+                "third_game": bool(g.get("isThirdPlaceGame")),
             })
         ids = {g["gid"] for g in games}
         if not games or ids <= seen_ids:
@@ -282,6 +286,19 @@ def infer_placements(season, rows, periods, reg_weeks):
         if g["hs"] == g["as"]:
             return None, None
         return (g["home"]["id"], g["away"]["id"]) if g["hs"] > g["as"] else (g["away"]["id"], g["home"]["id"])
+
+    # Fleaflicker flags the championship / 3rd place games itself; trust that over the bracket heuristic
+    flagged_champ = [g for p in playoff_periods for g in periods[p] if g.get("champ_game") and g["final"]]
+    if flagged_champ:
+        w, l = winner_loser(flagged_champ[-1])
+        if w is not None:
+            result = {"champion": w, "runner_up": l}
+            flagged_third = [g for p in playoff_periods for g in periods[p] if g.get("third_game") and g["final"]]
+            if flagged_third:
+                w3, _ = winner_loser(flagged_third[-1])
+                if w3 is not None:
+                    result["third"] = w3
+            return result
 
     prev_w, prev_l = set(), set()
     if len(playoff_periods) > 1:

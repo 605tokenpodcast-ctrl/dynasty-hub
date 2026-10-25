@@ -11,7 +11,8 @@
 //
 // HTTP routes (CORS-enabled for the site):
 //   GET /gazette?league=<name>&season=<yyyy>  -> [{ week, text }] for the Season Review tab
-//   GET /run?job=alerts|recap|gazette|previews&key=<ADMIN_KEY>[&dry=1]  -> run a job by hand
+//   GET /run?job=alerts|recap|gazette|previews[&dry=1] with header X-Admin-Key: <ADMIN_KEY>  -> run a job by hand
+//       (?key=<ADMIN_KEY> also works, but the key then shows up in Cloudflare's request logs)
 //
 // Settings: LEAGUES and SITE_URL are vars in wrangler.toml. Secrets (wrangler secret put, or the
 // dashboard): DISCORD_WEBHOOK_URL and/or GROUPME_BOT_ID, ANTHROPIC_API_KEY (optional), ADMIN_KEY.
@@ -36,7 +37,9 @@ export default {
       return new Response(JSON.stringify(list), { headers: { ...cors, 'Cache-Control': 'public, max-age=300' } });
     }
     if (url.pathname === '/run') {
-      if (!env.ADMIN_KEY || url.searchParams.get('key') !== env.ADMIN_KEY) return new Response('Forbidden', { status: 403 });
+      // The X-Admin-Key header keeps the key out of Cloudflare's request logs; ?key= still works from a browser
+      const key = request.headers.get('X-Admin-Key') || url.searchParams.get('key');
+      if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) return new Response('Forbidden', { status: 403 });
       const job = url.searchParams.get('job');
       if (!['alerts', 'recap', 'gazette', 'previews'].includes(job)) return new Response('Unknown job', { status: 400 });
       const out = await runJob(job, env, url.searchParams.get('dry') === '1');

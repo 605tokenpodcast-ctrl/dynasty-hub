@@ -1,0 +1,9 @@
+{
+  "_about": [
+    "Optional extras for the site, merged on top of the defaults in index.html.",
+    "aliasOverrides: lower-case text found in a team label -> the manager it belongs to, e.g. \"oldusername\": \"Smokers Haven\".",
+    "managers: manager -> { \"tagline\": \"...\", \"color\": \"#3b82f6\" } for the Trophy Room cards."
+  ],
+  "aliasOverrides": {},
+  "managers": {}
+}

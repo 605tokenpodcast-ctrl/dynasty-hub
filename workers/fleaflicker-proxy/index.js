@@ -8,17 +8,21 @@
 // (FLEA_LEAGUES in wrangler.toml), numeric params only.
 
 const ALLOWED_ENDPOINTS = new Set(['FetchLeagueScoreboard', 'FetchLeagueBoxscore', 'FetchLeagueStandings']);
-// Origins allowed to read responses. Add a custom domain here if the site moves.
-const ALLOWED_ORIGINS = ['https://605tokenpodcast-ctrl.github.io'];
 const PASS_PARAMS = ['league_id', 'season', 'scoring_period', 'fantasy_game_id'];
 const CACHE_SECONDS = 30;
 const ERROR_CACHE_SECONDS = 10; // brief, so an upstream outage isn't hit by every open tab each minute
 
+// Cloudflare ignores the Cache API on *.workers.dev addresses, so responses are also kept in this
+// worker's memory: requests reaching the same running copy share one upstream call per URL.
+const memory = new Map(); // upstream url -> { expires, res: Promise<{ status, text }> }
+
 export default {
   async fetch(request, env, ctx) {
+    // Origins allowed to read responses (ALLOWED_ORIGINS in wrangler.toml)
+    const origins = String(env.ALLOWED_ORIGINS || 'https://605tokenpodcast-ctrl.github.io').split(',').map(s => s.trim()).filter(Boolean);
     const origin = request.headers.get('Origin') || '';
     const cors = {
-      'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+      'Access-Control-Allow-Origin': origins.includes(origin) ? origin : origins[0],
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Vary': 'Origin',
     };
@@ -41,29 +45,47 @@ export default {
       upstream.searchParams.set(key, value);
     }
 
-    const cache = caches.default;
-    const cacheKey = new Request(upstream.toString());
-    const errorKey = new Request(`${upstream.toString()}&_upstream_error=1`);
-    let res = await cache.match(cacheKey);
-    if (!res) {
-      const err = await cache.match(errorKey);
-      if (err) res = new Response(err.body, { status: Number(err.headers.get('X-Upstream-Status')) || 502, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (!res) {
-      const r = await fetch(upstream.toString(), { headers: { 'User-Agent': 'dynasty-hub fleaflicker proxy' } });
-      res = new Response(r.body, {
-        status: r.status,
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${r.ok ? CACHE_SECONDS : ERROR_CACHE_SECONDS}` },
-      });
-      // The Cache API stores only 200s, so a failed call is cached under a separate key as a 200
-      // carrying the real status in a header, and turned back into the error when read
-      if (r.ok) ctx.waitUntil(cache.put(cacheKey, res.clone()));
-      else ctx.waitUntil(cache.put(errorKey, new Response(await res.clone().text(), {
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ERROR_CACHE_SECONDS}`, 'X-Upstream-Status': String(r.status) },
-      })));
-    }
-    const out = new Response(res.body, res);
-    Object.entries(cors).forEach(([k, v]) => out.headers.set(k, v));
-    return out;
+    const { status, text } = await upstreamResponse(upstream.toString(), ctx);
+    return new Response(text, {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${status === 200 ? CACHE_SECONDS : ERROR_CACHE_SECONDS}` },
+    });
   },
 };
+
+function upstreamResponse(url, ctx) {
+  const now = Date.now();
+  const hit = memory.get(url);
+  if (hit && hit.expires > now) return hit.res;
+  const res = fetchUpstream(url, ctx);
+  for (const [k, v] of memory) if (v.expires <= now) memory.delete(k);
+  memory.set(url, { expires: now + CACHE_SECONDS * 1000, res });
+  // Errors are kept only briefly
+  res.then(r => { if (r.status !== 200) memory.set(url, { expires: Date.now() + ERROR_CACHE_SECONDS * 1000, res }); },
+    () => memory.delete(url));
+  return res;
+}
+
+async function fetchUpstream(url, ctx) {
+  const cache = caches.default;
+  const cacheKey = new Request(url);
+  const errorKey = new Request(`${url}&_upstream_error=1`);
+  const hit = await cache.match(cacheKey);
+  if (hit) return { status: 200, text: await hit.text() };
+  const err = await cache.match(errorKey);
+  if (err) return { status: Number(err.headers.get('X-Upstream-Status')) || 502, text: await err.text() };
+
+  const r = await fetch(url, { headers: { 'User-Agent': 'dynasty-hub fleaflicker proxy' } });
+  const text = await r.text();
+  const status = r.ok ? 200 : r.status;
+  // The Cache API stores only 200s, so a failed call is cached under a separate key as a 200
+  // carrying the real status in a header, and turned back into the error when read
+  ctx.waitUntil(cache.put(r.ok ? cacheKey : errorKey, new Response(text, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${r.ok ? CACHE_SECONDS : ERROR_CACHE_SECONDS}`,
+      ...(r.ok ? {} : { 'X-Upstream-Status': String(r.status) }),
+    },
+  })));
+  return { status, text };
+}

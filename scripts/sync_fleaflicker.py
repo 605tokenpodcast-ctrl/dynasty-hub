@@ -491,10 +491,13 @@ def fetch_team_picks_raw(league_id, team_id, season):
         data = api("FetchTeamPicks", league_id=league_id, team_id=team_id)
     except FleaError:
         return []
+    # This year's rookie picks stay listed until the NFL season starts (the rookie draft is over by
+    # then); the season itself rolls over on March 1, months before the draft.
+    first_year = season if date.today() < nfl_kickoff(season) else season + 1
     out = []
     for pk in (data or {}).get("picks") or []:
         yr, rnd, orig = pick_key_parts(pk)
-        if not (rnd and season < yr <= season + FUTURE_PICK_SEASONS):
+        if not (rnd and first_year <= yr < first_year + FUTURE_PICK_SEASONS):
             continue
         owner = team_id_of(pk.get("ownedBy") or pk.get("owner") or pk.get("currentOwner"))
         out.append({"yr": yr, "rnd": rnd, "orig": orig, "owner": owner})
@@ -559,8 +562,10 @@ def fetch_lineup_rows(league_id, season, periods, labels):
             if not g["final"] and g["hs"] == 0 and g["as"] == 0:
                 continue
             try:
-                box = api("FetchLeagueBoxscore", league_id=league_id, season=season,
-                          scoring_period=p, fantasy_game_id=g["gid"])
+                # No season here: Fleaflicker answers FetchLeagueBoxscore with HTTP 400 when it's given
+                # one. The game id already pins the season; the week is dropped too if that call fails.
+                box = (api("FetchLeagueBoxscore", league_id=league_id, scoring_period=p, fantasy_game_id=g["gid"])
+                       or api("FetchLeagueBoxscore", league_id=league_id, fantasy_game_id=g["gid"]))
             except FleaError as e:
                 print(f"  lineup {season} week {p}: {e}")
                 continue
@@ -586,7 +591,9 @@ def fetch_lineup_rows(league_id, season, periods, labels):
                 if not d["start"] and not d["bench"]:
                     continue
                 pool = [(pos, pts) for pos, pts, _ in d["start"] + d["bench"]]
-                best = max(optimal_points(d["slots"], pool), score)
+                # Fleaflicker works out the best lineup itself (pointsHome / pointsAway); prefer it
+                optimum = num((((box.get("points" + side.capitalize()) or {}).get("scoringPeriod") or {}).get("optimum")))
+                best = max(optimum or optimal_points(d["slots"], pool), score)
                 fmt = lambda xs: "; ".join(f"{label} {pts:.2f}" for _, pts, label in xs)
                 rows.append([str(season), f"Week {p}", labels.get(g[side]["id"]) or team_label(g[side]),
                              f"{score:.2f}", f"{best:.2f}", fmt(d["start"]),
@@ -595,8 +602,9 @@ def fetch_lineup_rows(league_id, season, periods, labels):
 
 
 def fetch_move_rows(league_id, labels, season):
-    """Waiver claims and free-agent adds for one season, newest first."""
-    rows, offset, seen = [], None, set()
+    """Waiver claims and free-agent adds for one season, newest first. Fleaflicker lists the drop
+    that goes with an add as its own item, so a team's drops within a minute of an add are joined to it."""
+    rows, drops, offset, seen = [], [], None, set()
     for _ in range(200):
         data = api("FetchLeagueTransactions", league_id=league_id, result_offset=offset)
         if not data:
@@ -614,20 +622,33 @@ def fetch_move_rows(league_id, labels, season):
             if tx_season != season:
                 continue
             kind = str(tx.get("type") or "")
+            team = tx.get("team") or {}
+            if kind == "TRANSACTION_DROP":
+                drops.append((dt, team.get("id"), player_label(unwrap_player(tx.get("player")))))
+                continue
             if kind not in ("TRANSACTION_CLAIM", "TRANSACTION_ADD"):
                 continue
-            team = tx.get("team") or {}
             bid = tx.get("bidAmount") if tx.get("bidAmount") is not None else (tx.get("waiverBid") or "")
             rows.append([str(season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}",
                          labels.get(team.get("id")) or team_label(team),
                          "Waiver" if kind == "TRANSACTION_CLAIM" else "Free Agent",
-                         player_label(unwrap_player(tx.get("player"))), "", f"{num(bid, 0):g}" if bid != "" else ""])
+                         player_label(unwrap_player(tx.get("player"))), "", f"{num(bid, 0):g}" if bid != "" else "",
+                         (dt, team.get("id"))])
         nxt = data.get("resultOffsetNext")
         if older or nxt is None or nxt in seen:
             break
         seen.add(nxt)
         offset = nxt
-    return rows
+    return [attach_drops(r, drops) for r in rows]
+
+
+def attach_drops(row, drops):
+    """Fill the Dropped column of an add row (its last item is (time, team id)) from drops made
+    by the same team within a minute of it."""
+    (dt, team_id), out = row[8], row[:8]
+    out[6] = ", ".join(label for t, tid, label in drops
+                       if tid == team_id and abs((t - dt).total_seconds()) <= 60)
+    return out
 
 
 def existing_section_rows(rows, word):

@@ -107,6 +107,7 @@
                     <button onclick="switchTab('picks')" id="nav-picks" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
                     <button onclick="switchTab('trades')" id="nav-trades" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
                     <button onclick="switchTab('h2h')" id="nav-h2h" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
+                    <button onclick="switchTab('matchups')" id="nav-matchups" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
                     <button onclick="switchTab('synergy')" id="nav-synergy" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
                     <button onclick="switchTab('leagues')" id="nav-leagues" class="px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
                 </nav>
@@ -325,6 +326,29 @@
                         </div>
                         <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-4"></div>
                     </div>
+                </div>
+
+                <!-- TAB: WEEKLY MATCHUPS -->
+                <div id="tab-matchups" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🏈 Weekly Matchup Center</h2>
+                            <p class="text-slate-400 text-sm">Every matchup a manager has this week across all leagues, with records, head-to-head history and win odds.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <div class="space-y-1 flex-1 sm:flex-none">
+                                <label class="text-xs text-slate-400 font-semibold">Manager</label>
+                                <select id="matchups-owner" onchange="renderMatchups()" class="w-full sm:w-56 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs text-slate-400 font-semibold">Week</label>
+                                <select id="matchups-week" onchange="renderMatchups()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="matchups-summary"></div>
+                    <div id="matchups-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                    <p id="matchups-footnote" class="text-xs text-slate-500"></p>
                 </div>
 
                 <!-- TAB 10: TRADE PARTNER SYNERGY -->
@@ -674,7 +698,7 @@
 
         function switchTab(tabId, skipUrlUpdate = false) {
             currentActiveTab = tabId;
-            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'records', 'luck', 'picks', 'trades', 'h2h', 'synergy', 'leagues'].forEach(t => {
+            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'records', 'luck', 'picks', 'trades', 'h2h', 'matchups', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -690,6 +714,8 @@
                 activeNav.classList.add('bg-accent', 'text-white');
                 activeNav.classList.remove('hover:bg-slate-800');
             }
+            if (tabId === 'matchups') renderMatchups();
+            else stopMatchupRefresh();
             if (!skipUrlUpdate) updateUrlParams();
         }
 
@@ -711,6 +737,9 @@
                 url.searchParams.delete('m1');
                 url.searchParams.delete('m2');
             }
+            const mOwner = document.getElementById('matchups-owner')?.value;
+            if (currentActiveTab === 'matchups' && mOwner) url.searchParams.set('owner', mOwner);
+            else url.searchParams.delete('owner');
             window.history.replaceState({}, '', url);
         }
 
@@ -757,6 +786,7 @@
                 });
             });
 
+            const params = new URLSearchParams(window.location.search);
             renderTrophyRoom(leagueNames);
             renderDashboardLeagues(leagueNames);
             renderPowerRankings();
@@ -770,11 +800,11 @@
             renderDraftPicksMatrix();
             renderTrades();
             initH2HDropdowns();
+            initMatchupsTab(params.get('owner'));
             renderTradeSynergy();
             renderSelectedLeague();
 
             // Check deep link params on initial load
-            const params = new URLSearchParams(window.location.search);
             const tabParam = params.get('tab');
             const m1Param = params.get('m1');
             const m2Param = params.get('m2');
@@ -2407,6 +2437,431 @@
                 </div>
                 ${logHtml}
             `;
+        }
+
+        // --- TAB: WEEKLY MATCHUP CENTER ---
+        let matchupGames = null;     // every real game across all leagues, built once from the master JSON
+        let matchupLiveState = null; // Sleeper /state/nfl, or null when unavailable
+        const matchupLiveCache = {}; // `${leagueId}|${week}` -> { ts, sides: { owner: {...} } }
+        const matchupLeagueCache = {}; // leagueId -> { ts, labelByRoster }
+        const matchupProjCache = {};   // `${season}|${week}` -> { ts, byPlayer }
+        let matchupRefreshTimer = null;
+        const MATCHUP_LIVE_TTL = 60 * 1000;
+
+        function escHtml(v) {
+            return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function weekNumber(w) {
+            const m = String(w || '').match(/(\d+)/);
+            return m ? parseInt(m[1], 10) : 0;
+        }
+
+        // Standard normal CDF (Abramowitz-Stegun 7.1.26)
+        function normalCdf(z) {
+            const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+            const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z / 2);
+            return z >= 0 ? (1 + erf) / 2 : (1 - erf) / 2;
+        }
+
+        function matchupCurrentSeason() {
+            return matchupGames.reduce((mx, g) => (g.season > mx ? g.season : mx), '');
+        }
+
+        function isLiveWeek(season, week) {
+            const st = matchupLiveState;
+            return !!st && String(st.season) === season && st.season_type === 'regular' && Number(st.week) === week;
+        }
+
+        function buildMatchupGames() {
+            const games = [];
+            Object.keys(globalMasterData).forEach(league => {
+                const rows = globalMasterData[league];
+                if (!Array.isArray(rows)) return;
+                let section = '', leagueId = '';
+                const raw = [];
+                rows.forEach(r => {
+                    const col0 = String(r[0] || '').trim();
+                    if (col0 === 'League ID') leagueId = String(r[1] || '').trim();
+                    const sec = getSectionType(col0);
+                    if (sec) { section = sec; return; }
+                    if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
+                    const matchupId = String(r[2]).trim();
+                    if (!matchupId || matchupId === '0') return; // ID 0 = playoff byes / eliminated teams, not real games
+                    const s1 = parseFloat(r[4]), s2 = parseFloat(r[6]);
+                    raw.push({
+                        league, leagueId, season: col0, week: weekNumber(r[1]),
+                        team1: String(r[3] || '').trim(), team2: String(r[5] || '').trim(),
+                        s1: isNaN(s1) ? 0 : s1, s2: isNaN(s2) ? 0 : s2
+                    });
+                });
+
+                const weekStats = {}, lastScored = {};
+                raw.forEach(g => {
+                    const k = `${g.season}|${g.week}`;
+                    const st = weekStats[k] = weekStats[k] || { teams: 0, scored: 0 };
+                    st.teams += 2;
+                    st.scored += (g.s1 > 0) + (g.s2 > 0);
+                    if (g.s1 > 0 || g.s2 > 0) lastScored[g.season] = Math.max(lastScored[g.season] || 0, g.week);
+                });
+                raw.forEach(g => {
+                    const st = weekStats[`${g.season}|${g.week}`];
+                    // Played = a later week already has scores, or every team in the week has scored.
+                    // The latest week can be half-played (e.g. only Thursday night), so it needs all teams.
+                    const later = g.week < (lastScored[g.season] || 0);
+                    g.played = later ? st.scored / st.teams >= 0.75 : st.scored === st.teams;
+                    g.o1 = getMasterOwner(g.team1);
+                    g.o2 = getMasterOwner(g.team2);
+                    games.push(g);
+                });
+            });
+            matchupGames = games;
+        }
+
+        // A game counts toward records and odds only once it is final
+        function isFinal(g) {
+            return g.played && !isLiveWeek(g.season, g.week);
+        }
+
+        function defaultMatchupWeek(season) {
+            const weeks = matchupGames.filter(g => g.season === season).map(g => g.week);
+            if (!weeks.length) return 1;
+            if (matchupLiveState && String(matchupLiveState.season) === season && matchupLiveState.season_type === 'regular') {
+                const w = Number(matchupLiveState.week);
+                if (weeks.includes(w)) return w;
+            }
+            const open = matchupGames.filter(g => g.season === season && !isFinal(g)).map(g => g.week);
+            return open.length ? Math.min(...open) : Math.max(...weeks);
+        }
+
+        function initMatchupsTab(ownerParam) {
+            buildMatchupGames();
+            const season = matchupCurrentSeason();
+            const owners = new Set();
+            matchupGames.filter(g => g.season === season).forEach(g => { owners.add(g.o1); owners.add(g.o2); });
+            const sorted = [...owners].filter(Boolean).sort((a, b) => a.localeCompare(b));
+
+            const ownerSel = document.getElementById('matchups-owner');
+            ownerSel.innerHTML = '';
+            sorted.forEach(o => ownerSel.appendChild(new Option(o, o)));
+            const saved = chatStore('matchupsOwner');
+            const pick = [ownerParam, saved, 'Smokers Haven'].find(o => o && sorted.includes(o));
+            if (pick) ownerSel.value = pick;
+
+            populateMatchupWeeks(season);
+
+            // Live NFL week from Sleeper, if reachable; the tab works from the JSON alone without it
+            chatFetchJson('https://api.sleeper.app/v1/state/nfl').then(state => {
+                matchupLiveState = state;
+                populateMatchupWeeks(season);
+                if (currentActiveTab === 'matchups') renderMatchups();
+            }).catch(() => {});
+        }
+
+        function populateMatchupWeeks(season) {
+            const weekSel = document.getElementById('matchups-week');
+            const weeks = [...new Set(matchupGames.filter(g => g.season === season).map(g => g.week))].sort((a, b) => a - b);
+            const def = defaultMatchupWeek(season);
+            weekSel.innerHTML = '';
+            weeks.forEach(w => weekSel.appendChild(new Option(`${season} Week ${w}${w === def ? ' (current)' : ''}`, w)));
+            weekSel.value = def;
+        }
+
+        function seasonTable(league, season) {
+            const table = {};
+            const allScores = [];
+            matchupGames.filter(g => g.league === league && g.season === season && isFinal(g))
+                .sort((a, b) => a.week - b.week)
+                .forEach(g => {
+                    [[g.o1, g.team1, g.s1, g.s2], [g.o2, g.team2, g.s2, g.s1]].forEach(([o, team, pf, pa]) => {
+                        const t = table[o] = table[o] || { owner: o, team, w: 0, l: 0, t: 0, pf: 0, scores: [], results: [] };
+                        t.team = team;
+                        t.pf += pf;
+                        t.scores.push(pf);
+                        allScores.push(pf);
+                        const res = pf > pa ? 'W' : pf < pa ? 'L' : 'T';
+                        t[res.toLowerCase()]++;
+                        t.results.push(res);
+                    });
+                });
+            const ranked = Object.values(table).sort((a, b) => (b.w + b.t / 2) - (a.w + a.t / 2) || b.pf - a.pf);
+            ranked.forEach((t, i) => { t.rank = i + 1; });
+            return { table, size: ranked.length, allScores };
+        }
+
+        function meanSd(xs) {
+            if (!xs.length) return { mean: 0, sd: 0 };
+            const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+            const v = xs.length > 1 ? xs.reduce((a, b) => a + (b - mean) ** 2, 0) / (xs.length - 1) : 0;
+            return { mean, sd: Math.sqrt(v) };
+        }
+
+        // Score model from this season's finals, shrunk toward the league average so 2-3 games don't dominate
+        function scoreModel(teamRow, leagueScores) {
+            const lg = meanSd(leagueScores);
+            const lgMean = lg.mean || 110, lgSd = lg.sd || 25;
+            const scores = teamRow ? teamRow.scores : [];
+            const own = meanSd(scores);
+            const n = scores.length, k = 3;
+            const mean = (own.mean * n + lgMean * k) / (n + k);
+            const sd = Math.sqrt(((n > 1 ? own.sd ** 2 : lgSd ** 2) * n + lgSd ** 2 * k) / (n + k));
+            return { mean, sd };
+        }
+
+        function headToHead(a, b, league) {
+            const out = { w: 0, l: 0, t: 0, last: null };
+            matchupGames.forEach(g => {
+                if (league && g.league !== league) return;
+                if (!isFinal(g)) return;
+                let mine, theirs;
+                if (g.o1 === a && g.o2 === b) { mine = g.s1; theirs = g.s2; }
+                else if (g.o1 === b && g.o2 === a) { mine = g.s2; theirs = g.s1; }
+                else return;
+                if (mine > theirs) out.w++; else if (mine < theirs) out.l++; else out.t++;
+                const key = `${g.season}-${String(g.week).padStart(2, '0')}`;
+                if (!out.last || key > out.last.key) out.last = { key, season: g.season, week: g.week, mine, theirs, league: g.league };
+            });
+            return out;
+        }
+
+        function fmtRecord(r) {
+            return `${r.w}-${r.l}${r.t ? '-' + r.t : ''}`;
+        }
+
+        // --- Live layer: Sleeper matchups + projections for the live week (Sleeper leagues only) ---
+        function projectionField(league) {
+            const fmt = leagueValueFormats[String(league).trim().toLowerCase()] || '';
+            if (/_ppr1_/.test(fmt)) return 'pts_ppr';
+            if (/_ppr0_/.test(fmt)) return 'pts_std';
+            return 'pts_half_ppr';
+        }
+
+        async function getMatchupProjections(season, week) {
+            const key = `${season}|${week}`;
+            const hit = matchupProjCache[key];
+            if (hit && Date.now() - hit.ts < 30 * 60 * 1000) return hit.byPlayer;
+            const byPlayer = {};
+            try {
+                const qs = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(p => `position[]=${p}`).join('&');
+                const arr = await chatFetchJson(`https://api.sleeper.com/projections/nfl/${season}/${week}?season_type=regular&${qs}`);
+                arr.forEach(x => { if (x && x.stats) byPlayer[x.player_id] = x.stats; });
+            } catch (e) { /* unofficial endpoint; odds fall back to the season model */ }
+            matchupProjCache[key] = { ts: Date.now(), byPlayer };
+            return byPlayer;
+        }
+
+        async function getRosterLabels(leagueId) {
+            const hit = matchupLeagueCache[leagueId];
+            if (hit && Date.now() - hit.ts < 60 * 60 * 1000) return hit.labelByRoster;
+            const base = `https://api.sleeper.app/v1/league/${leagueId}`;
+            const [users, rosters] = await Promise.all([chatFetchJson(`${base}/users`), chatFetchJson(`${base}/rosters`)]);
+            const userLabel = {};
+            users.forEach(u => {
+                const display = String(u.display_name || 'Unknown').trim();
+                const teamName = String((u.metadata || {}).team_name || '').trim();
+                // Same label format the sync script writes, so getMasterOwner resolves it identically
+                userLabel[u.user_id] = teamName && teamName.toLowerCase() !== display.toLowerCase() ? `${teamName} (${display})` : display;
+            });
+            const labelByRoster = {};
+            rosters.forEach(r => { labelByRoster[r.roster_id] = userLabel[r.owner_id] || `Team ${r.roster_id}`; });
+            matchupLeagueCache[leagueId] = { ts: Date.now(), labelByRoster };
+            return labelByRoster;
+        }
+
+        async function loadLiveLeague(game) {
+            const key = `${game.leagueId}|${game.week}`;
+            const hit = matchupLiveCache[key];
+            if (hit && Date.now() - hit.ts < MATCHUP_LIVE_TTL) return;
+            const [labels, matchups, proj] = await Promise.all([
+                getRosterLabels(game.leagueId),
+                chatFetchJson(`https://api.sleeper.app/v1/league/${game.leagueId}/matchups/${game.week}`),
+                getMatchupProjections(game.season, game.week)
+            ]);
+            const field = projectionField(game.league);
+            const sides = {};
+            matchups.forEach(m => {
+                const owner = getMasterOwner(labels[m.roster_id] || '');
+                const pts = m.players_points || {};
+                let remaining = 0, remainingVar = 0, left = 0, hasProj = false;
+                (m.starters || []).filter(p => p && p !== '0').forEach(pid => {
+                    const st = proj[pid];
+                    const pr = st ? (st[field] ?? st.pts_half_ppr ?? st.pts_ppr ?? 0) : 0;
+                    if (st) hasProj = true;
+                    // Approximation: a starter still on 0 points is treated as yet to play
+                    if (!(pts[pid] > 0) && pr > 0) {
+                        left++;
+                        remaining += pr;
+                        remainingVar += (0.5 * pr) ** 2; // single-player weekly sd ~ half the projection
+                    }
+                });
+                const points = Number(m.points) || 0;
+                sides[owner] = { points, projected: points + remaining, sd: Math.sqrt(remainingVar), left, hasProj };
+            });
+            matchupLiveCache[key] = { ts: Date.now(), sides };
+        }
+
+        function stopMatchupRefresh() {
+            if (matchupRefreshTimer) clearInterval(matchupRefreshTimer);
+            matchupRefreshTimer = null;
+        }
+
+        async function refreshMatchupLive(games) {
+            const live = games.filter(g => isLiveWeek(g.season, g.week) && /^\d{12,}$/.test(g.leagueId));
+            if (!live.length) return;
+            const results = await Promise.allSettled(live.map(loadLiveLeague));
+            if (results.some(r => r.status === 'fulfilled') && currentActiveTab === 'matchups') renderMatchups(true);
+        }
+
+        function openH2HFrom(btn) {
+            document.getElementById('h2h-mgr-1').value = btn.dataset.a;
+            document.getElementById('h2h-mgr-2').value = btn.dataset.b;
+            calculateH2H();
+            switchTab('h2h');
+        }
+
+        function renderMatchups(fromLive = false) {
+            if (!matchupGames) return;
+            const owner = document.getElementById('matchups-owner').value;
+            const week = parseInt(document.getElementById('matchups-week').value, 10);
+            const season = matchupCurrentSeason();
+            const grid = document.getElementById('matchups-grid');
+            const summary = document.getElementById('matchups-summary');
+            chatStore('matchupsOwner', owner);
+            if (!fromLive) updateUrlParams();
+
+            const games = matchupGames.filter(g => g.season === season && g.week === week && (g.o1 === owner || g.o2 === owner));
+            if (!games.length) {
+                summary.innerHTML = '';
+                grid.innerHTML = `<p class="text-sm text-slate-400">No matchups found for ${escHtml(owner)} in week ${week}.</p>`;
+                document.getElementById('matchups-footnote').innerText = '';
+                return;
+            }
+
+            const cards = [];
+            let expectedWins = 0, oddsCount = 0, finalW = 0, finalL = 0, finalT = 0, anyLive = false;
+
+            games.forEach(g => {
+                const meIs1 = g.o1 === owner;
+                const me = { owner, team: meIs1 ? g.team1 : g.team2, score: meIs1 ? g.s1 : g.s2 };
+                const opp = { owner: meIs1 ? g.o2 : g.o1, team: meIs1 ? g.team2 : g.team1, score: meIs1 ? g.s2 : g.s1 };
+                const { table, size, allScores } = seasonTable(g.league, season);
+                const final = isFinal(g);
+                const liveWeek = isLiveWeek(g.season, g.week);
+                const liveSides = (matchupLiveCache[`${g.leagueId}|${g.week}`] || {}).sides || {};
+                const meLive = liveWeek ? liveSides[me.owner] : null;
+                const oppLive = liveWeek ? liveSides[opp.owner] : null;
+
+                let pWin = null, status, oddsLabel = '';
+                if (final) {
+                    status = 'Final';
+                    if (me.score > opp.score) finalW++; else if (me.score < opp.score) finalL++; else finalT++;
+                } else {
+                    const mm = scoreModel(table[me.owner], allScores);
+                    const om = scoreModel(table[opp.owner], allScores);
+                    let mu = mm.mean - om.mean, sigma = Math.hypot(mm.sd, om.sd);
+                    oddsLabel = 'Season model';
+                    if (meLive && oppLive && meLive.hasProj && oppLive.hasProj) {
+                        mu = meLive.projected - oppLive.projected;
+                        sigma = Math.hypot(meLive.sd, oppLive.sd);
+                        oddsLabel = 'Live projection';
+                    }
+                    pWin = sigma < 0.5 ? (mu > 0 ? 1 : mu < 0 ? 0 : 0.5) : normalCdf(mu / sigma);
+                    expectedWins += pWin;
+                    oddsCount++;
+                    const started = (meLive && meLive.points > 0) || (oppLive && oppLive.points > 0) || me.score > 0 || opp.score > 0;
+                    status = started ? 'Live' : 'Upcoming';
+                    if (started) anyLive = true;
+                }
+
+                const leagueH2H = headToHead(me.owner, opp.owner, g.league);
+                const allH2H = headToHead(me.owner, opp.owner, null);
+
+                const side = (s, live, isMe) => {
+                    const row = table[s.owner];
+                    const rec = row ? fmtRecord(row) : '0-0';
+                    const avg = row && row.scores.length ? (row.pf / row.scores.length).toFixed(1) : '—';
+                    const form = row ? row.results.slice(-5).map(r => `<span class="inline-block w-4 text-center rounded text-[10px] font-bold ${r === 'W' ? 'bg-emerald-500/20 text-emerald-300' : r === 'L' ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-700 text-slate-300'}">${r}</span>`).join(' ') : '';
+                    const shownScore = live ? live.points : s.score;
+                    const scoreHtml = (final || shownScore > 0) ? `<p class="text-3xl font-extrabold text-white">${shownScore.toFixed(2)}</p>` : `<p class="text-3xl font-extrabold text-slate-600">—</p>`;
+                    const projHtml = !final && live && live.hasProj ? `<p class="text-xs text-sky-300">Proj ${live.projected.toFixed(1)}${live.left ? ` · ${live.left} left` : ''}</p>` : '';
+                    return `
+                        <div class="${isMe ? 'text-left' : 'text-right'} space-y-1 min-w-0">
+                            <p class="font-bold ${isMe ? 'text-accent' : 'text-white'} truncate" title="${escHtml(s.team)}">${escHtml(s.owner)}</p>
+                            <p class="text-xs text-slate-400 truncate">${escHtml(s.team)}</p>
+                            ${scoreHtml}
+                            ${projHtml}
+                            <p class="text-xs text-slate-300">${rec}${row ? ` · #${row.rank} of ${size}` : ''} · ${avg} avg</p>
+                            <p class="space-x-0.5">${form}</p>
+                        </div>`;
+                };
+
+                let resultBadge = '';
+                if (final) {
+                    const r = me.score > opp.score ? ['WIN', 'bg-emerald-600'] : me.score < opp.score ? ['LOSS', 'bg-rose-600'] : ['TIE', 'bg-slate-600'];
+                    resultBadge = `<span class="${r[1]} text-white text-[10px] font-bold px-2 py-0.5 rounded">${r[0]}</span>`;
+                } else {
+                    resultBadge = `<span class="${status === 'Live' ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-200'} text-[10px] font-bold px-2 py-0.5 rounded">${status.toUpperCase()}</span>`;
+                }
+
+                const oddsHtml = pWin === null ? '' : `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-accent">${Math.round(pWin * 100)}%</span>
+                            <span class="text-slate-500">Win odds · ${oddsLabel}</span>
+                            <span class="text-slate-300">${Math.round((1 - pWin) * 100)}%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-slate-700 overflow-hidden"><div class="h-full bg-accent" style="width:${(pWin * 100).toFixed(1)}%"></div></div>
+                    </div>`;
+
+                const last = leagueH2H.last;
+                const lastHtml = last ? `Last met ${last.season} Wk ${last.week}: ${last.mine > last.theirs ? 'won' : last.mine < last.theirs ? 'lost' : 'tied'} ${last.mine.toFixed(2)}-${last.theirs.toFixed(2)}` : 'First meeting in this league';
+                const allGames = allH2H.w + allH2H.l + allH2H.t;
+                const leagueGames = leagueH2H.w + leagueH2H.l + leagueH2H.t;
+
+                cards.push(`
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-5 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-sm font-semibold text-accent truncate">${escHtml(g.league)}</span>
+                            ${resultBadge}
+                        </div>
+                        <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
+                            ${side(me, meLive, true)}
+                            <div class="text-slate-500 font-bold text-sm pt-8">VS</div>
+                            ${side(opp, oppLive, false)}
+                        </div>
+                        ${oddsHtml}
+                        <div class="border-t border-slate-800 pt-3 flex flex-wrap justify-between items-center gap-2 text-xs">
+                            <div class="space-y-0.5 text-slate-300">
+                                <p><strong>H2H in this league:</strong> ${leagueGames ? fmtRecord(leagueH2H) : '0-0'} · <strong>All leagues:</strong> ${allGames ? fmtRecord(allH2H) : '0-0'}</p>
+                                <p class="text-slate-400">${lastHtml}</p>
+                            </div>
+                            <button onclick="openH2HFrom(this)" data-a="${escHtml(me.owner)}" data-b="${escHtml(opp.owner)}" class="text-accent hover:underline font-semibold">Full H2H →</button>
+                        </div>
+                    </div>`);
+            });
+
+            const finals = finalW + finalL + finalT;
+            const parts = [`<strong class="text-white">${games.length}</strong> matchup${games.length === 1 ? '' : 's'} in week ${week}`];
+            if (finals) parts.push(`went <strong class="text-white">${finalW}-${finalL}${finalT ? '-' + finalT : ''}</strong>`);
+            if (oddsCount) parts.push(`projected <strong class="text-white">${expectedWins.toFixed(1)}</strong> wins in ${oddsCount} open game${oddsCount === 1 ? '' : 's'}`);
+            summary.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300">${escHtml(owner)}: ${parts.join(' · ')}${anyLive ? ' <span class="text-amber-400 font-semibold">· live</span>' : ''}</div>`;
+            grid.innerHTML = cards.join('');
+
+            const liveWeek = isLiveWeek(season, week);
+            document.getElementById('matchups-footnote').innerText = liveWeek
+                ? 'Live scores and projections from Sleeper refresh every 60 seconds (Sleeper leagues only). A starter still on 0 points counts as yet to play. Records and odds use completed games only.'
+                : 'Win odds come from each team\'s scoring this season, blended toward the league average. Records and head-to-head use completed games only.';
+
+            if (!fromLive) {
+                stopMatchupRefresh();
+                if (liveWeek) {
+                    refreshMatchupLive(games);
+                    matchupRefreshTimer = setInterval(() => {
+                        if (currentActiveTab !== 'matchups' || document.hidden) return;
+                        refreshMatchupLive(games);
+                    }, MATCHUP_LIVE_TTL);
+                }
+            }
         }
 
         // --- TAB 10: TRADE PARTNER SYNERGY MATRIX ---

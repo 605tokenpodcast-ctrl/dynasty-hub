@@ -7,7 +7,8 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -1866,9 +1867,10 @@
             return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
+        // Bot replies can echo team names and trade text from the leagues, so markdown output is sanitized
         function chatFormat(s) {
-            if (typeof marked !== 'undefined' && marked.parse) {
-                return marked.parse(String(s || ''));
+            if (typeof marked !== 'undefined' && marked.parse && typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(marked.parse(String(s || '')));
             }
             return chatEscape(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
         }
@@ -1879,7 +1881,7 @@
             el.className = role === 'user'
                 ? 'ml-8 bg-accent/20 border border-accent/30 text-slate-100 rounded-lg px-3 py-2'
                 : 'mr-8 bg-slate-900 border border-slate-800 text-slate-200 rounded-lg px-3 py-2';
-            el.innerHTML = chatFormat(text);
+            el.innerHTML = role === 'user' ? chatEscape(text).replace(/\n/g, '<br>') : chatFormat(text);
             box.appendChild(el);
             box.scrollTop = box.scrollHeight;
             return el;
@@ -1966,13 +1968,14 @@
                         d.l += parseInt(rec[1], 10) || 0;
                     }
                     if (section === 'rosters') current.push(`${getMasterOwner(col0)} ${r[1] || ''} (${r[2] || '0'} PF)`);
-                    if (section === 'trades' && trades.length < 3 && r[3] && r[4]) {
-                        trades.push(`${r[0]} ${r[1]}: ${r[4]}`.slice(0, 350));
-                    }
+                    if (section === 'trades' && r[3] && r[4]) trades.push(r);
                 });
                 lines.push(`## ${p.name}`);
                 if (current.length) lines.push('Current records: ' + current.join('; '));
-                if (trades.length) lines.push('Recent trades: ' + trades.join(' | '));
+                // The JSON is not in date order, so sort before picking the newest
+                const recent = trades.sort((a, b) => tradeTimestamp(b) - tradeTimestamp(a)).slice(0, 5)
+                    .map(r => `${r[0]} ${r[1]}: ${r[4]}`.slice(0, 350));
+                if (recent.length) lines.push('Recent trades (newest first): ' + recent.join(' | '));
             });
 
             lines.push('## All-time manager stats (titles, runner-ups, record)');
@@ -2012,22 +2015,9 @@
             return map;
         }
 
-        // Unofficial Sleeper endpoint. Approximate PPR points; quietly skipped if it fails.
-        async function getChatProjections(season, week) {
-            try {
-                const qs = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(p => `position[]=${p}`).join('&');
-                const arr = await chatFetchJson(`https://api.sleeper.com/projections/nfl/${season}/${week}?season_type=regular&${qs}`);
-                const m = {};
-                arr.forEach(x => {
-                    const s = x.stats || {};
-                    const v = s.pts_ppr ?? s.pts_half_ppr ?? s.pts_std;
-                    if (v != null) m[x.player_id] = v;
-                });
-                return m;
-            } catch (e) { return {}; }
-        }
-
+        // proj = Sleeper projection stats by player (shared with the Matchup Center), scored with this league's format
         async function getLeagueLiveText(p, week, players, proj) {
+            const field = projectionField(p.name);
             const base = `https://api.sleeper.app/v1/league/${p.id}`;
             const [users, rosters, matchups] = await Promise.all([
                 chatFetchJson(`${base}/users`),
@@ -2054,7 +2044,8 @@
                     let total = 0, anyProj = false;
                     const starters = (m.starters || []).filter(s => s && s !== '0').map(s => {
                         const pl = players[s] || { n: s, p: '', i: '' };
-                        const pr = proj[s];
+                        const st = proj[s];
+                        const pr = st ? (st[field] ?? st.pts_half_ppr ?? st.pts_ppr ?? null) : null;
                         if (pr != null) { total += pr; anyProj = true; }
                         return `${pl.n} (${pl.p}${pl.i ? ' ' + pl.i : ''}${pr != null ? ' ' + pr.toFixed(1) : ''})`;
                     });
@@ -2062,6 +2053,27 @@
                     return `${ownerByRoster[m.roster_id] || 'Team ' + m.roster_id} [${anyProj ? 'proj ' + total.toFixed(1) : 'no projection'}${live}]: ${starters.join(', ')}`;
                 });
                 lines.push(sides.join('\n   VS   '));
+            });
+            return lines.join('\n');
+        }
+
+        // Fleaflicker leagues: live scores and Fleaflicker's own projections via the Matchup Center loader
+        async function getFleaLiveText(p, season, week) {
+            const games = (matchupGames || []).filter(g => g.league === p.name && g.season === String(season) && g.week === week);
+            if (!games.length) return `## ${p.name} - Week ${week}: no matchups scheduled`;
+            await loadLiveLeague(games[0]);
+            const sides = (matchupLiveCache[`${p.id}|${week}`] || {}).sides || {};
+            const lines = [`## ${p.name} - Week ${week} matchups (Fleaflicker, team totals only)`];
+            games.forEach(g => {
+                const a = sides[g.o1], b = sides[g.o2];
+                const fmt = s => s ? `[${s.hasProj ? 'proj ' + s.projected.toFixed(1) : 'no projection'}${s.points > 0 ? ', live score ' + s.points : ''}, ${s.left} players left]` : '[no live data]';
+                let odds = '';
+                if (a && b && a.hasProj && b.hasProj) {
+                    const sd = Math.sqrt(a.sd ** 2 + b.sd ** 2);
+                    const pa = sd > 0 ? normalCdf((a.projected - b.projected) / sd) : (a.projected > b.projected ? 1 : a.projected < b.projected ? 0 : 0.5);
+                    odds = ` (${g.o1} win chance ${Math.round(pa * 100)}%)`;
+                }
+                lines.push(`${g.o1} ${fmt(a)}   VS   ${g.o2} ${fmt(b)}${odds}`);
             });
             return lines.join('\n');
         }
@@ -2074,12 +2086,15 @@
                 const state = await chatFetchJson('https://api.sleeper.app/v1/state/nfl');
                 const week = state.week || state.display_week || 1;
                 const profiles = chatLeagueProfiles();
-                const live = profiles.filter(p => /^\d{12,}$/.test(p.id));
-                const noFeed = profiles.filter(p => !/^\d{12,}$/.test(p.id)).map(p => p.name);
+                const hasFeed = p => isSleeperLeagueId(p.id) || (FLEA_PROXY && isFleaLeagueId(p.id));
+                const live = profiles.filter(hasFeed);
+                const noFeed = profiles.filter(p => !hasFeed(p)).map(p => p.name);
 
-                const [players, proj] = await Promise.all([getChatPlayers(), getChatProjections(state.season, week)]);
-                const results = await Promise.allSettled(live.map(p => getLeagueLiveText(p, week, players, proj)));
-                parts.push(`# LIVE DATA (NFL ${state.season_type} week ${week}). Injury tags come from Sleeper (Q = questionable, D = doubtful, O = out, IR). Projections are approximate PPR points.`);
+                const [players, proj] = await Promise.all([getChatPlayers(), getMatchupProjections(state.season, week)]);
+                const results = await Promise.allSettled(live.map(p => isSleeperLeagueId(p.id)
+                    ? getLeagueLiveText(p, week, players, proj)
+                    : getFleaLiveText(p, state.season, week)));
+                parts.push(`# LIVE DATA (NFL ${state.season_type} week ${week}). Injury tags come from Sleeper (Q = questionable, D = doubtful, O = out, IR). Projections use each league's own scoring (PPR, half PPR or standard).`);
                 results.forEach((r, i) => {
                     parts.push(r.status === 'fulfilled' ? r.value : `## ${live[i].name}: live data failed to load`);
                 });

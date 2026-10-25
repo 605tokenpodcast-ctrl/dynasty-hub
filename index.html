@@ -2204,9 +2204,18 @@
             filterTrades();
         }
 
+        // Trade dates are stored as "m/d/yyyy"; fall back to Jan 1 of the season when a date is missing
+        function tradeTimestamp(r) {
+            const m = String(r[1] || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) return new Date(+m[3], +m[1] - 1, +m[2]).getTime();
+            const yr = parseInt(r[0], 10);
+            return yr ? new Date(yr, 0, 1).getTime() : 0;
+        }
+
         function renderTrades() {
             const tbody = document.getElementById('trades-table-body');
             tbody.innerHTML = '';
+            const trades = [];
 
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName] || [];
@@ -2217,19 +2226,23 @@
                     const newSec = getSectionType(col0);
                     if (newSec) { section = newSec; return; }
                     if (section !== 'trades' || isColumnHeaderRow(col0) || !col0 || !r[3] || !r[4]) return;
-
-                    const hasLineage = String(r[4]).includes('Resulted in drafting:');
-                    const tr = document.createElement('tr');
-                    tr.dataset.hasLineage = hasLineage ? '1' : '0';
-                    tr.className = "hover:bg-slate-800/50 transition";
-                    tr.innerHTML = `
-                        <td class="p-4 font-medium whitespace-nowrap">${r[0]} &bull; ${r[2] || ''}<br><span class="text-xs text-slate-400">${r[1] || ''}</span></td>
-                        <td class="p-4 text-accent font-semibold">${leagueName}</td>
-                        <td class="p-4 font-medium text-white">${r[3]}</td>
-                        <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
-                    `;
-                    tbody.appendChild(tr);
+                    trades.push({ r, leagueName, ts: tradeTimestamp(r) });
                 });
+            });
+
+            // Newest first across all leagues
+            trades.sort((a, b) => b.ts - a.ts).forEach(({ r, leagueName }) => {
+                const hasLineage = String(r[4]).includes('Resulted in drafting:');
+                const tr = document.createElement('tr');
+                tr.dataset.hasLineage = hasLineage ? '1' : '0';
+                tr.className = "hover:bg-slate-800/50 transition";
+                tr.innerHTML = `
+                    <td class="p-4 font-medium whitespace-nowrap">${r[0]} &bull; ${r[2] || ''}<br><span class="text-xs text-slate-400">${r[1] || ''}</span></td>
+                    <td class="p-4 text-accent font-semibold">${leagueName}</td>
+                    <td class="p-4 font-medium text-white">${r[3]}</td>
+                    <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 

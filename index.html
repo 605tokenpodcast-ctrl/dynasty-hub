@@ -2476,7 +2476,7 @@
         const MATCHUP_LIVE_TTL = 60 * 1000;
         // Fleaflicker sends no CORS headers, so live Fleaflicker data goes through workers/fleaflicker-proxy.js.
         // Paste the deployed proxy URL here; leave empty to skip live Fleaflicker scores.
-        const FLEA_PROXY = '';
+        const FLEA_PROXY = 'https://dawn-pine-2ee2.605tokenpodcast.workers.dev';
 
         function escHtml(v) {
             return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

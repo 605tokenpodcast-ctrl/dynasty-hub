@@ -16,7 +16,7 @@ import time
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from sync_leagues import LEAGUE_IDS, REDRAFT_LEAGUE_IDS  # noqa: E402
+from sync_leagues import SLEEPER_LEAGUES, REDRAFT_LEAGUE_IDS  # noqa: E402
 
 OUTPUT = 'ktc_values.json'
 DEFAULT_FORMAT = {'isDynasty': True, 'numQbs': 1, 'numTeams': 12, 'ppr': 0.5}
@@ -56,8 +56,7 @@ def detect_format(league_id):
     ppr = min((0, 0.5, 1), key=lambda p: abs(p - rec))  # FantasyCalc only accepts 0 / 0.5 / 1
     num_teams = int(league.get('total_rosters') or 12)
 
-    fmt = {'isDynasty': is_dynasty, 'numQbs': num_qbs, 'numTeams': num_teams, 'ppr': ppr}
-    return league.get('name', league_id).strip(), fmt
+    return {'isDynasty': is_dynasty, 'numQbs': num_qbs, 'numTeams': num_teams, 'ppr': ppr}
 
 
 def fetch_values(fmt):
@@ -103,9 +102,11 @@ def pick_values(players):
 def main():
     league_formats = {}
     formats_needed = {format_key(DEFAULT_FORMAT): DEFAULT_FORMAT}
-    for league_id in LEAGUE_IDS:
+    # Keyed by the leagues.json name, the same name the site and the bot look leagues up by
+    for cfg in SLEEPER_LEAGUES:
+        name, league_id = cfg['name'], cfg['id']
         try:
-            name, fmt = detect_format(league_id)
+            fmt = detect_format(league_id)
         except RuntimeError as e:
             print(f"Could not read settings for league {league_id}: {e}; using default format")
             continue

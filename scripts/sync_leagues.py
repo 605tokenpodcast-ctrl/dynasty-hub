@@ -38,16 +38,25 @@ def fetch_json(url, retries=4):
     FAILED_URLS.append(url)
     return None
 
-def count_rows(rows, section_word, season, with_tx_id=False):
+def played_score(row):
+    """Score column (4) of a lineup row as a number, 0 for an unplayed week."""
+    try:
+        return float(row[3])
+    except (IndexError, TypeError, ValueError):
+        return 0.0
+
+def count_rows(rows, section_word, season, with_tx_id=False, played_only=False):
     """Count data rows for `season` inside the section whose header contains `section_word`.
-    With with_tx_id, only rows carrying a Sleeper transaction_id (column 6) are counted."""
+    With with_tx_id, only rows carrying a Sleeper transaction_id (column 6) are counted.
+    With played_only, only lineup rows with points are counted."""
     count, active = 0, False
     for row in rows or []:
         c0 = str(row[0] if row else '').strip()
         if c0.startswith('---'):
             active = section_word in c0.upper()
             continue
-        if active and c0 == season and (not with_tx_id or (len(row) > 5 and str(row[5]).strip())):
+        if active and c0 == season and (not with_tx_id or (len(row) > 5 and str(row[5]).strip())) \
+                and (not played_only or played_score(row) > 0):
             count += 1
     return count
 
@@ -119,18 +128,25 @@ def optimal_score(roster_positions, pool, players_data):
     return total
 
 def build_player_meta(players_data):
-    """Age, position, NFL team and years in the league for every active skill player, plus a
-    Sleeper ID -> name map (the bot worker uses it to name players in trade alerts)."""
-    meta, ids = {}, {}
+    """Age, position, NFL team and years in the league for every active skill player, a
+    Sleeper ID -> name map (the bot names players in trade alerts with it, the site's chat bot
+    names starters with it) and Sleeper's injury tags (Q, D, O, IR) for the chat bot."""
+    meta, ids, injuries = {}, {}, {}
     for pid, p in players_data.items():
         pos = p.get('position')
+        if pos == 'DEF':
+            name = f"{p.get('first_name', '')} {p.get('last_name', '')}".strip() or pid
+            ids[pid] = f"{name} (DEF)"
+            continue
         name = p.get('full_name')
         if not name or pos not in ('QB', 'RB', 'WR', 'TE', 'K') or not p.get('active'):
             continue
         age = p.get('age')
         meta[name] = [age if isinstance(age, (int, float)) else None, pos, p.get('team') or 'FA', p.get('years_exp')]
         ids[pid] = f"{name} ({pos})"
-    return meta, ids
+        if p.get('injury_status'):
+            injuries[pid] = p['injury_status']
+    return meta, ids, injuries
 
 def lineup_row(season, week, mgr, m, roster_positions, players_data):
     """Full lineup in slot order, plus the best lineup the roster could have started.
@@ -237,20 +253,29 @@ def find_renewed_league(league_info, nfl_state):
                 return lg
     return None
 
+def open_week(nfl_state, season):
+    """Sleeper's current NFL week as a string while `season` is being played, else ''."""
+    st = nfl_state or {}
+    if str(st.get('season') or '') != str(season) or st.get('season_type') != 'regular':
+        return ''
+    week = int(st.get('week') or 0)
+    return str(week) if 1 <= week <= LAST_PLAYOFF_WEEK else ''
+
 def owner_key(label):
     """Sleeper display name from a "Team Name (display)" label, so a renamed team still matches."""
     m = re.search(r'\(([^()]*)\)\s*$', str(label))
     return (m.group(1) if m else str(label)).strip().lower()
 
-def bracket_placements(league_id, roster_labels):
+def bracket_placements(league_id, roster_labels, third_place_game=True):
     """owner_key -> placement label from Sleeper's winners bracket, once the title game is final.
-    Bracket games carry p = the place they decide: p 1 is the final, p 3 the 3rd-place game."""
+    Bracket games carry p = the place they decide: p 1 is the final, p 3 the 3rd-place game.
+    Leagues that play no 3rd-place game (third_place_game: false in leagues.json) get no 3rd place."""
     out = {}
     for g in fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/winners_bracket") or []:
         if g.get('p') == 1 and g.get('w') and g.get('l'):
             out[owner_key(roster_labels.get(g['w'], ''))] = PLACEMENT_LABELS[1]
             out[owner_key(roster_labels.get(g['l'], ''))] = PLACEMENT_LABELS[2]
-        elif g.get('p') == 3 and g.get('w'):
+        elif g.get('p') == 3 and g.get('w') and third_place_game:
             out[owner_key(roster_labels.get(g['w'], ''))] = PLACEMENT_LABELS[3]
     return out if PLACEMENT_LABELS[1] in out.values() else {}
 
@@ -322,7 +347,9 @@ def build_master_data():
             continue
 
         raw_name = league_info.get('name', f"League {league_id}").strip()
-        league_key = existing_key_map.get(raw_name.lower(), raw_name)
+        # Filed under the leagues.json name, so a league renamed on Sleeper (often at renewal)
+        # keeps its history, playoff rules and Gazette instead of starting a new, empty block
+        league_key = existing_key_map.get(cfg['name'].strip().lower(), cfg['name'])
         existing_rows = master_data.get(league_key, [])
         
         is_redraft = cfg.get('type') == 'redraft'
@@ -418,7 +445,8 @@ def build_master_data():
                 ])
 
         # Final placements, once the championship game is decided
-        placements = optional_fetches(lambda: bracket_placements(league_id, roster_to_manager)) or {}
+        third_place_game = cfg.get('third_place_game') is not False
+        placements = optional_fetches(lambda: bracket_placements(league_id, roster_to_manager, third_place_game)) or {}
         apply_placements(live_standings, placements)
 
         # --- 3. FETCH THIS SEASON'S WEEKLY BOX SCORES & MATCHUPS (WEEKS 1-17) ---
@@ -465,7 +493,7 @@ def build_master_data():
                 ])
 
                 row = lineup_row(season, week, mgr, m, roster_positions, players_data)
-                if row:
+                if row and played_score(row) > 0:  # unplayed weeks come back as all-zero lineups
                     new_lineup_rows.append(row)
 
                 if mid is not None:
@@ -587,13 +615,17 @@ def build_master_data():
             set_profile(profile_rows, "Playoff Start Week", str(league_settings['playoff_week_start']))
         if league_settings.get('playoff_teams'):
             set_profile(profile_rows, "Playoff Teams", str(league_settings['playoff_teams']))
+        # The NFL week still being played (empty outside the season). The site counts that week's
+        # games as unfinished, so a sync on Monday morning doesn't record Sunday-only scores as final.
+        if nfl_state is not None:
+            set_profile(profile_rows, "Open Week", open_week(nfl_state, season))
 
         # Last season's placements, if the sync never saw its title game (e.g. it renewed first)
         prev_season = str(int(season) - 1)
         prev_rows = [r for r in historical_standings if str(r[0]).strip() == prev_season]
         prev_id = str(league_info.get('previous_league_id') or '')
         if prev_rows and prev_id not in ('', '0', 'None') and not any('Champion' in str(r[4]) for r in prev_rows):
-            prev_places = optional_fetches(lambda: bracket_placements(prev_id, manager_labels(prev_id))) or {}
+            prev_places = optional_fetches(lambda: bracket_placements(prev_id, manager_labels(prev_id), third_place_game)) or {}
             if apply_placements(prev_rows, prev_places):
                 print(f"  recorded {prev_season} placements from league {prev_id}")
 
@@ -654,10 +686,11 @@ def build_master_data():
         # Never replace current-season data with less of it: a shrinking row count means
         # some API call silently returned nothing.
         # Trades count only ID-backed rows, so removing legacy duplicates doesn't trip the guard.
+        # Lineups count only played weeks (older files also stored unplayed weeks as zeros).
         shrunk = [
             sec for sec, ids_only in (('MATCHUPS', False), ('TRADE', True), ('LINEUPS', False), ('FREE AGENT', False))
-            if count_rows(compiled_rows, sec, season, ids_only)
-            < count_rows(existing_rows, sec, season, ids_only)
+            if count_rows(compiled_rows, sec, season, ids_only, sec == 'LINEUPS')
+            < count_rows(existing_rows, sec, season, ids_only, sec == 'LINEUPS')
         ]
         if shrunk:
             print(f"ERROR: {league_key}: {season} rows shrank in {shrunk}; keeping existing data.")
@@ -674,10 +707,10 @@ def build_master_data():
     with open('sleeper_leagues_master.json', 'w', encoding='utf-8') as f:
         json.dump(master_data, f, separators=(',', ':'))
 
-    meta, ids = build_player_meta(players_data)
+    meta, ids, injuries = build_player_meta(players_data)
     with open('player_meta.json', 'w', encoding='utf-8') as f:
         json.dump({"generated_at": int(time.time()), "fields": ["age", "pos", "team", "years_exp"],
-                   "players": meta, "ids": ids}, f, separators=(',', ':'))
+                   "players": meta, "ids": ids, "injuries": injuries}, f, separators=(',', ':'))
 
     print("Successfully merged live Sleeper data while locking out future picks for redraft leagues!")
 

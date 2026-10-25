@@ -35,6 +35,12 @@ class CountRows(unittest.TestCase):
         self.assertEqual(sync_leagues.count_rows(rows, "TRADE", "2026", with_tx_id=True), 1)
         self.assertEqual(sync_leagues.count_rows(rows, "MATCHUPS", "2026"), 1)
 
+    def test_played_only_skips_zero_point_lineups(self):
+        rows = [SEC("WEEKLY LINEUPS"), ["Season"], ["2026", "Week 1", "A", "101.50", "120.00", "", ""],
+                ["2026", "Week 9", "A", "0.00", "0.00", "", ""]]
+        self.assertEqual(sync_leagues.count_rows(rows, "LINEUPS", "2026"), 2)
+        self.assertEqual(sync_leagues.count_rows(rows, "LINEUPS", "2026", played_only=True), 1)
+
 
 class Placements(unittest.TestCase):
     labels = {1: "Alpha Dogs (alpha)", 2: "beta", 3: "Gamma (gamma)", 4: "Delta (delta)"}
@@ -48,6 +54,13 @@ class Placements(unittest.TestCase):
                             {"r": 2, "m": 3, "t1": 1, "t2": 2, "w": 2, "l": 1, "p": 1},
                             {"r": 2, "m": 4, "t1": 3, "t2": 4, "w": 3, "l": 4, "p": 3}])
         self.assertEqual(out, {"beta": "🏆 League Champion", "alpha": "🥈 Runner-Up", "gamma": "🥉 3rd Place"})
+
+    def test_no_third_place_when_league_plays_none(self):
+        games = [{"r": 2, "m": 3, "t1": 1, "t2": 2, "w": 2, "l": 1, "p": 1},
+                 {"r": 2, "m": 4, "t1": 3, "t2": 4, "w": 3, "l": 4, "p": 3}]
+        with mock.patch.object(sync_leagues, 'fetch_json', return_value=games):
+            out = sync_leagues.bracket_placements("L", self.labels, third_place_game=False)
+        self.assertEqual(out, {"beta": "🏆 League Champion", "alpha": "🥈 Runner-Up"})
 
     def test_nothing_until_final_is_decided(self):
         self.assertEqual(self.bracket([{"r": 2, "m": 3, "t1": 1, "t2": 2, "w": None, "l": None, "p": 1}]), {})
@@ -86,6 +99,37 @@ class Profile(unittest.TestCase):
         sync_leagues.set_profile(rows, "League ID", "2")
         sync_leagues.set_profile(rows, "Current Season", "2027")
         self.assertEqual([r[:2] for r in rows], [["League ID", "2"], ["Current Season", "2027"]])
+
+
+class OpenWeek(unittest.TestCase):
+    def test_current_week_only_during_that_regular_season(self):
+        self.assertEqual(sync_leagues.open_week({"season": "2026", "season_type": "regular", "week": 8}, "2026"), "8")
+        self.assertEqual(sync_leagues.open_week({"season": "2026", "season_type": "regular", "week": 8}, "2025"), "")
+        self.assertEqual(sync_leagues.open_week({"season": "2026", "season_type": "off", "week": 0}, "2026"), "")
+        self.assertEqual(sync_leagues.open_week({"season": "2026", "season_type": "regular", "week": 18}, "2026"), "")
+        self.assertEqual(sync_leagues.open_week(None, "2026"), "")
+
+
+class PlayerMeta(unittest.TestCase):
+    def test_injuries_and_defenses(self):
+        players = {"1": {"full_name": "A Guy", "position": "RB", "active": True, "injury_status": "Q", "age": 24},
+                   "2": {"full_name": "B Guy", "position": "WR", "active": True},
+                   "KC": {"first_name": "Kansas City", "last_name": "Chiefs", "position": "DEF"}}
+        meta, ids, injuries = sync_leagues.build_player_meta(players)
+        self.assertEqual(ids, {"1": "A Guy (RB)", "2": "B Guy (WR)", "KC": "Kansas City Chiefs (DEF)"})
+        self.assertEqual(injuries, {"1": "Q"})
+        self.assertEqual(meta["A Guy"][0], 24)
+
+
+class FleaflickerMoves(unittest.TestCase):
+    def test_drop_joined_to_same_team_add_within_a_minute(self):
+        from datetime import datetime, timezone
+        t = datetime(2026, 10, 7, 10, 0, tzinfo=timezone.utc)
+        row = ["2026", "Week 5", "10/7/2026", "Team", "Waiver", "New Guy (WR)", "", "5", (t, 7)]
+        drops = [(t, 7, "Old Guy (RB)"), (t, 8, "Other Team Guy (TE)"),
+                 (datetime(2026, 10, 8, 10, 0, tzinfo=timezone.utc), 7, "Later Drop (K)")]
+        self.assertEqual(sync_fleaflicker.attach_drops(row, drops),
+                         ["2026", "Week 5", "10/7/2026", "Team", "Waiver", "New Guy (WR)", "Old Guy (RB)", "5"])
 
 
 class FleaflickerFinishedSeasons(unittest.TestCase):

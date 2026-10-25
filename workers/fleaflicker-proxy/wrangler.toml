@@ -8,3 +8,5 @@ compatibility_date = "2026-10-01"
 [vars]
 # Filled in from leagues.json by scripts/worker_config.py before each deploy
 FLEA_LEAGUES = "165455"
+# Sites allowed to read responses, comma-separated. Add a custom domain here if the site moves.
+ALLOWED_ORIGINS = "https://605tokenpodcast-ctrl.github.io"

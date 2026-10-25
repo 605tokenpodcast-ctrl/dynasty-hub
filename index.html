@@ -787,7 +787,12 @@
                 }
 
                 if (metaRes.status === 'fulfilled' && metaRes.value.ok) {
-                    try { playerMeta = (await metaRes.value.json()).players || {}; } catch (e) { /* ages are optional */ }
+                    try {
+                        const meta = await metaRes.value.json();
+                        playerMeta = meta.players || {};
+                        playerMetaIds = meta.ids || {};
+                        playerMetaInjuries = meta.injuries || null;
+                    } catch (e) { /* ages are optional */ }
                 }
 
                 if (ktcRes.status === 'fulfilled' && ktcRes.value.ok) {
@@ -857,6 +862,7 @@
             if (tabId === 'matchups') renderMatchups();
             else stopMatchupRefresh();
             if (tabId === 'playoffs') renderPlayoffOdds();
+            if (['analytics', 'awardcenter', 'review'].includes(tabId)) ensureAnalyticsTab();
             if (tabId === 'analytics') renderAnalytics();
             if (tabId === 'awardcenter') renderAwardsCenter();
             if (tabId === 'review') renderSeasonReview();
@@ -865,7 +871,17 @@
         // Back / forward buttons move between tabs (each tab switch adds a history entry)
         window.addEventListener('popstate', () => {
             if (!Object.keys(globalMasterData).length) return;
-            switchTab(new URLSearchParams(window.location.search).get('tab') || 'dashboard', true);
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'dashboard';
+            if (tab === 'h2h') {
+                // Bring back the two managers the link was for
+                const sel1 = document.getElementById('h2h-mgr-1'), sel2 = document.getElementById('h2h-mgr-2');
+                const has = (sel, v) => v && [...sel.options].some(o => o.value === v);
+                if (has(sel1, params.get('m1'))) sel1.value = params.get('m1');
+                if (has(sel2, params.get('m2'))) sel2.value = params.get('m2');
+                calculateH2H();
+            }
+            switchTab(tab, true);
         });
 
         document.addEventListener('keydown', e => {
@@ -930,6 +946,11 @@
             const leagueNames = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]));
             Object.keys(leagueProfileCache).forEach(k => delete leagueProfileCache[k]);
             allSeasonsCache = null;
+            openWeekCache = null;
+            Object.keys(undraftedPickYearsCache).forEach(k => delete undraftedPickYearsCache[k]);
+            playerMetaNorm = null;
+            recordsSnapshot = [];
+            analyticsReady = false;
             document.getElementById('sync-banner').innerText = `Synced with Sleeper Master JSON • ${leagueNames.length} Active Leagues`;
 
             // Season labels and the Luck tab's season list come from the data, not a hardcoded year
@@ -963,7 +984,6 @@
             initH2HDropdowns();
             initMatchupsTab(params.get('owner'));
             initPlayoffsTab();
-            initAnalyticsTab();
             renderedTabs.clear();
 
             // Check deep link params on initial load
@@ -978,17 +998,15 @@
             }
             if (m1Param || m2Param) calculateH2H();
             switchTab(tabParam || currentActiveTab, true);
+        }
 
-            // All-league records for the chatbot, built right after the first paint
-            setTimeout(() => {
-                const filter = document.getElementById('records-league-filter');
-                if (!renderedTabs.has('records') || filter.value !== 'ALL') {
-                    filter.value = 'ALL';
-                    renderedTabs.add('records');
-                    renderRecords();
-                }
-                recordsSnapshot = recordsDetailStore.slice();
-            }, 0);
+        // The Analytics, Awards Center and Season Review dropdowns need the shared stats layer
+        // (every lineup and waiver move), so it is built the first time one of those tabs opens.
+        let analyticsReady = false;
+        function ensureAnalyticsTab() {
+            if (analyticsReady) return;
+            analyticsReady = true;
+            initAnalyticsTab();
         }
 
         // Tabs whose content is built the first time they are opened instead of all at page load.
@@ -1418,49 +1436,39 @@
             const weeklyHighs = [];
             const managerBenchPoints = {};
 
-            Object.keys(globalMasterData).forEach(leagueName => {
-                if (leagueFilter !== 'ALL' && leagueName !== leagueFilter) return;
-                const rows = globalMasterData[leagueName] || [];
-                let section = '';
-                const weekBuckets = {};
-
-                rows.forEach(r => {
-                    const col0 = String(r[0] || '').trim();
-                    const newSec = getSectionType(col0);
-                    if (newSec) { section = newSec; return; }
-                    if (section !== 'boxscores' || isColumnHeaderRow(col0) || !col0) return;
-
-                    const week = col0;
-                    const rawTeam = String(r[1] || '');
-                    const owner = getMasterOwner(rawTeam);
-                    const totalScore = parseFloat(r[2]) || 0;
-                    const topStarter = String(r[3] || '');
-                    const topBench = String(r[4] || '');
-
-                    if (!weekBuckets[week]) weekBuckets[week] = [];
-                    weekBuckets[week].push({ league: leagueName, week, owner, rawTeam, totalScore, topStarter, topBench });
+            // This season's lineups (every league, Fleaflicker too), one bucket per league and week
+            const season = parseInt(latestSeason(), 10) || 0;
+            const buckets = {};
+            const top = list => list.reduce((best, p) => (!best || p.pts > best.pts ? p : best), null);
+            const label = p => p ? `${p.name} (${p.pos}) (${p.pts.toFixed(2)})` : 'None (0.00)';
+            buildHubData().lineups.forEach(l => {
+                if (l.season !== season || (leagueFilter !== 'ALL' && l.league !== leagueFilter)) return;
+                const st = top(l.starters), bn = top(l.bench);
+                (buckets[`${l.league}||${l.weekNum}`] = buckets[`${l.league}||${l.weekNum}`] || []).push({
+                    league: l.league, week: l.week, owner: l.owner, rawTeam: l.team, totalScore: l.score,
+                    topStarter: label(st), topBench: label(bn), benchPts: bn ? bn.pts : 0
                 });
+            });
+            const teamsInLeague = {};
+            Object.values(buckets).forEach(entries => {
+                teamsInLeague[entries[0].league] = Math.max(teamsInLeague[entries[0].league] || 0, entries.length);
+            });
 
-                Object.keys(weekBuckets).forEach(wk => {
-                    const entries = weekBuckets[wk];
-                    const activeCount = entries.filter(e => e.totalScore > 0).length;
-                    if (activeCount < entries.length * 0.75) return; // skip unplayed or Thursday-only partial weeks
+            Object.values(buckets).forEach(entries => {
+                if (entries.length < teamsInLeague[entries[0].league] * 0.75) return; // partly played week
 
-                    // Weekly High Roller
-                    const sortedByTotal = [...entries].sort((a, b) => b.totalScore - a.totalScore);
-                    if (sortedByTotal[0] && sortedByTotal[0].totalScore > 0) {
-                        weeklyHighs.push(sortedByTotal[0]);
+                // Weekly High Roller
+                const sortedByTotal = [...entries].sort((a, b) => b.totalScore - a.totalScore);
+                if (sortedByTotal[0] && sortedByTotal[0].totalScore > 0) {
+                    weeklyHighs.push(sortedByTotal[0]);
+                }
+
+                // Bench explosions
+                entries.forEach(e => {
+                    if (e.benchPts > 0) {
+                        benchList.push(e);
+                        managerBenchPoints[e.owner] = (managerBenchPoints[e.owner] || 0) + e.benchPts;
                     }
-
-                    // Parse bench explosions
-                    entries.forEach(e => {
-                        const m = e.topBench.match(/\(([\d.]+)\)\s*$/);
-                        const benchPts = m ? parseFloat(m[1]) : 0;
-                        if (benchPts > 0) {
-                            benchList.push({ ...e, benchPts });
-                            managerBenchPoints[e.owner] = (managerBenchPoints[e.owner] || 0) + benchPts;
-                        }
-                    });
                 });
             });
 
@@ -1537,6 +1545,7 @@
                     const week = String(r[1]).trim();
                     const weekNum = parseInt(week.replace(/\D/g, ''), 10) || 1;
                     if (weekNum >= playoffStartWeek(leagueName, season)) return; // Regular season only for true schedule luck
+                    if (isOpenWeek(season, weekNum)) return; // still being played
                     const matchupId = String(r[2]).trim();
                     if (matchupId === '0' || !matchupId) return;
 
@@ -1683,6 +1692,29 @@
             return parseInt(prof[key], 10) || 0;
         }
 
+        // The NFL week still being played, per season ("Open Week", written by the Sleeper sync). Its
+        // games and lineups don't count as final, so a Monday-morning sync doesn't record Sunday-only
+        // scores before Monday Night Football.
+        let openWeekCache = null;
+        function openWeek(season) {
+            if (!openWeekCache) {
+                openWeekCache = {};
+                Object.keys(globalMasterData).forEach(name => {
+                    if (!Array.isArray(globalMasterData[name])) return;
+                    const prof = leagueProfile(name);
+                    const w = parseInt(prof['Open Week'], 10);
+                    const yr = String(prof['Current Season'] || '');
+                    if (w > 0 && yr) openWeekCache[yr] = Math.min(openWeekCache[yr] || w, w);
+                });
+            }
+            return openWeekCache[String(season).trim()] || 0;
+        }
+
+        function isOpenWeek(season, weekNum) {
+            const w = openWeek(season);
+            return w > 0 && weekNum >= w;
+        }
+
         // --- TAB: HALL OF RECORDS ---
         // Leagues marked exclude_from_records in leagues.json are skipped on the records and odds tabs.
         function isAwardExcluded(name) {
@@ -1773,11 +1805,13 @@
                         const t2 = getMasterOwner(r[5]);
                         if (!t1 || !t2 || t1 === t2) return;
                         const week = String(r[1]).trim();
+                        const weekNum = parseInt(week.replace(/\D/g, ''), 10) || 0;
+                        if (isOpenWeek(col0, weekNum)) return; // still being played
                         games.push({
                             league: leagueName,
                             season: parseInt(col0, 10) || 0,
                             week,
-                            weekNum: parseInt(week.replace(/\D/g, ''), 10) || 0,
+                            weekNum,
                             t1, s1, t2, s2
                         });
                     }
@@ -2093,6 +2127,16 @@
         // Built once from the master JSON and reused by the Analytics, Awards Center and Season Review tabs.
         let hubCache = null;
         let playerMeta = {}; // player name -> [age, pos, team, years_exp], from player_meta.json
+        let playerMetaIds = {}; // Sleeper id -> "Name (POS)", from player_meta.json
+        let playerMetaInjuries = null; // Sleeper id -> injury tag (Q, D, O, IR), from player_meta.json
+        let playerMetaNorm = null;
+        function playerMetaByNorm() {
+            if (!playerMetaNorm) {
+                playerMetaNorm = {};
+                Object.keys(playerMeta).forEach(k => { playerMetaNorm[normalizePlayerName(k)] = playerMeta[k]; });
+            }
+            return playerMetaNorm;
+        }
 
         // "Josh Allen (QB) 30.00; Bijan Robinson (RB) 20.00" -> [{ name, pos, pts }]
         function parseLineupList(text) {
@@ -2130,11 +2174,23 @@
             if (drafted) return { label: s, value: playerValueByName(drafted[1], leagueName) };
             const pick = s.match(/^(\d{4})\s+Round/i);
             if (pick) {
+                // Still a pick only while its draft hasn't happened, i.e. teams in the league still hold that year's picks
                 const yr = parseInt(pick[1], 10);
-                return { label: s, value: yr >= new Date().getFullYear() ? scoreDraftPickKTC(s, leagueName) : 0 };
+                return { label: s, value: undraftedPickYears(leagueName).has(yr) ? scoreDraftPickKTC(s, leagueName) : 0 };
             }
             const m = s.match(/^(.*?)\s*\(([A-Z/]+)(?:\s*-\s*[A-Z]+)?\)$/);
             return { label: s, value: playerValueByName(m ? m[1] : s, leagueName) };
+        }
+
+        // Draft years whose picks teams in this league still hold (from the rosters' Future Draft Picks)
+        const undraftedPickYearsCache = {};
+        function undraftedPickYears(leagueName) {
+            if (undraftedPickYearsCache[leagueName]) return undraftedPickYearsCache[leagueName];
+            const years = new Set();
+            sectionRows(leagueName, 'rosters').forEach(r => {
+                (String(r[4] || '').match(/\b20\d\d\b/g) || []).forEach(y => years.add(parseInt(y, 10)));
+            });
+            return (undraftedPickYearsCache[leagueName] = years);
         }
 
         function playerValueByName(name, leagueName) {
@@ -2162,7 +2218,7 @@
                 if (!Array.isArray(globalMasterData[league]) || isAwardExcluded(league)) return;
                 sectionRows(league, 'lineups').forEach(r => {
                     const score = parseFloat(r[3]) || 0;
-                    if (score <= 0) return;
+                    if (score <= 0 || isOpenWeek(r[0], weekNumber(r[1]))) return;
                     lineups.push({
                         league, season: parseInt(r[0], 10) || 0, week: String(r[1]), weekNum: weekNumber(r[1]),
                         team: String(r[2] || '').trim(), owner: getMasterOwner(r[2]),
@@ -2261,7 +2317,10 @@
         // Every pickup (waiver or free agent), with the starting points that player scored for the team afterwards
         function computePickups(hub) {
             const lineupsByTeam = {};
-            hub.lineups.forEach(l => { (lineupsByTeam[`${l.league}||${l.season}||${l.owner}`] = lineupsByTeam[`${l.league}||${l.season}||${l.owner}`] || []).push(l); });
+            hub.lineups.forEach(l => {
+                (lineupsByTeam[`${l.league}||${l.season}||${l.owner}`] = lineupsByTeam[`${l.league}||${l.season}||${l.owner}`] || []).push(l);
+                l.starterByName = new Map(l.starters.map(s => [normalizePlayerName(s.name), s])); // names normalized once
+            });
             const out = [];
             hub.moves.forEach(m => {
                 if (!/waiver|free agent/i.test(m.type)) return;
@@ -2271,7 +2330,7 @@
                     let pts = 0, starts = 0, best = null;
                     teamLineups.forEach(l => {
                         if (l.weekNum < m.weekNum) return;
-                        const st = l.starters.find(s => normalizePlayerName(s.name) === norm);
+                        const st = l.starterByName.get(norm);
                         if (!st) return;
                         pts += st.pts; starts++;
                         if (!best || st.pts > best.pts) best = { pts: st.pts, week: l.week, weekNum: l.weekNum };
@@ -2592,7 +2651,7 @@
                         .map(p => {
                             const m = p.match(/^(.+?)\s*\(([A-Z/]+)\s*-\s*([A-Z]+)\)$/);
                             const name = m ? m[1].trim() : p;
-                            const meta = playerMeta[name] || playerMeta[Object.keys(playerMeta).find(k => normalizePlayerName(k) === normalizePlayerName(name))] || null;
+                            const meta = playerMeta[name] || playerMetaByNorm()[normalizePlayerName(name)] || null;
                             return { name, val: scorePlayerKTC(p, lg), age: meta ? meta[0] : null };
                         }).sort((a, b) => b.val - a.val);
                     const core = roster.slice(0, 10).filter(p => p.age);
@@ -3098,6 +3157,21 @@
         let chatContextCache = { ts: 0, text: '' };
         let recordsSnapshot = [];
 
+        // All-league Hall of Records for the chat bot, built the first time the bot needs it
+        function ensureRecordsSnapshot() {
+            if (recordsSnapshot.length) return;
+            const filter = document.getElementById('records-league-filter');
+            const prev = filter.value;
+            filter.value = 'ALL';
+            renderRecords();
+            recordsSnapshot = recordsDetailStore.slice();
+            if (prev === 'ALL') renderedTabs.add('records');
+            else {
+                filter.value = prev;
+                if (renderedTabs.has('records')) renderRecords();
+            }
+        }
+
         function chatStore(key, val) {
             try {
                 if (val === undefined) return localStorage.getItem(key);
@@ -3227,6 +3301,7 @@
                 lines.push(`${o}: ${d.t} titles, ${d.ru} runner-ups, ${d.w}-${d.l} all-time, in ${d.lg.size} leagues`);
             });
 
+            ensureRecordsSnapshot();
             if (recordsSnapshot.length) {
                 lines.push('## Hall of Records (top 3 each)');
                 recordsSnapshot.forEach(x => {
@@ -3237,6 +3312,16 @@
         }
 
         async function getChatPlayers() {
+            // The daily sync's player_meta.json has names and injury tags, which saves every browser
+            // downloading Sleeper's full player list
+            if (playerMetaInjuries && Object.keys(playerMetaIds).length) {
+                const map = {};
+                Object.entries(playerMetaIds).forEach(([id, label]) => {
+                    const m = String(label).match(/^(.*) \(([^()]+)\)$/);
+                    map[id] = { n: m ? m[1] : label, p: m ? m[2] : '', i: playerMetaInjuries[id] || '' };
+                });
+                return map;
+            }
             try {
                 const cached = JSON.parse(chatStore('sleeperPlayersTrim') || 'null');
                 if (cached && Date.now() - cached.ts < 6 * 3600 * 1000) return cached.map;
@@ -3259,21 +3344,17 @@
         }
 
         // proj = Sleeper projection stats by player (shared with the Matchup Center), scored with this league's format
-        async function getLeagueLiveText(p, week, players, proj) {
+        async function getLeagueLiveText(p, season, week, players, proj) {
             const field = projectionField(p.name);
-            const base = `https://api.sleeper.app/v1/league/${p.id}`;
-            const [users, rosters, matchups] = await Promise.all([
-                chatFetchJson(`${base}/users`),
-                chatFetchJson(`${base}/rosters`),
-                chatFetchJson(`${base}/matchups/${week}`)
+            // The live-scores worker's snapshot first (shared with the Matchups tab), Sleeper directly if it's missing
+            const snap = await liveSnapshot(season, week);
+            const cached = snap && snap.sleeper && snap.sleeper[p.id];
+            const [labels, matchups] = await Promise.all([
+                cached ? cached.labels : getRosterLabels(p.id),
+                cached ? cached.matchups : chatFetchJson(`https://api.sleeper.app/v1/league/${p.id}/matchups/${week}`)
             ]);
-            const userById = {};
-            users.forEach(u => { userById[u.user_id] = u; });
             const ownerByRoster = {};
-            rosters.forEach(r => {
-                const u = userById[r.owner_id];
-                ownerByRoster[r.roster_id] = u ? getMasterOwner(u.display_name) : `Team ${r.roster_id}`;
-            });
+            Object.entries(labels).forEach(([rid, label]) => { ownerByRoster[rid] = getMasterOwner(label); });
 
             const groups = {};
             matchups.forEach(m => {
@@ -3335,7 +3416,7 @@
 
                 const [players, proj] = await Promise.all([getChatPlayers(), getMatchupProjections(state.season, week)]);
                 const results = await Promise.allSettled(live.map(p => isSleeperLeagueId(p.id)
-                    ? getLeagueLiveText(p, week, players, proj)
+                    ? getLeagueLiveText(p, state.season, week, players, proj)
                     : getFleaLiveText(p, state.season, week)));
                 parts.push(`# LIVE DATA (NFL ${state.season_type} week ${week}). Injury tags come from Sleeper (Q = questionable, D = doubtful, O = out, IR). Projections use each league's own scoring (PPR, half PPR or standard).`);
                 results.forEach((r, i) => {
@@ -3545,21 +3626,17 @@
                 });
             });
 
-            // Newest first across all leagues
-            trades.sort((a, b) => b.ts - a.ts).forEach(({ r, leagueName }) => {
+            // Newest first across all leagues, written to the page in one go
+            tbody.innerHTML = trades.sort((a, b) => b.ts - a.ts).map(({ r, leagueName }) => {
                 const hasLineage = String(r[4]).includes('Resulted in drafting:');
-                const tr = document.createElement('tr');
-                tr.dataset.hasLineage = hasLineage ? '1' : '0';
-                tr.className = "hover:bg-slate-800/50 transition";
-                tr.innerHTML = `
+                return `<tr data-has-lineage="${hasLineage ? '1' : '0'}" class="hover:bg-slate-800/50 transition">
                     <td class="p-4 font-medium whitespace-nowrap">${escHtml(r[0])} &bull; ${escHtml(r[2])}<br><span class="text-xs text-slate-400">${escHtml(r[1])}</span></td>
                     <td class="p-4 text-accent font-semibold">${escHtml(leagueName)}</td>
                     <td class="p-4 font-medium text-white">${escHtml(r[3])}</td>
                     <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
                     <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${hindsightCell(r[4], leagueName)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+                </tr>`;
+            }).join('');
         }
 
         function hindsightCell(breakdown, leagueName) {
@@ -3577,7 +3654,7 @@
             const query = (document.getElementById('trade-search')?.value || '').toLowerCase();
             const rows = document.getElementById('trades-table-body').getElementsByTagName('tr');
             for (let row of rows) {
-                const matchesText = row.innerText.toLowerCase().includes(query);
+                const matchesText = row.textContent.toLowerCase().includes(query);
                 const matchesLineage = !lineageOnlyMode || row.dataset.hasLineage === '1';
                 row.style.display = (matchesText && matchesLineage) ? '' : 'none';
             }
@@ -3674,6 +3751,7 @@
 
                     const wStat = weekStats[`${season}|${week}`];
                     if (!wStat || wStat.totalTeams === 0 || (wStat.nonZeroTeams / wStat.totalTeams) < 0.75) return;
+                    if (isOpenWeek(season, weekNumber(week))) return; // still being played
 
                     const team1Owner = getMasterOwner(r[3]);
                     const team2Owner = getMasterOwner(r[5]);
@@ -3810,7 +3888,7 @@
                     // Played = a later week already has scores, or every team in the week has scored.
                     // The latest week can be half-played (e.g. only Thursday night), so it needs all teams.
                     const later = g.week < (lastScored[g.season] || 0);
-                    g.played = later ? st.scored / st.teams >= 0.75 : st.scored === st.teams;
+                    g.played = (later ? st.scored / st.teams >= 0.75 : st.scored === st.teams) && !isOpenWeek(g.season, g.week);
                     // Playoff-week pairings exist before the bracket is set; they only become real once the
                     // regular season is over, so hide unplayed ones until the week before has scores
                     if (!g.played && g.week >= playoffStartWeek(league, g.season) && g.week > (lastScored[g.season] || 0) + 1) return;
@@ -4009,7 +4087,9 @@
             const games = board.games || [];
             const boxes = cached
                 ? games.map(g => ({ status: 'fulfilled', value: { game: { homeScore: { projected: g.projected.home }, awayScore: { projected: g.projected.away } } } }))
-                : await Promise.allSettled(games.map(g => fleaFetch('FetchLeagueBoxscore', { ...base, fantasy_game_id: g.id })));
+                // No season: Fleaflicker answers FetchLeagueBoxscore with HTTP 400 when it's given one
+                : await Promise.allSettled(games.map(g => fleaFetch('FetchLeagueBoxscore', { league_id: game.leagueId, scoring_period: game.week, fantasy_game_id: g.id })
+                    .catch(() => fleaFetch('FetchLeagueBoxscore', { league_id: game.leagueId, fantasy_game_id: g.id }))));
 
             // Fleaflicker gives team names; the JSON labels are "Team Name (Owner)" or just the name
             const ownerByTeamName = {};
@@ -4531,13 +4611,31 @@
         }
 
         // --- TAB 11: RAW LEAGUE SHEETS ---
+        // Weekly lineups and waiver moves run to thousands of rows, so they stay folded until asked for
+        const FOLDED_LEAGUE_SECTIONS = ['lineups', 'moves'];
+        const unfoldedLeagueSections = new Set();
+        function toggleLeagueSection(sec) {
+            if (unfoldedLeagueSections.has(sec)) unfoldedLeagueSections.delete(sec);
+            else unfoldedLeagueSections.add(sec);
+            renderSelectedLeague();
+        }
+
         function renderSelectedLeague() {
             const leagueName = document.getElementById('league-selector').value;
             const rows = globalMasterData[leagueName] || [];
             const container = document.getElementById('league-view-content');
 
-            let html = `<h3 class="text-xl font-bold mb-4 text-accent">${escHtml(leagueName)}</h3>`;
-            html += `<table class="w-full text-left text-sm border-collapse">`;
+            // Data rows per section, for the folded sections' "Show" buttons
+            const counts = {};
+            let countSec = 'profile';
+            rows.forEach(row => {
+                const col0 = String(row[0] || '').trim();
+                const sec = getSectionType(col0);
+                if (sec) { countSec = sec; return; }
+                if (col0 && !isColumnHeaderRow(col0)) counts[countSec] = (counts[countSec] || 0) + 1;
+            });
+
+            const parts = [`<h3 class="text-xl font-bold mb-4 text-accent">${escHtml(leagueName)}</h3>`, `<table class="w-full text-left text-sm border-collapse">`];
 
             let activeSection = 'profile';
 
@@ -4556,23 +4654,27 @@
                 if (currentLeagueFilter !== 'all') {
                     renderRow = (activeSection === currentLeagueFilter);
                 }
+                const folded = FOLDED_LEAGUE_SECTIONS.includes(activeSection) && !unfoldedLeagueSections.has(activeSection);
 
                 if (renderRow) {
                     if (isHeader) {
-                        html += `<tr class="bg-slate-900 border-t border-b border-slate-700"><td colspan="8" class="p-4 font-bold text-accent tracking-wide">${escHtml(col0)}</td></tr>`;
-                    } else {
-                        html += `<tr class="border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`;
+                        const fold = FOLDED_LEAGUE_SECTIONS.includes(secType) && counts[secType]
+                            ? ` <button type="button" onclick="toggleLeagueSection('${secType}')" class="ml-3 text-xs font-semibold text-slate-400 hover:text-accent">${folded ? `Show ${counts[secType].toLocaleString()} rows` : 'Hide'}</button>`
+                            : '';
+                        parts.push(`<tr class="bg-slate-900 border-t border-b border-slate-700"><td colspan="8" class="p-4 font-bold text-accent tracking-wide">${escHtml(col0)}${fold}</td></tr>`);
+                    } else if (!folded) {
+                        parts.push(`<tr class="border-b border-slate-800 hover:bg-slate-800/40 transition ${isSubHeader ? 'bg-slate-900/60 font-semibold text-slate-300' : 'text-slate-200'}">`);
                         row.forEach(cell => {
                             const cellVal = cell !== undefined && cell !== null ? cell : '';
-                            html += `<td class="p-3 text-xs leading-relaxed max-w-sm break-words">${escHtml(cellVal)}</td>`;
+                            parts.push(`<td class="p-3 text-xs leading-relaxed max-w-sm break-words">${escHtml(cellVal)}</td>`);
                         });
-                        html += `</tr>`;
+                        parts.push(`</tr>`);
                     }
                 }
             });
 
-            html += `</table>`;
-            container.innerHTML = html;
+            parts.push(`</table>`);
+            container.innerHTML = parts.join('');
         }
     </script>
 </body>

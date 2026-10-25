@@ -33,21 +33,40 @@ export default {
     const week = url.searchParams.get('week') || '';
     if (!/^\d{4}$/.test(season) || !/^\d{1,2}$/.test(week)) return new Response('season and week required', { status: 400, headers: cors });
 
-    const cache = caches.default;
-    const cacheKey = new Request(`https://live-scores.cache/${season}/${week}`);
-    let res = await cache.match(cacheKey);
-    if (!res) {
-      const body = await buildSnapshot(env, season, week);
-      res = new Response(JSON.stringify(body), {
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${CACHE_SECONDS}` },
-      });
-      ctx.waitUntil(cache.put(cacheKey, res.clone()));
-    }
-    const out = new Response(res.body, res);
-    Object.entries(cors).forEach(([k, v]) => out.headers.set(k, v));
-    return out;
+    const key = `${season}/${week}`;
+    const body = await snapshotText(env, ctx, key, season, week);
+    return new Response(body, {
+      headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${CACHE_SECONDS}` },
+    });
   },
 };
+
+// Cloudflare ignores the Cache API on *.workers.dev addresses, so the snapshot is also kept in this
+// worker's memory. Requests that reach the same running copy share one snapshot (and one in-flight
+// build) per minute; the Cache API takes over if the worker ever moves to a custom domain.
+const memory = new Map(); // key -> { expires, text: Promise<string> }
+
+async function snapshotText(env, ctx, key, season, week) {
+  const now = Date.now();
+  const hit = memory.get(key);
+  if (hit && hit.expires > now) return hit.text;
+
+  const cache = caches.default;
+  const cacheKey = new Request(`https://live-scores.cache/${key}`);
+  const text = (async () => {
+    const cached = await cache.match(cacheKey);
+    if (cached) return cached.text();
+    const fresh = JSON.stringify(await buildSnapshot(env, season, week));
+    ctx.waitUntil(cache.put(cacheKey, new Response(fresh, {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${CACHE_SECONDS}` },
+    })));
+    return fresh;
+  })();
+  for (const [k, v] of memory) if (v.expires <= now) memory.delete(k);
+  memory.set(key, { expires: now + CACHE_SECONDS * 1000, text });
+  text.catch(() => memory.delete(key));
+  return text;
+}
 
 const list = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
 
@@ -88,7 +107,14 @@ async function fleaLeague(id, season, week) {
   const qs = `sport=NFL&league_id=${id}&season=${season}&scoring_period=${week}`;
   const board = await getJson(`${base}/FetchLeagueScoreboard?${qs}`);
   const games = board.games || [];
-  const boxes = await Promise.allSettled(games.map(g => getJson(`${base}/FetchLeagueBoxscore?${qs}&fantasy_game_id=${g.id}`)));
+  // One at a time: Fleaflicker answers bursts of calls with HTTP 403
+  const boxes = [];
+  for (const g of games) {
+    // No season: Fleaflicker answers FetchLeagueBoxscore with HTTP 400 when it's given one
+    const boxUrl = `${base}/FetchLeagueBoxscore?sport=NFL&league_id=${id}&fantasy_game_id=${g.id}`;
+    try { boxes.push({ status: 'fulfilled', value: await getJson(`${boxUrl}&scoring_period=${week}`).catch(() => getJson(boxUrl)) }); }
+    catch (e) { boxes.push({ status: 'rejected' }); }
+  }
   return {
     games: games.map((g, i) => {
       const box = boxes[i].status === 'fulfilled' ? (boxes[i].value.game || {}) : {};

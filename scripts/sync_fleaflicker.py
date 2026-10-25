@@ -46,7 +46,7 @@ API_BASE = "https://www.fleaflicker.com/api/"
 REQUEST_DELAY = 0.8           # seconds between calls - Fleaflicker answers HTTP 403 if you go faster
 RETRY_BACKOFF = [5, 20, 60, 120]   # seconds to wait before each retry of a refused/failed call
 SEASON_RETRY_COOLDOWN = 150   # extra cooldown before re-trying a season that failed outright
-MAX_SCORING_PERIODS = 20      # upper bound if the API doesn't tell us
+LAST_PLAYOFF_WEEK = 17        # every league's championship is week 17; week 18 is unused
 FALLBACK_REG_SEASON_WEEKS = 14
 FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
 DEBUG = os.environ.get("FLEA_DEBUG") == "1"
@@ -215,12 +215,16 @@ def fetch_standings(league_id, season):
     return out
 
 
-def fetch_scoreboard(league_id, season):
-    """Returns {period: [game, ...]} with normalised games."""
+def fetch_scoreboard(league_id, season, keep_unplayed=False):
+    """Returns {period: [game, ...]} with normalised games.
+
+    keep_unplayed keeps scheduled games that haven't been played yet (written as 0-0),
+    so the current season carries its full schedule like the Sleeper leagues do.
+    """
     periods = {}
     seen_ids = set()
-    max_period = MAX_SCORING_PERIODS
-    for p in range(1, MAX_SCORING_PERIODS + 1):
+    max_period = LAST_PLAYOFF_WEEK
+    for p in range(1, LAST_PLAYOFF_WEEK + 1):
         if p > max_period:
             break
         data = api("FetchLeagueScoreboard", league_id=league_id, season=season, scoring_period=p)
@@ -229,7 +233,7 @@ def fetch_scoreboard(league_id, season):
         if p == 1:
             ordinals = [int(num(e.get("ordinal"), 0)) for e in (data.get("eligibleSchedulePeriods") or [])]
             if ordinals:
-                max_period = max(ordinals)
+                max_period = min(max(ordinals), LAST_PLAYOFF_WEEK)
         games = []
         for g in data.get("games") or []:
             home, away = g.get("home") or {}, g.get("away") or {}
@@ -238,10 +242,10 @@ def fetch_scoreboard(league_id, season):
             hs = num((g.get("homeScore") or {}).get("score", g.get("homeScore")))
             as_ = num((g.get("awayScore") or {}).get("score", g.get("awayScore")))
             final = bool(g.get("isFinalScore") or g.get("isFinal"))
-            if not final and hs == 0 and as_ == 0:
+            if not final and hs == 0 and as_ == 0 and not keep_unplayed:
                 continue  # not played yet
             games.append({
-                "gid": str(g.get("id")),
+                "gid": str(g.get("id") or f"{p}-{home.get('id')}-{away.get('id')}"),
                 "home": home, "away": away,
                 "hs": hs, "as": as_, "final": final,
             })
@@ -315,7 +319,7 @@ def build_season(league_id, season):
     rows = fetch_standings(league_id, season)
     if not rows:
         return None
-    periods = fetch_scoreboard(league_id, season)
+    periods = fetch_scoreboard(league_id, season, keep_unplayed=(season == current_season()))
 
     # --- safety net: if the standings payload carried no usable record/PF,
     # rebuild them from the scoreboard (regular-season weeks only).

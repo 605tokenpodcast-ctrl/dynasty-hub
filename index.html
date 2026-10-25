@@ -1448,6 +1448,9 @@
             return AWARD_EXCLUDED_LEAGUES.some(k => n.includes(k.toUpperCase()));
         }
 
+        // Every league plays its championship in week 17; week 18 is unused.
+        const LAST_PLAYOFF_WEEK = 17;
+
         // First playoff week for a league/season. Weeks before this are regular season.
         // Add or change rules here if a league's schedule changes.
         function playoffStartWeek(leagueName, season) {
@@ -2470,7 +2473,6 @@
         const matchupLeagueCache = {}; // leagueId -> { ts, labelByRoster }
         const matchupProjCache = {};   // `${season}|${week}` -> { ts, byPlayer }
         let matchupRefreshTimer = null;
-        const matchupPlayoffHints = {}; // league -> first week with bye rows (ID 0) in the latest past season
         const MATCHUP_LIVE_TTL = 60 * 1000;
 
         function escHtml(v) {
@@ -2504,7 +2506,7 @@
                 const rows = globalMasterData[league];
                 if (!Array.isArray(rows)) return;
                 let section = '', leagueId = '';
-                const raw = [], zeroWeeks = {};
+                const raw = [];
                 rows.forEach(r => {
                     const col0 = String(r[0] || '').trim();
                     if (col0 === 'League ID') leagueId = String(r[1] || '').trim();
@@ -2512,7 +2514,6 @@
                     if (sec) { section = sec; return; }
                     if (section !== 'matchups' || isColumnHeaderRow(col0) || r.length < 7) return;
                     const matchupId = String(r[2]).trim();
-                    if (matchupId === '0') zeroWeeks[col0] = Math.min(zeroWeeks[col0] || 99, weekNumber(r[1]));
                     if (!matchupId || matchupId === '0') return; // ID 0 = playoff byes / eliminated teams, not real games
                     const s1 = parseFloat(r[4]), s2 = parseFloat(r[6]);
                     raw.push({
@@ -2521,10 +2522,6 @@
                         s1: isNaN(s1) ? 0 : s1, s2: isNaN(s2) ? 0 : s2
                     });
                 });
-
-                const latestSeason = raw.reduce((mx, g) => (g.season > mx ? g.season : mx), '');
-                const pastHint = Object.keys(zeroWeeks).filter(se => se < latestSeason).sort().pop();
-                if (pastHint) matchupPlayoffHints[league] = zeroWeeks[pastHint];
 
                 const weekStats = {}, lastScored = {};
                 raw.forEach(g => {
@@ -2535,11 +2532,15 @@
                     if (g.s1 > 0 || g.s2 > 0) lastScored[g.season] = Math.max(lastScored[g.season] || 0, g.week);
                 });
                 raw.forEach(g => {
+                    if (g.week > LAST_PLAYOFF_WEEK) return; // no league uses week 18
                     const st = weekStats[`${g.season}|${g.week}`];
                     // Played = a later week already has scores, or every team in the week has scored.
                     // The latest week can be half-played (e.g. only Thursday night), so it needs all teams.
                     const later = g.week < (lastScored[g.season] || 0);
                     g.played = later ? st.scored / st.teams >= 0.75 : st.scored === st.teams;
+                    // Playoff-week pairings exist before the bracket is set; they only become real once the
+                    // regular season is over, so hide unplayed ones until the week before has scores
+                    if (!g.played && g.week >= playoffStartWeek(league, g.season) && g.week > (lastScored[g.season] || 0) + 1) return;
                     g.o1 = getMasterOwner(g.team1);
                     g.o2 = getMasterOwner(g.team2);
                     games.push(g);
@@ -2903,27 +2904,11 @@
 
         // --- TAB: PLAYOFF ODDS SIMULATOR ---
         const PLAYOFF_SIMS = 10000;
-        const playoffSettings = {}; // league -> { start, teams, source } from Sleeper league settings
         const playoffSimCache = {}; // league -> simulation result
 
-        function playoffConfig(league) {
-            if (playoffSettings[league]) return playoffSettings[league];
-            const hint = matchupPlayoffHints[league];
-            return { start: hint || 15, teams: 6, source: hint ? 'inferred from past seasons' : 'default' };
-        }
-
-        // Exact playoff start week and team count from Sleeper; the simulator works without them
-        function loadPlayoffSettings() {
-            chatLeagueProfiles().filter(p => /^\d{12,}$/.test(p.id)).forEach(p => {
-                chatFetchJson(`https://api.sleeper.app/v1/league/${p.id}`).then(info => {
-                    const st = (info && info.settings) || {};
-                    if (!st.playoff_week_start || !st.playoff_teams) return;
-                    playoffSettings[p.name] = { start: Number(st.playoff_week_start), teams: Number(st.playoff_teams), source: 'Sleeper settings' };
-                    delete playoffSimCache[p.name];
-                    if (currentActiveTab === 'playoffs') renderPlayoffOdds();
-                    else if (currentActiveTab === 'matchups') renderMatchups(true);
-                }).catch(() => {});
-            });
+        // Same rules as Records / Luck: playoffStartWeek() and top 6 (top 7 in All Flex Zone)
+        function playoffConfig(league, season) {
+            return { start: playoffStartWeek(league, season), teams: /all flex zone/i.test(league) ? 7 : 6 };
         }
 
         function gaussian() {
@@ -2934,7 +2919,7 @@
 
         function simulateLeague(league) {
             const season = matchupCurrentSeason();
-            const cfg = playoffConfig(league);
+            const cfg = playoffConfig(league, season);
             const cacheKey = `${season}|${cfg.start}|${cfg.teams}|${matchupLiveState ? matchupLiveState.week : ''}`;
             const hit = playoffSimCache[league];
             if (hit && hit.cacheKey === cacheKey) return hit;
@@ -3046,7 +3031,6 @@
                 .filter(lg => !isAwardExcluded(lg));
             leagues.forEach(lg => sel.appendChild(new Option(lg, lg)));
             if (prev && leagues.includes(prev)) sel.value = prev;
-            loadPlayoffSettings();
         }
 
         function renderPlayoffOdds() {
@@ -3057,7 +3041,7 @@
             const note = document.getElementById('playoffs-footnote');
             const sim = simulateLeague(league);
             if (!sim) {
-                box.innerHTML = `<p class="p-6 text-sm text-slate-400">Nothing to simulate for ${escHtml(league)}: either the regular season is over or there is no future schedule in the data (Fleaflicker leagues only store played weeks).</p>`;
+                box.innerHTML = `<p class="p-6 text-sm text-slate-400">Nothing to simulate for ${escHtml(league)}: either the regular season is over or the rest of the schedule isn't in the data yet.</p>`;
                 note.innerText = '';
                 return;
             }
@@ -3105,7 +3089,7 @@
                 </table>`;
 
             note.innerText = `${PLAYOFF_SIMS.toLocaleString()} simulated seasons. Remaining games (weeks ${sim.nextWeek}-${sim.cfg.start - 1}) use each team's season scoring, blended toward the league average; ties broken by points for. ` +
-                `Top ${sim.playoffTeams} make the playoffs${sim.byes ? `, top ${sim.byes} get a bye` : ''} (playoffs start week ${sim.cfg.start}, ${sim.cfg.source}). ` +
+                `Top ${sim.playoffTeams} make the playoffs${sim.byes ? `, top ${sim.byes} get a bye` : ''} (playoffs start week ${sim.cfg.start}). ` +
                 `*Clinched / out means it happened in every simulation, not a mathematical guarantee. The line under the cutoff team marks the playoff line.`;
         }
 

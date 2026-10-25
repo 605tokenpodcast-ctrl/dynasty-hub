@@ -1,0 +1,27 @@
+# Deployed by .github/workflows/deploy-workers.yml (or `npx wrangler deploy` from this folder).
+name = "dynasty-league-bot"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+# UTC times: alerts every 15 min, recap Tue 9am CT, Gazette Tue 9:30am CT, previews Thu 6pm CT
+crons = ["*/15 * * * *", "0 14 * * 2", "30 14 * * 2", "0 23 * * 4"]
+
+# The deploy workflow creates this namespace on first run and fills in the id.
+[[kv_namespaces]]
+binding = "BOT_KV"
+id = "REPLACED_BY_DEPLOY_WORKFLOW"
+
+[vars]
+SITE_URL = "https://605tokenpodcast-ctrl.github.io/dynasty-hub/"
+# Names must match the league names on the site (the Gazette is stored under them).
+LEAGUES = '''[
+  {"name": "Dante's league", "id": "1312263393003991040", "platform": "sleeper"},
+  {"name": "Andys league", "id": "1388685966092296192", "platform": "sleeper"},
+  {"name": "Hail Mary Jane Congregation", "id": "1312042561786904576", "platform": "sleeper"},
+  {"name": "Fish's League", "id": "1338346687445348352", "platform": "sleeper"},
+  {"name": "Roundhouse", "id": "1389343056888606720", "platform": "sleeper"},
+  {"name": "All Flex Zone", "id": "1329118060811927552", "platform": "sleeper"},
+  {"name": "Branden's League", "id": "165455", "platform": "fleaflicker"}
+]'''

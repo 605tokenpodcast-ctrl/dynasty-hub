@@ -1,0 +1,7 @@
+# Deployed by .github/workflows/deploy-workers.yml (or `npx wrangler deploy` from this folder).
+name = "dynasty-award-cards"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+SITE_URL = "https://605tokenpodcast-ctrl.github.io/dynasty-hub/"

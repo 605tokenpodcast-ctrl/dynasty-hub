@@ -1,0 +1,11 @@
+{
+  "name": "dynasty-award-cards",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "workers-og": "0.0.27"
+  },
+  "devDependencies": {
+    "wrangler": "4.146.0"
+  }
+}

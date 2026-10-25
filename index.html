@@ -2183,7 +2183,7 @@
             const rest = entries.slice(1, 3);
             const empty = `<p class="text-xs text-slate-500">${escHtml(emptyText || 'Not enough data yet.')}${needs ? ' ' + escHtml(needs) : ''}</p>`;
             const shareLink = top && AWARD_CARD_ENDPOINT
-                ? `<a onclick="event.stopPropagation()" target="_blank" rel="noopener" href="${escHtml(awardShareUrl(icon, title, top))}" class="text-[11px] text-slate-400 hover:text-accent font-semibold">📤 Share card</a>` : '';
+                ? `<button type="button" onclick="copyAwardLink(event, this)" data-url="${escHtml(awardShareUrl(icon, title, top))}" class="text-[11px] text-slate-400 hover:text-accent font-semibold">📤 Share card</button>` : '';
             const body = top ? `
                 <div class="space-y-1">
                     <p class="text-2xl font-extrabold text-emerald-400">${escHtml(top.value)}</p>
@@ -2221,6 +2221,21 @@
         function awardShareUrl(icon, title, entry) {
             const qs = new URLSearchParams({ icon, title, name: entry.name, value: entry.value, detail: entry.detail || '' });
             return `${AWARD_CARD_ENDPOINT}/share?${qs}`;
+        }
+        // Copies the share link; pasted into a group chat it previews as the award card image.
+        async function copyAwardLink(event, btn) {
+            event.stopPropagation();
+            const url = btn.dataset.url;
+            try {
+                await navigator.clipboard.writeText(url);
+            } catch (e) {
+                window.prompt('Copy this link:', url);
+                return;
+            }
+            const label = btn.textContent;
+            btn.textContent = '✓ Link copied';
+            btn.classList.add('text-emerald-400');
+            setTimeout(() => { btn.textContent = label; btn.classList.remove('text-emerald-400'); }, 2000);
         }
 
         const pct1 = x => `${(x * 100).toFixed(1)}%`;

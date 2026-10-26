@@ -394,3 +394,29 @@ class TradeValuesAtGrade(unittest.TestCase):
         self.assertEqual(snap.player("Old Mid"), 2250)  # ECR 100 halfway between 50 (4000) and 150 (500)
         self.assertEqual(snap.pick(2019, 2), 4000)  # overall pick 14 is a 2nd-rounder
         self.assertEqual(snap.pick(2020, 1), 500)
+
+    def test_picks_only_trade_waits_for_rookie_seasons(self):
+        r = ["2023", "3/1/2023", "Week 1", "A & B", "A received: [2024 Round 1st Pick] <---> B received: [2025 Round 2nd Pick -> Resulted in drafting: Z (WR)]", "", ""]
+        self.assertEqual(sync_trade_values.grading_date(r), sync_trade_values.dt.date(2028, 6, 1))
+        r[4] = "A received: [X (WR)] <---> B received: [2025 Round 2nd Pick]"
+        self.assertEqual(sync_trade_values.grading_date(r), sync_trade_values.dt.date(2026, 3, 1))
+
+    def test_main_saves_trade_day_and_grade_values(self):
+        import json, tempfile
+        bd = "A received: [Star Guy (WR)] <---> B received: [2027 Round 1st Pick]"
+        master = {"L": [SEC("TRADE HISTORY"), ["Season"], ["2023", "10/1/2023", "Week 5", "A & B", bd, "", ""],
+                        ["2026", "10/20/2026", "Week 7", "A & B", bd, "", ""]]}
+        raw = lambda self, date, today: (date, TradeValuesAtGrade.PLAYERS, TradeValuesAtGrade.PICKS)  # noqa: E731
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(sync_trade_values.History, 'raw', raw), \
+                mock.patch.object(sync_trade_values.league_config, 'leagues', return_value=[]), \
+                mock.patch.multiple(sync_trade_values, MASTER=os.path.join(d, 'm.json'), KTC=os.path.join(d, 'k.json'),
+                                    OUTPUT=os.path.join(d, 'o.json')):
+            json.dump(master, open(sync_trade_values.MASTER, 'w'))
+            sync_trade_values.main(today=sync_trade_values.dt.date(2026, 10, 26))
+            out = json.load(open(sync_trade_values.OUTPUT))['trades']
+        old, new = out["L||2023||10/1/2023||" + bd], out["L||2026||10/20/2026||" + bd]
+        self.assertEqual(old['trade_day']['as_of'], "2023-10-01")
+        self.assertEqual(old['grade']['mark'], "2026-10-01")
+        self.assertEqual(old['grade']['values']["Star Guy (WR)"], 10000)
+        self.assertNotIn('grade', new)
+        self.assertEqual(new['trade_day']['values']["2027 Round 1st Pick"], 2250)

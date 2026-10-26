@@ -13,7 +13,11 @@ snapshot of every player and pick value back to 2019:
 Frozen entries are kept, so a trade's grade never moves once set. Redraft leagues are skipped: they
 are graded on points alone.
 
-Output: {"source", "trades": {key: {"as_of": "YYYY-MM-DD", "values": {item label: value}}}}
+It also keeps every dynasty trade's values on the day of the trade, so the grade can show how each
+side's value moved.
+
+Output: {"source", "trades": {key: {"trade_day": {"as_of", "values"}, "grade": {"mark", "as_of", "values"}}}}
+with values = {item label: value}, as_of = the snapshot date and mark = the grading date.
 where key = "league||season||date||breakdown" (see tradeValueKey in index.html).
 """
 import csv
@@ -161,16 +165,15 @@ def interpolate(curve, x):
 def item_value(label, snapshot, as_of):
     """Value of one traded item on the grading date (same item rules as tradeItemPlayerName in index.html)."""
     s = label.strip()
+    pick = re.match(r'^(\d{4})\s+Round\s+(\d+)', s, re.I)
+    # Rookie drafts are done by June: before that a pick is valued as a pick, even if we know who it became
+    if pick and as_of < dt.date(int(pick[1]), 6, 1):
+        return snapshot.pick(int(pick[1]), int(pick[2]))
     drafted = re.search(r'Resulted in drafting:\s*(.+?)\s*(?:\([A-Z/]+\))?\s*$', s)
     if drafted:
         return snapshot.player(drafted[1])
-    pick = re.match(r'^(\d{4})\s+Round\s+(\d+)', s, re.I)
     if pick:
-        year, rnd = int(pick[1]), int(pick[2])
-        # Rookie drafts are done by June; a pick from a finished draft with no recorded player is worth nothing
-        if as_of >= dt.date(year, 6, 1):
-            return 0
-        return snapshot.pick(year, rnd)
+        return 0  # a pick from a finished draft with no recorded player
     m = re.match(r'^(.*?)\s*\(([A-Z/]+)(?:\s*-\s*[A-Z]+)?\)$', s)
     return snapshot.player(m[1] if m else s)
 
@@ -224,16 +227,34 @@ def fetch_text(url):
         return response.read().decode('utf-8')
 
 
-def due_trades(master, today):
-    """(key, league, trade row, grading date) for every dynasty trade whose 3-year mark has passed."""
+def grading_date(r):
+    """3 years after the trade; for a picks-only trade, June 1 after the rookies' first 3 seasons
+    (the latest pick's year + 3), matching windowedTradeGrade in index.html."""
+    items = trade_items(r[4])
+    years = [re.match(r'^(\d{4})\s+Round', i, re.I) for i in items]
+    if items and all(years):
+        return dt.date(max(int(y[1]) for y in years) + GRADE_YEARS, 6, 1)
+    d = trade_date(r)
+    return add_years(d, GRADE_YEARS) if d else None
+
+
+def dynasty_trades(master):
+    """(key, league, trade row, trade date, grading date) for every dynasty trade."""
     redraft = {lg['name'] for lg in league_config.leagues() if lg.get('type') == 'redraft'}
     for league, rows in master.items():
         if league in redraft or not isinstance(rows, list):
             continue
         for r in trade_rows(rows):
             d = trade_date(r)
-            if d and add_years(d, GRADE_YEARS) <= today:
-                yield trade_key(league, r), league, r, add_years(d, GRADE_YEARS)
+            if d:
+                yield trade_key(league, r), league, r, d, grading_date(r)
+
+
+def due_trades(master, today):
+    """(key, league, trade row, grading date) for every dynasty trade whose grading date has passed."""
+    for key, league, r, _, mark in dynasty_trades(master):
+        if mark <= today:
+            yield key, league, r, mark
 
 
 def main(today=None):
@@ -251,30 +272,42 @@ def main(today=None):
     except (OSError, ValueError):
         frozen = {}
 
-    history, snapshots, out, added, skipped = History(), {}, {}, 0, 0
-    for key, league, r, mark in due_trades(master, today):
-        if key in frozen:
-            out[key] = frozen[key]
-            continue
-        if mark < EARLIEST_SNAPSHOT:
-            skipped += 1
-            continue
-        raw = history.raw(mark, today)
+    history, snapshots = History(), {}
+
+    def values_on(date, league, r):
+        """{'as_of', 'values'} from the latest snapshot on or before `date`, or None before the history starts."""
+        raw = history.raw(date, today) if date >= EARLIEST_SNAPSHOT else None
         if not raw:
-            skipped += 1
-            continue
+            return None
         superflex = '_sf_' in formats.get(league, '')
         snap_key = (raw[0], superflex)
         if snap_key not in snapshots:
             ref = history.reference_curve(superflex, today) if raw[0] < REFERENCE_SNAPSHOT else None
             snapshots[snap_key] = Snapshot(raw[1], raw[2], superflex, ref)
-        snap = snapshots[snap_key]
-        out[key] = {'as_of': raw[0].isoformat(), 'values': {lbl: round(item_value(lbl, snap, raw[0])) for lbl in trade_items(r[4])}}
-        added += 1
+        return {'as_of': raw[0].isoformat(),
+                'values': {lbl: round(item_value(lbl, snapshots[snap_key], raw[0])) for lbl in trade_items(r[4])}}
+
+    out, counts = {}, {'trade_day': 0, 'grade': 0}
+    for key, league, r, traded, mark in dynasty_trades(master):
+        old, entry = frozen.get(key) or {}, {}
+        # Trade-day values: on the day the trade happened, so the grade can be compared against them
+        entry['trade_day'] = old.get('trade_day') or values_on(traded, league, r)
+        if entry['trade_day'] and not old.get('trade_day'):
+            counts['trade_day'] += 1
+        # Grade values: on the grading date, once it has passed. Kept unless frozen for another grading date
+        if mark <= today:
+            entry['grade'] = old['grade'] if (old.get('grade') or {}).get('mark') == mark.isoformat() else None
+            if not entry['grade']:
+                got = values_on(mark, league, r)
+                entry['grade'] = {'mark': mark.isoformat(), **got} if got else None
+                counts['grade'] += bool(got)
+        entry = {k: v for k, v in entry.items() if v}
+        if entry:
+            out[key] = entry
 
     with open(OUTPUT, 'w', encoding='utf-8') as f:
         json.dump({'source': 'DynastyProcess', 'trades': dict(sorted(out.items()))}, f, indent=1, ensure_ascii=False)
-    print(f"{OUTPUT}: {len(out)} trades ({added} newly frozen, {skipped} too old for value history)")
+    print(f"{OUTPUT}: {len(out)} trades ({counts['trade_day']} trade-day and {counts['grade']} grade values newly frozen)")
 
 
 if __name__ == '__main__':

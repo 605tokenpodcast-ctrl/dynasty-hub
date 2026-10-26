@@ -769,7 +769,8 @@ def draft_board_rows(data, season, labels, redraft=False, traded=None):
     # Pick order: the overall number when the board has it, else the round, then the slot (or list order)
     picks.sort(key=lambda p: (p[1] or (p[0] - 1) * n + (p[2] or 0), p[0], p[3] if ordered else p[2], p[3]))
     origin = {(rnd, label): orig for (_, rnd, orig), label in parse_draft_board(data, season, traded).items()}
-    kind = "Redraft" if redraft else "Startup" if max(p[0] for p in picks) > STARTUP_ROUNDS else "Rookie"
+    # Rookie drafts here often run a few uneven extra rounds (teams passing), so count picks, not rounds
+    kind = "Redraft" if redraft else "Startup" if len(picks) > STARTUP_ROUNDS * n else "Rookie"
     rows = []
     for overall, (rnd, _, _, _, c, label) in enumerate(picks, 1):
         tid = team_id_of(c.get("team"))

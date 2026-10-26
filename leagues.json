@@ -6,7 +6,8 @@
     "playoff_start_week: first playoff week, keyed by the first season it applies to (the latest key <= season wins).",
     "playoff_teams: teams that make the playoffs. third_place_game: false when the league plays no 3rd-place game.",
     "exclude_from_records: true leaves the league out of Hall of Records, Playoff Odds and award tabs.",
-    "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league)."
+    "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league).",
+    "ungraded_drafts: season -> reason, for a draft the Draft History tab shows but doesn't grade (e.g. a roster re-entry)."
   ],
   "leagues": [
     {
@@ -37,6 +38,9 @@
       "platform": "sleeper",
       "id": "1312042561786904576",
       "type": "dynasty",
+      "ungraded_drafts": {
+        "2021": "every roster re-entered by hand after the move from Fleaflicker"
+      },
       "playoff_start_week": {
         "2015": 14,
         "2021": 15

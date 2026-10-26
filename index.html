@@ -155,6 +155,7 @@
                     <button onclick="switchTab('records')" id="nav-records" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
                     <button onclick="switchTab('luck')" id="nav-luck" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
                     <button onclick="switchTab('picks')" id="nav-picks" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
+                    <button onclick="switchTab('drafts')" id="nav-drafts" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📋 Draft History</button>
                     <button onclick="switchTab('trades')" id="nav-trades" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
                     <button onclick="switchTab('h2h')" id="nav-h2h" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
                     <button onclick="switchTab('matchups')" id="nav-matchups" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
@@ -414,6 +415,49 @@
                         <p class="text-slate-400 text-sm">Live inventory of future draft picks held by each manager across all leagues, weighted by KeepTradeCut pick values.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
+                </div>
+
+                <!-- DRAFT HISTORY & GRADES -->
+                <div id="tab-drafts" class="hidden space-y-6">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📋 Draft History & Draft Grades</h2>
+                            <p class="text-slate-400 text-sm">Every saved draft board. Pick a league and year to see the whole draft, or a manager and year to see all of their drafts that year.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                            <div class="flex bg-slate-900 border border-slate-700 rounded-lg p-1 text-xs">
+                                <button id="drafts-mode-league" onclick="setDraftMode('league')" class="px-3 py-1.5 rounded bg-accent text-white font-medium transition">By League</button>
+                                <button id="drafts-mode-owner" onclick="setDraftMode('owner')" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">By Manager</button>
+                            </div>
+                            <select id="drafts-league" onchange="renderDraftHistory()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                            <select id="drafts-owner" onchange="renderDraftHistory()" class="hidden bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                            <select id="drafts-season" onchange="renderDraftHistory()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200"></select>
+                        </div>
+                    </div>
+                    <div id="drafts-view" class="space-y-6"></div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-200">🧠 Drafting Skill Leaderboard</h3>
+                                <p class="text-slate-400 text-xs">Every graded draft a manager made, in every league, combined.</p>
+                            </div>
+                            <select id="drafts-skill-kind" onchange="renderDraftSkill()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200">
+                                <option value="ALL">All drafts</option>
+                                <option value="Rookie">Rookie drafts</option>
+                                <option value="Startup">Startup drafts</option>
+                                <option value="Redraft">Redraft drafts</option>
+                            </select>
+                        </div>
+                        <div id="drafts-skill" class="space-y-4"></div>
+                    </div>
+                    <details class="bg-cardbg border border-slate-700 rounded-xl p-4 text-xs text-slate-400">
+                        <summary class="cursor-pointer font-semibold text-slate-200">How draft grades work</summary>
+                        <div class="mt-3 space-y-2">
+                            <p><strong class="text-slate-200">What a pick produced.</strong> Rookie and startup picks: 60% the fantasy points the player scored in this league (for whoever rostered him, starters and bench) in his first 3 seasons, 40% his dynasty value today. Old classes whose players have mostly retired lean on points instead, since today's value says little about them. Redraft picks: his points that season. Both are measured against the average pick in the first 4 rounds of the same draft, so 1.00 is a solid early pick.</p>
+                            <p><strong class="text-slate-200">What the slot should produce.</strong> Each draft gets a smooth curve of how much each pick number returned in that class (early picks are expected to return far more). A pick is graded on what it produced minus what its slot should have, so a 1.01 bust hurts and a late-round hit shines.</p>
+                            <p><strong class="text-slate-200">Draft grade.</strong> Everything a manager's picks produced divided by what their slots should have (1.00× = as expected). Traded picks count for the manager who made the pick. Kickers, defenses and keepers are shown but not graded. The leaderboard combines every graded draft on a tighter scale, since luck evens out over many drafts, and ranks managers with at least 3 of them. Rookie classes younger than 3 seasons get an early grade that leans on today's values and firms up each season.</p>
+                        </div>
+                    </details>
                 </div>
 
                 <!-- TAB 8: TRADES & DRAFT LINEAGE -->
@@ -764,6 +808,7 @@
             if (s.includes('FREE AGENT MOVES')) return 'moves';
             if (s.includes('BOX SCORES')) return 'boxscores';
             if (s.includes('MATCHUPS')) return 'matchups';
+            if (s.includes('DRAFT HISTORY')) return 'drafts';
             return 'other';
         }
 
@@ -929,7 +974,7 @@
             currentActiveTab = tabId;
             // Before rendering: some tabs update the URL while they render, which must not replace this entry
             if (!skipUrlUpdate) updateUrlParams(true);
-            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'awardcenter', 'analytics', 'review', 'records', 'luck', 'picks', 'trades', 'h2h', 'matchups', 'playoffs', 'synergy', 'leagues'].forEach(t => {
+            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'awardcenter', 'analytics', 'review', 'records', 'luck', 'picks', 'drafts', 'trades', 'h2h', 'matchups', 'playoffs', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -1032,6 +1077,8 @@
 
         function initApp() {
             hubCache = null;
+            draftGradeCache = null;
+            Object.keys(marketTopCache).forEach(k => delete marketTopCache[k]);
             document.getElementById('upload-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
 
@@ -1117,6 +1164,7 @@
             records: () => renderRecords(),
             luck: () => renderLuckIndex(),
             picks: () => renderDraftPicksMatrix(),
+            drafts: () => initDraftHistoryTab(),
             trades: () => renderTrades(),
             synergy: () => renderTradeSynergy(),
             leagues: () => renderSelectedLeague()
@@ -4111,6 +4159,340 @@
                 const matchesLineage = !lineageOnlyMode || row.dataset.hasLineage === '1';
                 row.style.display = (matchesText && matchesLineage) ? '' : 'none';
             }
+        }
+
+        // --- DRAFT HISTORY & GRADES ---
+        // Rows come from each league's DRAFT HISTORY section (the syncs save every pick of every draft):
+        // Season, Draft (Rookie / Startup / Redraft), Round, Pick, Team / Manager (who made the pick), Player,
+        // Original Owner (only when the pick was someone else's), Notes (Keeper, auction price like "$12").
+        const DRAFT_GRADE_YEARS = 3;        // rookie and startup picks are judged on their first 3 seasons
+        const DRAFT_POINTS_WEIGHT = 0.6;    // once those seasons are played; the rest is dynasty value today, as for trades
+        // An average pick's worth added to both sides of a manager's produced / expected ratio, so one late hit
+        // on a single pick doesn't read as an A+ draft
+        const DRAFT_GRADE_SHRINK = 1;
+        const DRAFT_SCORE_CAP = 4;          // a pick returns at most 4x an early-round pick of its class on either measure
+        const DRAFT_UNGRADED_POS = /^(K|DEF|D\/ST|DST)$/;
+        let draftGradeCache = null;
+        let draftMode = 'league';
+
+        // Per league: normalized player name -> { season: points } from every lineup (whoever rostered him,
+        // starters and bench), and the share of each season with lineup history (0-1)
+        function leaguePlayerSeasonPoints(league, latest) {
+            const pts = {}, weeks = {};
+            sectionRows(league, 'lineups').forEach(r => {
+                const season = parseInt(r[0], 10), wk = weekNumber(r[1]);
+                if (!season || !wk || (parseFloat(r[3]) || 0) <= 0) return;
+                weeks[season] = Math.max(weeks[season] || 0, wk);
+                [...parseLineupList(r[5]), ...parseLineupList(r[6])].forEach(p => {
+                    const by = pts[normalizePlayerName(p.name)] = pts[normalizePlayerName(p.name)] || {};
+                    by[season] = (by[season] || 0) + p.pts;
+                });
+            });
+            const played = {};
+            Object.entries(weeks).forEach(([s, w]) => { played[s] = parseInt(s, 10) < latest ? 1 : Math.min(1, w / 17); });
+            return { pts, played };
+        }
+
+        // Average dynasty value of the top `n` players in this league's value format today
+        const marketTopCache = {};
+        function marketTopMean(league, n) {
+            const key = `${league}||${n}`;
+            if (key in marketTopCache) return marketTopCache[key];
+            const vals = Object.entries(getValueFormat(league).players || {})
+                .filter(([k]) => !PICK_KEY_RE.test(k)).map(([, v]) => v).sort((a, b) => b - a).slice(0, n);
+            return (marketTopCache[key] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0);
+        }
+
+        function draftPickLetter(diff) {
+            return diff >= 1.5 ? 'A+' : diff >= 0.6 ? 'A' : diff >= 0.2 ? 'B' : diff >= -0.35 ? 'C' : diff >= -1 ? 'D' : 'F';
+        }
+        // One draft swings a lot; a career of drafts evens out, so its scale is tighter
+        function draftRatioLetter(r, career = false) {
+            const [aPlus, a, b, c, d] = career ? [1.3, 1.18, 1.07, 0.93, 0.82] : [1.6, 1.3, 1.1, 0.9, 0.7];
+            return r >= aPlus ? 'A+' : r >= a ? 'A' : r >= b ? 'B' : r >= c ? 'C' : r >= d ? 'D' : 'F';
+        }
+        const DRAFT_SKILL_MIN_DRAFTS = 3;   // fewer graded drafts than this: listed, not ranked
+        function draftGradeBadge(gr, title = '') {
+            const color = gr.startsWith('A') ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' : gr === 'B' ? 'text-sky-300 border-sky-500/30 bg-sky-500/10'
+                : gr === 'C' ? 'text-slate-300 border-slate-600 bg-slate-800' : gr === 'D' ? 'text-amber-300 border-amber-500/30 bg-amber-500/10' : 'text-rose-300 border-rose-500/30 bg-rose-500/10';
+            return `<span class="inline-block min-w-[2rem] text-center border rounded font-bold px-1 ${color}"${title ? ` title="${escHtml(title)}"` : ''}>${gr}</span>`;
+        }
+
+        // Owner totals for a list of graded picks: { owner: { picks, score, expected, ratio, grade } }
+        function draftOwnerTotals(picks, career = false) {
+            const out = {};
+            picks.filter(p => p.graded).forEach(p => {
+                const o = out[p.owner] = out[p.owner] || { owner: p.owner, picks: [], score: 0, expected: 0 };
+                o.picks.push(p);
+                o.score += p.score;
+                o.expected += p.expected;
+            });
+            Object.values(out).forEach(o => {
+                o.ratio = (o.score + DRAFT_GRADE_SHRINK) / (o.expected + DRAFT_GRADE_SHRINK);
+                o.grade = draftRatioLetter(o.ratio, career);
+            });
+            return out;
+        }
+
+        // Every draft in every league, each pick scored against what its slot usually returns:
+        // [{ league, season, kind, base, redraft, elapsed, provisional, reason, picks: [...], owners: {...} }]
+        function buildDraftGrades() {
+            if (draftGradeCache) return draftGradeCache;
+            const latest = parseInt(latestSeason(), 10) || new Date().getFullYear();
+            const drafts = [];
+            Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k])).forEach(league => {
+                const rows = sectionRows(league, 'drafts');
+                if (!rows.length) return;
+                const groups = {};
+                rows.forEach(r => { (groups[`${r[0]}||${r[1]}`] = groups[`${r[0]}||${r[1]}`] || []).push(r); });
+                const idx = leaguePlayerSeasonPoints(league, latest);
+                const ungraded = leagueRules(league).ungraded_drafts || {};
+                Object.values(groups).forEach(g => {
+                    const season = parseInt(g[0][0], 10), kind = String(g[0][1] || '').trim() || 'Rookie';
+                    const base = kind.split(' ')[0], redraft = base === 'Redraft';
+                    const picks = g.map(r => {
+                        const m = String(r[5] || '').match(/^(.*?)\s*\(([^()]+)\)$/);
+                        const price = (String(r[7] || '').match(/\$(\d+(?:\.\d+)?)/) || [])[1];
+                        return {
+                            league, season, kind, round: parseInt(r[2], 10) || 0, pick: parseInt(r[3], 10) || 0,
+                            team: String(r[4] || '').trim(), owner: getMasterOwner(r[4]),
+                            name: m ? m[1].trim() : String(r[5] || '').trim(), pos: m ? m[2] : '',
+                            via: String(r[6] || '').trim() ? getMasterOwner(r[6]) : '',
+                            keeper: /keeper/i.test(String(r[7] || '')), price: price ? parseFloat(price) : null
+                        };
+                    }).sort((a, b) => a.pick - b.pick);
+                    // Pick within its round (1.03), and the slot that sets expectations: the overall pick, or for
+                    // an auction the price rank (most expensive = 1)
+                    const inRound = {};
+                    picks.forEach(p => { p.inRound = inRound[p.round] = (inRound[p.round] || 0) + 1; });
+                    if (picks.some(p => p.price != null)) [...picks].sort((a, b) => (b.price || 0) - (a.price || 0)).forEach((p, i) => { p.slot = i + 1; });
+                    else picks.forEach((p, i) => { p.slot = p.pick || i + 1; });
+
+                    const years = redraft ? [season] : Array.from({ length: DRAFT_GRADE_YEARS }, (_, i) => season + i);
+                    const elapsed = years.reduce((a, y) => a + (idx.played[y] || 0), 0) / years.length;
+                    picks.forEach(p => {
+                        const by = idx.pts[normalizePlayerName(p.name)] || {};
+                        p.pts = years.reduce((a, y) => a + (by[y] || 0), 0);
+                        p.value = redraft ? 0 : playerValueByName(p.name, league);
+                    });
+                    const d = { league, season, kind, base, redraft, picks, elapsed, provisional: elapsed < 0.999,
+                        reason: ungraded[String(season)] || '', key: `${league}||${season}||${kind}` };
+                    // Kickers and defenses are streamed, so their points say nothing about drafting; keepers weren't picks
+                    const pool = picks.filter(p => !p.keeper && !DRAFT_UNGRADED_POS.test(p.pos));
+                    // 1.00 = the average pick of the draft's first 4 rounds, so a 30-round startup (mostly
+                    // players who never mattered) is on the same scale as a 4-round rookie draft
+                    const teams = Math.max(1, picks.filter(p => p.round === 1).length);
+                    const top = pool.filter(p => p.slot <= teams * 4);
+                    const meanPts = top.reduce((a, p) => a + p.pts, 0) / (top.length || 1);
+                    const meanVal = top.reduce((a, p) => a + p.value, 0) / (top.length || 1);
+                    if (!d.reason && !meanPts && !meanVal) d.reason = elapsed ? 'Nobody from this draft has scored yet' : 'No lineup history for this season';
+                    if (!d.reason) {
+                        // Points count fully once the window is played; until then today's value carries the grade.
+                        // An old class whose players have mostly retired holds little value today, so value only
+                        // gets the share of its weight that the class still holds next to today's market
+                        const market = marketTopMean(league, top.length);
+                        const valueShare = market ? Math.min(1, meanVal / market) : 1;
+                        const w = !meanVal ? 1 : !meanPts ? 0 : 1 - (1 - DRAFT_POINTS_WEIGHT * elapsed) * valueShare;
+                        d.pointsWeight = w;
+                        pool.forEach(p => {
+                            p.graded = true;
+                            // Capped, so one outlier (a veteran QB scoring in a class of rookies) can't swamp a draft
+                            p.score = w * (meanPts ? Math.min(DRAFT_SCORE_CAP, p.pts / meanPts) : 0)
+                                + (1 - w) * (meanVal ? Math.min(DRAFT_SCORE_CAP, p.value / meanVal) : 0);
+                        });
+                    }
+                    drafts.push(d);
+                });
+            });
+
+            // What each slot returned in this draft: least squares of score on ln(slot) over its graded picks, so a
+            // pick is judged against its own class (a deep class lifts every slot) and each draft's grades balance out
+            drafts.forEach(d => {
+                const graded = d.picks.filter(p => p.graded), n = graded.length;
+                let curve = () => 1;
+                if (n >= 2) {
+                    const xs = graded.map(p => Math.log(p.slot)), ys = graded.map(p => p.score);
+                    const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+                    const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0);
+                    const b = sxx ? Math.min(0, xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / sxx) : 0;
+                    curve = slot => Math.max(0.05, my + b * (Math.log(slot) - mx));
+                }
+                graded.forEach(p => {
+                    p.expected = curve(p.slot);
+                    p.diff = p.score - p.expected;
+                    p.grade = draftPickLetter(p.diff);
+                    p.provisional = d.provisional;
+                });
+                d.owners = draftOwnerTotals(d.picks);
+            });
+            drafts.sort((a, b) => b.season - a.season || a.league.localeCompare(b.league) || a.kind.localeCompare(b.kind));
+            return (draftGradeCache = drafts);
+        }
+
+        function initDraftHistoryTab() {
+            const drafts = buildDraftGrades();
+            const leagueSel = document.getElementById('drafts-league');
+            const ownerSel = document.getElementById('drafts-owner');
+            const leagues = [...new Set(drafts.map(d => d.league))];
+            leagueSel.innerHTML = leagues.map(l => `<option value="${escHtml(l)}">${escHtml(l)}</option>`).join('');
+            const owners = [...new Set(drafts.flatMap(d => d.picks.map(p => p.owner)))].filter(Boolean).sort((a, b) => a.localeCompare(b));
+            ownerSel.innerHTML = owners.map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('');
+            if (owners.includes('Smokers Haven')) ownerSel.value = 'Smokers Haven';
+            renderDraftHistory();
+            renderDraftSkill();
+        }
+
+        function setDraftMode(mode) {
+            draftMode = mode;
+            ['league', 'owner'].forEach(m => {
+                document.getElementById(`drafts-mode-${m}`).className = m === mode
+                    ? 'px-3 py-1.5 rounded bg-accent text-white font-medium transition'
+                    : 'px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition';
+            });
+            document.getElementById('drafts-league').classList.toggle('hidden', mode !== 'league');
+            document.getElementById('drafts-owner').classList.toggle('hidden', mode !== 'owner');
+            renderDraftHistory();
+        }
+
+        function draftPickLabel(p) {
+            return `${p.round}.${String(p.inRound).padStart(2, '0')}`;
+        }
+
+        function draftStatusNote(d) {
+            if (d.reason) return `<span class="text-xs text-slate-400 border border-slate-700 rounded px-2 py-0.5">Not graded: ${escHtml(d.reason)}</span>`;
+            if (!d.provisional) return `<span class="text-xs text-emerald-300 border border-emerald-500/30 rounded px-2 py-0.5">Final grade</span>`;
+            const pct = Math.round(d.elapsed * 100);
+            return `<span class="text-xs text-amber-300 border border-amber-500/30 rounded px-2 py-0.5" title="Points count for more each season until the ${d.redraft ? 'season ends' : `rookies' first ${DRAFT_GRADE_YEARS} seasons are played`}">⏳ Early grade (${pct}% of the ${d.redraft ? 'season' : `${DRAFT_GRADE_YEARS}-year window`} played)</span>`;
+        }
+
+        // One draft's picks as a table; `owner` limits it to that manager's picks
+        function draftPicksTable(d, owner = null) {
+            const picks = owner ? d.picks.filter(p => p.owner === owner) : d.picks;
+            const ptsHead = d.redraft ? 'Season Pts' : `Pts (first ${DRAFT_GRADE_YEARS} yrs)`;
+            const body = picks.map(p => {
+                const tip = p.graded ? `Produced ${p.score.toFixed(2)} vs ${p.expected.toFixed(2)} expected from pick ${p.slot} (1.00 = this draft's average pick)` : '';
+                return `<tr class="hover:bg-slate-800/40 transition">
+                    <td class="p-3 font-mono text-slate-400">${draftPickLabel(p)}${p.price != null ? ` <span class="text-slate-500">$${p.price}</span>` : ''}</td>
+                    ${owner ? '' : `<td class="p-3 font-semibold text-accent">${escHtml(p.owner)}${p.via ? ` <span class="text-xs text-slate-500">via ${escHtml(p.via)}</span>` : ''}</td>`}
+                    <td class="p-3 font-semibold text-slate-100">${escHtml(p.name)} <span class="text-xs text-slate-500">${escHtml(p.pos)}</span>${owner && p.via ? ` <span class="text-xs text-slate-500">(pick via ${escHtml(p.via)})</span>` : ''}${p.keeper ? ' <span class="text-xs text-slate-500">(keeper)</span>' : ''}</td>
+                    <td class="p-3 font-mono">${Math.round(p.pts).toLocaleString()}</td>
+                    ${d.redraft ? '' : `<td class="p-3 font-mono">${Math.round(p.value).toLocaleString()}</td>`}
+                    <td class="p-3 font-mono text-xs text-slate-400">${p.graded ? `${p.score.toFixed(2)} <span class="text-slate-600">/</span> ${p.expected.toFixed(2)}` : '—'}</td>
+                    <td class="p-3">${p.graded ? draftGradeBadge(p.grade, tip) : '<span class="text-slate-600">—</span>'}</td>
+                </tr>`;
+            }).join('');
+            return `<div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm">
+                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700 text-xs uppercase"><tr>
+                    <th class="p-3">Pick</th>${owner ? '' : '<th class="p-3">Manager</th>'}<th class="p-3">Player</th><th class="p-3">${ptsHead}</th>
+                    ${d.redraft ? '' : '<th class="p-3">Value Today</th>'}<th class="p-3">Produced / Expected</th><th class="p-3">Grade</th>
+                </tr></thead><tbody class="divide-y divide-slate-800">${body}</tbody></table></div>`;
+        }
+
+        function draftOwnerChips(d) {
+            const owners = Object.values(d.owners || {}).sort((a, b) => b.ratio - a.ratio);
+            if (!owners.length) return '';
+            return `<div class="flex flex-wrap gap-2">${owners.map(o => `<div class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
+                ${draftGradeBadge(o.grade)}<span class="font-semibold text-slate-200">${escHtml(o.owner)}</span>
+                <span class="font-mono text-slate-400" title="What their picks produced vs what those slots should have">${o.ratio.toFixed(2)}×</span></div>`).join('')}</div>`;
+        }
+
+        function draftTitle(d) {
+            return `${d.season} ${escHtml(d.kind)} Draft`;
+        }
+
+        function syncDraftSeasonOptions(seasons) {
+            const sel = document.getElementById('drafts-season');
+            const prev = sel.value;
+            const opts = draftMode === 'owner' ? ['ALL', ...seasons] : seasons;
+            sel.innerHTML = opts.map(s => `<option value="${s}">${s === 'ALL' ? 'All years' : s}</option>`).join('');
+            sel.value = opts.map(String).includes(prev) ? prev : String(seasons[0] ?? '');
+            return sel.value;
+        }
+
+        function renderDraftHistory() {
+            const drafts = buildDraftGrades();
+            const view = document.getElementById('drafts-view');
+            if (!drafts.length) {
+                view.innerHTML = `<div class="bg-cardbg border border-slate-700 rounded-xl p-6 text-sm text-slate-400">No draft boards saved yet. They are filled in by the next Auto-Sync run.</div>`;
+                return;
+            }
+            if (draftMode === 'league') {
+                const league = document.getElementById('drafts-league').value;
+                const seasons = [...new Set(drafts.filter(d => d.league === league).map(d => d.season))];
+                const season = parseInt(syncDraftSeasonOptions(seasons), 10);
+                const list = drafts.filter(d => d.league === league && d.season === season);
+                view.innerHTML = list.map(d => `<div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                    <div class="p-4 border-b border-slate-800 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-lg font-bold">${draftTitle(d)} <span class="text-slate-400 text-sm font-normal">· ${escHtml(d.league)} · ${d.picks.length} picks</span></h3>
+                            ${draftStatusNote(d)}
+                        </div>
+                        ${draftOwnerChips(d)}
+                    </div>
+                    ${draftPicksTable(d)}
+                </div>`).join('') || '<p class="text-slate-400 text-sm">No drafts saved for this league and year.</p>';
+                return;
+            }
+            const owner = document.getElementById('drafts-owner').value;
+            const mine = drafts.filter(d => d.picks.some(p => p.owner === owner));
+            const seasons = [...new Set(mine.map(d => d.season))];
+            const season = syncDraftSeasonOptions(seasons);
+            const list = mine.filter(d => season === 'ALL' || d.season === parseInt(season, 10));
+            const all = draftOwnerTotals(list.filter(d => !d.reason).flatMap(d => d.picks.filter(p => p.owner === owner)), list.length >= DRAFT_SKILL_MIN_DRAFTS)[owner];
+            const summary = all ? `<div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex flex-wrap items-center gap-3 text-sm">
+                    ${draftGradeBadge(all.grade)}<span class="font-semibold text-slate-200">${escHtml(owner)} ${season === 'ALL' ? 'across every draft' : `in ${season}`}</span>
+                    <span class="text-slate-400">${list.length} draft${list.length === 1 ? '' : 's'} · ${all.picks.length} graded picks · produced <span class="font-mono text-slate-200">${all.ratio.toFixed(2)}×</span> what those slots should have</span>
+                </div>` : '';
+            view.innerHTML = summary + (list.map(d => {
+                const o = (d.owners || {})[owner];
+                return `<div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                    <div class="p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="text-lg font-bold">${o ? draftGradeBadge(o.grade) + ' ' : ''}${escHtml(d.league)} <span class="text-slate-400 text-sm font-normal">· ${draftTitle(d)}${o ? ` · ${o.ratio.toFixed(2)}× expected` : ''}</span></h3>
+                        ${draftStatusNote(d)}
+                    </div>
+                    ${draftPicksTable(d, owner)}
+                </div>`;
+            }).join('') || '<p class="text-slate-400 text-sm">No drafts for this manager in that year.</p>');
+        }
+
+        function renderDraftSkill() {
+            const kind = document.getElementById('drafts-skill-kind').value;
+            const drafts = buildDraftGrades().filter(d => !d.reason && (kind === 'ALL' || d.base === kind));
+            const picks = drafts.flatMap(d => d.picks.filter(p => p.graded));
+            const totals = Object.values(draftOwnerTotals(picks, true));
+            totals.forEach(t => {
+                t.drafts = new Set(t.picks.map(p => `${p.league}||${p.season}||${p.kind}`)).size;
+                t.ranked = t.drafts >= DRAFT_SKILL_MIN_DRAFTS;
+                t.best = t.picks.reduce((a, p) => (!a || p.diff > a.diff ? p : a), null);
+                t.worst = t.picks.reduce((a, p) => (!a || p.diff < a.diff ? p : a), null);
+                t.hits = t.picks.filter(p => p.grade.startsWith('A')).length;
+            });
+            totals.sort((a, b) => (b.ranked - a.ranked) || b.ratio - a.ratio);
+            const out = document.getElementById('drafts-skill');
+            if (!totals.length) { out.innerHTML = '<p class="text-slate-400 text-sm">No graded drafts yet.</p>'; return; }
+            const pickText = p => `${escHtml(p.name)} <span class="text-slate-500">(${p.season} ${draftPickLabel(p)}, ${escHtml(p.league)})</span>`;
+            const rows = totals.map((t, i) => `<tr class="hover:bg-slate-800/40 transition${t.ranked ? '' : ' opacity-60'}"${t.ranked ? '' : ` title="Fewer than ${DRAFT_SKILL_MIN_DRAFTS} graded drafts: not ranked"`}>
+                    <td class="p-3 text-slate-500 font-mono">${t.ranked ? i + 1 : '—'}</td>
+                    <td class="p-3 font-bold text-accent">${escHtml(t.owner)}</td>
+                    <td class="p-3">${draftGradeBadge(t.grade)}</td>
+                    <td class="p-3 font-mono">${t.ratio.toFixed(2)}×</td>
+                    <td class="p-3 text-xs text-slate-300">${t.drafts} drafts · ${t.picks.length} picks · ${t.hits} A-grade hits</td>
+                    <td class="p-3 text-xs text-emerald-300">${t.best ? pickText(t.best) : '—'}</td>
+                    <td class="p-3 text-xs text-rose-300">${t.worst && t.worst.diff < -0.35 ? pickText(t.worst) : '—'}</td>
+                </tr>`).join('');
+            // Steals and busts from final grades only: early grades still move a lot
+            const ranked = picks.filter(p => !p.provisional).sort((a, b) => b.diff - a.diff);
+            const list = (arr, cls) => arr.map(p => `<li class="flex justify-between gap-3"><span>${draftGradeBadge(p.grade)} <span class="font-semibold text-slate-100">${escHtml(p.name)}</span> <span class="text-slate-500">${p.season} ${draftPickLabel(p)} · ${escHtml(p.owner)} · ${escHtml(p.league)}</span></span><span class="font-mono ${cls}">${p.diff >= 0 ? '+' : ''}${p.diff.toFixed(2)}</span></li>`).join('');
+            out.innerHTML = `<div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm"><div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-slate-900 text-slate-400 border-b border-slate-700 text-xs uppercase"><tr>
+                        <th class="p-3">#</th><th class="p-3">Manager</th><th class="p-3">Grade</th><th class="p-3">Produced vs Expected</th>
+                        <th class="p-3">Volume</th><th class="p-3">Best Pick</th><th class="p-3">Biggest Bust</th>
+                    </tr></thead><tbody class="divide-y divide-slate-800">${rows}</tbody></table></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4"><h4 class="font-bold text-emerald-300 mb-2">💎 Biggest Steals <span class="text-slate-500 font-normal">(final grades)</span></h4><ul class="space-y-1.5">${list(ranked.slice(0, 8), 'text-emerald-300')}</ul></div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4"><h4 class="font-bold text-rose-300 mb-2">💀 Biggest Busts <span class="text-slate-500 font-normal">(final grades)</span></h4><ul class="space-y-1.5">${list(ranked.slice(-8).reverse(), 'text-rose-300')}</ul></div>
+                </div>`;
         }
 
         // --- TAB 9: H2H RECORDS ---

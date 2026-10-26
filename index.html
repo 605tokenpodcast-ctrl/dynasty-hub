@@ -614,33 +614,10 @@
         let sortedSynergyPairs = [];
         const tradePairDatabase = {};
 
-        // Default Alias Overrides (Merged automatically if managers_config.json is loaded)
-        let aliasOverrides = {
-            "anthonyz": "Smokers Haven",
-            "smokers haven": "Smokers Haven",
-            "smokershaven": "Smokers Haven",
-            "dantefish": "Dontiddy",
-            "pokelegoej": "BigDEddie"
-        };
-
+        // Manager aliases come from managers_config.json (aliasOverrides, exactAliases), shared with the syncs
+        let aliasOverrides = {};
         // Same person, different username on Fleaflicker vs Sleeper (matched on the exact username, case-insensitive)
-        const exactAliases = {
-            "derrickfish": "DerrickFish",
-            "thecards": "KillerCards",
-            "peopleaters420": "Burntcooks",
-            "andylang1031": "Kronik",
-            "leno": "JayLeno",
-            "jarvis2023": "jarvisevans",
-            "jarvis1983": "jarvisevans",
-            "insideinsight36": "InsideInsightt",
-            "insightinside": "InsideInsightt",
-            "insideinsightt": "InsideInsightt",
-            "easy-e_lliott": "michaelpacheco",
-            "buffalo bills": "joester526",
-            "fishy012": "lilfishy",
-            "ismurda": "Miksimus80",
-            "sohigh420": "tokenwhiteguy"
-        };
+        const exactAliases = {};
 
         let managerMeta = {
             "Smokers Haven": { tagline: "The 2027 1st-Round Draft Capital Kingpin", color: "#3b82f6" },
@@ -866,6 +843,7 @@
                 if (mgrRes.status === 'fulfilled' && mgrRes.value.ok) {
                     const mgrData = await mgrRes.value.json();
                     if (mgrData.aliasOverrides) Object.assign(aliasOverrides, mgrData.aliasOverrides);
+                    if (mgrData.exactAliases) Object.assign(exactAliases, mgrData.exactAliases);
                     if (mgrData.managers) Object.assign(managerMeta, mgrData.managers);
                 }
 
@@ -3949,7 +3927,8 @@
                     const [from, to] = pickYears ? rookieWindow(parseInt(label, 10)) : [ts, end];
                     return {
                         label,
-                        pts: weeks.filter(w => w.ts > from && w.ts <= to).reduce((a, w) => a + w.pts, 0),
+                        // From the trade's own week on: the owner key already limits it to weeks on the new team
+                        pts: weeks.filter(w => w.ts >= from && w.ts <= to).reduce((a, w) => a + w.pts, 0),
                         value: pointsOnly ? 0 : frozen ? frozen.values[label] || 0 : hindsightItemValue(label, leagueName).value
                     };
                 });

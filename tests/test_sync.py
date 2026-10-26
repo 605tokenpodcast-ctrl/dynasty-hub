@@ -385,3 +385,12 @@ class TradeValuesAtGrade(unittest.TestCase):
         with mock.patch.object(sync_trade_values.league_config, 'leagues', return_value=[]):
             due = list(sync_trade_values.due_trades(master, sync_trade_values.dt.date(2026, 10, 26)))
         self.assertEqual([(k.split('||')[2], m.isoformat()) for k, _, _, m in due], [("10/1/2023", "2026-10-01")])
+
+    def test_2019_ranking_only_snapshot(self):
+        players = 'mergename,pos,dynoECR,dyno2QBECR\nOld Star,WR,1,3\nOld Mid,RB,100,90\n'
+        picks = 'mergename,pos,dynoECR,dyno2QBECR\n2019 Pick 14,PICK,50,40\n2020 1st,PICK,150,150\n'
+        snap = sync_trade_values.Snapshot(players, picks, reference_curve=self.snap.curve)
+        self.assertEqual(snap.player("Old Star"), 10000)
+        self.assertEqual(snap.player("Old Mid"), 2250)  # ECR 100 halfway between 50 (4000) and 150 (500)
+        self.assertEqual(snap.pick(2019, 2), 4000)  # overall pick 14 is a 2nd-rounder
+        self.assertEqual(snap.pick(2020, 1), 500)

@@ -7,7 +7,8 @@ snapshot of every player and pick value back to 2019:
 
   - a trade that reaches its 3-year mark is frozen on the next run from the current snapshot;
   - a trade whose mark passed before it was frozen (the backfill, or a missed run) is looked up in the
-    snapshot history, which is cloned on demand.
+    snapshot history, which is cloned on demand. Snapshots before June 2020 only carry rankings (ECR),
+    so their values are read off the ranking -> value curve of the first snapshot that has both.
 
 Frozen entries are kept, so a trade's grade never moves once set. Redraft leagues are skipped: they
 are graded on points alone.
@@ -36,7 +37,8 @@ GRADE_YEARS = 3
 DP_REPO = 'https://github.com/dynastyprocess/data.git'
 DP_RAW = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/'
 CURRENT_WINDOW_DAYS = 21  # a mark this recent is valued from the current snapshot
-EARLIEST_SNAPSHOT = dt.date(2020, 6, 1)  # first snapshots with value_1qb / value_2qb columns
+EARLIEST_SNAPSHOT = dt.date(2019, 4, 6)  # first DynastyProcess snapshot
+REFERENCE_SNAPSHOT = dt.date(2020, 6, 1)  # an early snapshot with both rankings and values
 ROUND_SUFFIX = {1: '1st', 2: '2nd', 3: '3rd'}
 
 
@@ -90,33 +92,34 @@ def trade_items(breakdown):
 class Snapshot:
     """One DynastyProcess snapshot: player values by normalized name, pick values by (year, round)."""
 
-    def __init__(self, players_csv, picks_csv, superflex=False):
+    def __init__(self, players_csv, picks_csv, superflex=False, reference_curve=None):
+        """reference_curve: ECR -> value pairs for snapshots that only have rankings (before June 2020)."""
         col = 'value_2qb' if superflex else 'value_1qb'
-        ecr_col = 'ecr_2qb' if superflex else 'ecr_1qb'
-        self.players, curve = {}, []
-        for row in csv.DictReader(io.StringIO(players_csv.lstrip('﻿'))):
-            try:
-                value = float(row[col])
-            except (KeyError, TypeError, ValueError):
+        # 2019 files name the columns mergename / dynoECR / dyno2QBECR
+        ecr_cols = ('ecr_2qb', 'dyno2QBECR') if superflex else ('ecr_1qb', 'dynoECR')
+        self.players, self.curve = {}, []
+        for row in csv.DictReader(io.StringIO(players_csv.lstrip('\ufeff'))):
+            ecr, value = ranking(row, ecr_cols), number(row.get(col))
+            if value is None and ecr is not None and reference_curve:
+                value = interpolate(reference_curve, ecr)
+            if value is None:
                 continue
-            self.players[normalize_name(row.get('player'))] = value
-            try:
-                curve.append((float(row[ecr_col]), value))
-            except (KeyError, TypeError, ValueError):
-                pass
-        curve.sort()
+            self.players[normalize_name(row.get('player') or row.get('mergename'))] = value
+            if ecr is not None:
+                self.curve.append((ecr, value))
+        self.curve.sort()
+        curve = reference_curve if reference_curve and col not in players_csv.split('\n', 1)[0] else self.curve
         # Picks only carry a ranking (ECR); read their value off the players' ECR -> value curve
         self.picks = {}
-        for row in csv.DictReader(io.StringIO(picks_csv.lstrip('﻿'))):
-            m = re.match(r'^(20\d\d) (?:Pick (\d+)\.\d+|(?:(Early|Mid|Late) )?(\d+)(?:st|nd|rd|th))$', str(row.get('player', '')).strip())
-            try:
-                ecr = float(row[ecr_col])
-            except (KeyError, TypeError, ValueError):
+        for row in csv.DictReader(io.StringIO(picks_csv.lstrip('\ufeff'))):
+            name = str(row.get('player') or row.get('mergename') or '').strip()
+            # "2026 Pick 1.01", "2027 Early 1st", "2027 1st", and in 2019 "2019 Pick 14" (overall, 12 teams)
+            m = re.match(r'^(20\d\d) (?:Pick (\d+)\.\d+|Pick (\d+)|(?:(Early|Mid|Late) )?(\d+)(?:st|nd|rd|th))$', name)
+            ecr = ranking(row, ecr_cols)
+            if not m or ecr is None:
                 continue
-            if not m:
-                continue
-            year, rnd = int(m[1]), int(m[2] or m[4])
-            self.picks.setdefault((year, rnd), []).append(interpolate(curve, ecr))
+            rnd = int(m[2]) if m[2] else (int(m[3]) - 1) // 12 + 1 if m[3] else int(m[5])
+            self.picks.setdefault((int(m[1]), rnd), []).append(interpolate(curve, ecr))
 
     def player(self, name):
         return self.players.get(normalize_name(name), 0)
@@ -128,6 +131,20 @@ class Snapshot:
             return 0
         vals = self.picks[(years[0], rnd)]
         return sum(vals) / len(vals)
+
+
+def number(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def ranking(row, cols):
+    for c in cols:
+        if number(row.get(c)) is not None:
+            return number(row.get(c))
+    return None
 
 
 def interpolate(curve, x):
@@ -165,6 +182,7 @@ class History:
         self.repo = None
         self.commits = None
         self.cache = {}
+        self.reference = {}
 
     def _git(self, *args):
         return subprocess.run(['git', '-C', self.repo, *args], check=True, capture_output=True, text=True).stdout
@@ -190,6 +208,14 @@ class History:
             show = lambda f: self._git('show', f'{commit}:files/{f}')  # noqa: E731
             self.cache[when] = (when, show('values-players.csv'), show('values-picks.csv'))
         return self.cache[when]
+
+
+    def reference_curve(self, superflex, today):
+        """ECR -> value pairs from the first snapshot that has both, for pre-June-2020 snapshots."""
+        if superflex not in self.reference:
+            raw = self.raw(REFERENCE_SNAPSHOT, today)
+            self.reference[superflex] = Snapshot(raw[1], '', superflex).curve if raw else None
+        return self.reference[superflex]
 
 
 def fetch_text(url):
@@ -240,7 +266,8 @@ def main(today=None):
         superflex = '_sf_' in formats.get(league, '')
         snap_key = (raw[0], superflex)
         if snap_key not in snapshots:
-            snapshots[snap_key] = Snapshot(raw[1], raw[2], superflex)
+            ref = history.reference_curve(superflex, today) if raw[0] < REFERENCE_SNAPSHOT else None
+            snapshots[snap_key] = Snapshot(raw[1], raw[2], superflex, ref)
         snap = snapshots[snap_key]
         out[key] = {'as_of': raw[0].isoformat(), 'values': {lbl: round(item_value(lbl, snap, raw[0])) for lbl in trade_items(r[4])}}
         added += 1

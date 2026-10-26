@@ -271,12 +271,15 @@ async function weeklyGazette(lg, season, stateWeek, env, say, dry) {
   if (!r) return;
   const key = gazetteKey(lg.name, season);
   const list = (await env.BOT_KV.get(key, 'json')) || [];
-  if (list.some(a => a.week === r.week)) return; // already written
+  // Already written from these final scores; an article written before the week finished gets rewritten
+  const board = r.scoreboard.join('|');
+  if (list.some(a => a.week === r.week && a.board === board)) return;
   const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard);
   if (!article) return;
   if (dry) { say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, not saved):\n${article}`); return; }
-  list.push({ week: r.week, text: article, at: Date.now() });
-  await env.BOT_KV.put(key, JSON.stringify(list));
+  const kept = list.filter(a => a.week !== r.week);
+  kept.push({ week: r.week, text: article, at: Date.now(), board });
+  await env.BOT_KV.put(key, JSON.stringify(kept));
 }
 
 async function writeGazette(env, league, season, week, facts, scoreboard) {

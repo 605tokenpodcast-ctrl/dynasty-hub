@@ -438,7 +438,7 @@
                                         <th class="p-4">League</th>
                                         <th class="p-4">Teams Involved</th>
                                         <th class="p-4">Trade Breakdown & Draft Pick Lineage</th>
-                                        <th class="p-4">Hindsight (today's values)</th>
+                                        <th class="p-4">Grades: today's values &amp; 3 years later</th>
                                     </tr>
                                 </thead>
                                 <tbody id="trades-table-body" class="divide-y divide-slate-800"></tbody>
@@ -1047,6 +1047,7 @@
 
         function initApp() {
             hubCache = null;
+            startsCache = null;
             document.getElementById('upload-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
 
@@ -3802,14 +3803,14 @@
             });
 
             // Newest first across all leagues, written to the page in one go
-            tbody.innerHTML = trades.sort((a, b) => b.ts - a.ts).map(({ r, leagueName }) => {
+            tbody.innerHTML = trades.sort((a, b) => b.ts - a.ts).map(({ r, leagueName, ts }) => {
                 const hasLineage = String(r[4]).includes('Resulted in drafting:');
                 return `<tr data-has-lineage="${hasLineage ? '1' : '0'}" class="hover:bg-slate-800/50 transition">
                     <td class="p-4 font-medium whitespace-nowrap">${escHtml(r[0])} &bull; ${escHtml(r[2])}<br><span class="text-xs text-slate-400">${escHtml(r[1])}</span></td>
                     <td class="p-4 text-accent font-semibold">${escHtml(leagueName)}</td>
                     <td class="p-4 font-medium text-white">${escHtml(r[3])}</td>
                     <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
-                    <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${hindsightCell(r[4], leagueName)}</td>
+                    <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${hindsightCell(r[4], leagueName)}${threeYearCell(r[4], leagueName, ts)}</td>
                 </tr>`;
             }).join('');
         }
@@ -3823,6 +3824,66 @@
             const share = best.value / total;
             const verdict = share >= 0.65 ? `🦈 ${escHtml(best.owner)} fleeced` : share >= 0.55 ? `✅ ${escHtml(best.owner)} won` : '⚖️ Even';
             return `<p class="font-bold text-emerald-300">${verdict}</p>` + sides.map(s => `<p class="text-slate-400">${escHtml(s.owner)}: <span class="font-mono text-slate-200">${Math.round(s.value).toLocaleString()}</span></p>`).join('');
+        }
+
+        // Starter points each owner got from each player, by league, for grading trades on what they produced
+        let startsCache = null;
+        function startsIndex() {
+            if (startsCache) return startsCache;
+            const idx = {}, seasons = {};
+            buildHubData().lineups.forEach(l => {
+                (seasons[l.league] = seasons[l.league] || new Set()).add(l.season);
+                const ts = new Date(l.season, 8, 5 + 7 * (l.weekNum - 1)).getTime();   // week 1 ~ early September
+                l.starters.forEach(p => {
+                    const k = `${l.league}|${l.owner}|${normalizePlayerName(p.name)}`;
+                    (idx[k] = idx[k] || []).push({ ts, pts: p.pts });
+                });
+            });
+            return (startsCache = { idx, seasons });
+        }
+
+        // Grades a trade on the starter points each side got from what it received (players, and the players
+        // its picks became) in the three years after the trade, while those players stayed on its roster
+        const THREE_YEARS = 3 * 365.25 * 864e5;
+        function threeYearCell(breakdown, leagueName, ts) {
+            if (!ts) return '';
+            const { idx, seasons } = startsIndex();
+            const end = ts + THREE_YEARS;
+            const sides = String(breakdown || '').split(' <---> ').map(side => {
+                const m = side.match(/^(.*?) received: \[(.*)\]$/);
+                if (!m) return null;
+                const owner = getMasterOwner(m[1].trim());
+                const names = (m[2] === 'Nothing' ? [] : m[2].split(/,\s*(?![^()]*\))/)).map(x => {
+                    const s = x.trim();
+                    const d = s.match(/Resulted in drafting:\s*(.+?)\s*\([A-Z/]+\)\s*$/);
+                    if (d) return d[1];
+                    if (/^\d{4}\s+Round/i.test(s)) return null;   // a pick nobody has used yet
+                    const pl = s.match(/^(.*?)\s*\([A-Z/]+(?:\s*-\s*[A-Z]+)?\)$/);
+                    return pl ? pl[1] : s;
+                }).filter(Boolean);
+                const pts = names.reduce((sum, n) => sum + (idx[`${leagueName}|${owner}|${normalizePlayerName(n)}`] || [])
+                    .filter(w => w.ts > ts && w.ts <= end).reduce((a, w) => a + w.pts, 0), 0);
+                return { owner, pts };
+            }).filter(Boolean);
+            if (sides.length < 2) return '';
+            // Seasons inside the window that have no lineup data make the grade partial
+            const have = seasons[leagueName] || new Set();
+            const thisYear = new Date().getFullYear();
+            let missing = false;
+            for (let y = new Date(ts).getFullYear() - 1; y <= Math.min(new Date(end).getFullYear(), thisYear); y++) {
+                const from = new Date(y, 8, 1).getTime(), to = new Date(y + 1, 0, 15).getTime();
+                if (to > ts && from <= Math.min(end, Date.now()) && !have.has(y)) missing = true;
+            }
+            const title = `<p class="mt-3 pt-2 border-t border-slate-800 font-bold text-sky-300">📅 3 years later${end > Date.now() ? ' (so far)' : ''}</p>`;
+            const total = sides.reduce((a, b) => a + b.pts, 0);
+            if (!total) return title + `<p class="text-slate-500">${missing ? 'No lineup data for those seasons' : 'No starter points yet'}</p>`;
+            const best = [...sides].sort((a, b) => b.pts - a.pts)[0];
+            const share = best.pts / total;
+            const verdict = total < 50 ? '🤷 Nobody got much out of it'
+                : share >= 0.65 ? `🦈 ${escHtml(best.owner)} fleeced` : share >= 0.55 ? `✅ ${escHtml(best.owner)} won` : '⚖️ Even';
+            return title + `<p class="font-bold text-sky-200">${verdict}</p>`
+                + sides.map(sd => `<p class="text-slate-400">${escHtml(sd.owner)}: <span class="font-mono text-slate-200">${Math.round(sd.pts).toLocaleString()}</span> starter pts</p>`).join('')
+                + (missing ? '<p class="text-slate-500">Some seasons have no lineup data</p>' : '');
         }
 
         function filterTrades() {

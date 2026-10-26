@@ -486,6 +486,16 @@ def parse_draft_board(data, season):
     return out
 
 
+def traded_pick_key(pk, side, sides):
+    """(year, round, original owner id) for a pick in a trade. Fleaflicker leaves the original
+    owner off a team's own pick, so in a two-team trade it came from the other side."""
+    yr, rnd, orig = pick_key_parts(pk)
+    if not orig and len(sides) == 2:
+        other = sides[1] if side is sides[0] else sides[0]
+        orig = team_id_of(other.get("team"))
+    return yr, rnd, orig
+
+
 def fetch_draft_results(league_id, trades, first, last):
     """Draft boards for every season whose picks were traded (finished drafts only)."""
     seasons = set()
@@ -512,6 +522,15 @@ def fetch_draft_results(league_id, trades, first, last):
                      next((c for r in data.get("rows") or [] for c in r.get("cells") or [] if c), None)
             print(f"  (draft board keys: {sorted(data.keys())[:12]}; "
                   f"pick keys: {sorted(sample.keys())[:12] if isinstance(sample, dict) else None})")
+    # Traded picks from a draft we have that still found no player: log what the board has instead
+    have = {(y, r) for y, r, _ in out}
+    missing = sorted({traded_pick_key(pk, side, t.get("teams") or [])
+                      for t in trades for side in t.get("teams") or []
+                      for pk in side.get("picksObtained") or []} - set(out), key=str)
+    for yr, rnd, orig in missing:
+        if (yr, rnd) in have:
+            owners = sorted(o for y, r, o in out if (y, r) == (yr, rnd))
+            print(f"  unmatched pick {yr} round {rnd} from team {orig}; board round has teams {owners}")
     return out
 
 
@@ -569,12 +588,7 @@ def build_trade_rows(trades, season_labels, latest_label, drafted=None):
                 orig = pk.get("originalOwner") or pk.get("originalTeam")
                 if orig:
                     desc += f" (originally from {label_for(orig, season)})"
-                yr, rnd_n, orig_id = pick_key_parts(pk)
-                if not orig_id and len(sides) == 2:
-                    # Fleaflicker leaves the original owner off a team's own pick: it came from the other side
-                    other = sides[1] if s is sides[0] else sides[0]
-                    orig_id = team_id_of(other.get("team"))
-                player = (drafted or {}).get((yr, rnd_n, orig_id))
+                player = (drafted or {}).get(traded_pick_key(pk, s, sides))
                 if player:
                     desc += f" -> Resulted in drafting: {player}"
                 items.append(desc.strip())

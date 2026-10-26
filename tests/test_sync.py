@@ -200,6 +200,26 @@ class FleaflickerDraftLineage(unittest.TestCase):
         self.assertEqual(got[(2019, 2, "7")], "D (WR)")
         self.assertEqual(got[(2019, 1, "9")], "C (WR)")
 
+    def test_passed_on_pick_keeps_its_original_owner(self):
+        # Older Fleaflicker trades carry no originalOwner. A team sends its own pick while it has it,
+        # then the one it picked up; with several picked up (and its own gone) the pick stays unknown.
+        moves = [(2, 1), (1, 3), (1, 4), (3, 5), (3, 6), (5, 6), (6, 11), (6, 12)]   # (from, to), in time order
+        trades = [{"approvedOn": n, "teams": [
+            {"team": {"id": to}, "picksObtained": [{"season": 2024, "slot": {"round": 1}}]},
+            {"team": {"id": frm}}]} for n, (frm, to) in enumerate(moves, 1)]
+        sync_fleaflicker.resolve_pick_origins(list(reversed(trades)))   # input order doesn't matter
+        origins = [sync_fleaflicker.traded_pick_key(t["teams"][0]["picksObtained"][0], t["teams"][0], t["teams"])[2]
+                   for t in trades]
+        self.assertEqual(origins, ["2", "1", "2", "3", "1", "5", "6", None])
+
+    def test_fresh_lineage_replaces_stored(self):
+        fresh = [["2020", "7/7/2020", "Week 1", "A & B", "A received: [2021 Round 2nd Pick -> Resulted in drafting: Right (QB)] <---> B received: [X (WR)]", "", ""]]
+        old = ["2020", "7/7/2020", "Week 1", "A & B", "Old A received: [2021 Round 2nd Pick -> Resulted in drafting: Wrong (QB)] <---> Old B received: [X (WR)]", "", ""]
+        self.assertIn("Right (QB)", sync_fleaflicker.copy_lineage([old], fresh)[0][4])
+        none = [[*fresh[0][:4], "A received: [2021 Round 2nd Pick] <---> B received: [X (WR)]", "", ""]]
+        self.assertNotIn("Resulted", sync_fleaflicker.copy_lineage([old], none)[0][4])
+        self.assertIn("Wrong (QB)", sync_fleaflicker.copy_lineage([old], none, {2021})[0][4])   # draft unreadable this run
+
     def test_empty_board(self):
         self.assertEqual(sync_fleaflicker.parse_draft_board({}, 2017), {})
 
@@ -253,6 +273,29 @@ class PastSleeperTrades(unittest.TestCase):
         found = [self.row("9/20/2022", "A received: [Kenneth Walker III (RB), X (WR)] <---> B received: [Y (RB)]", "t1")]
         self.assertEqual(sync_leagues.merge_past_trades(trades, found), 0)
         self.assertEqual((legacy[5], far[5]), ("t1", ""))
+
+
+class SleeperDraftLineage(unittest.TestCase):
+    def test_traded_pick_gets_player_from_original_slot(self):
+        api = {
+            "https://api.sleeper.app/v1/league/L26/users": [{"user_id": "u1", "display_name": "alpha"}, {"user_id": "u2", "display_name": "beta"}],
+            "https://api.sleeper.app/v1/league/L26/drafts": [{"draft_id": "d1", "season": "2026", "status": "complete", "draft_order": {"u2": 1, "u1": 2}}],
+            # beta (slot 1) traded its 1st to alpha, who made both picks
+            "https://api.sleeper.app/v1/draft/d1/picks": [{"round": 1, "draft_slot": 1, "roster_id": 1, "player_id": "p1"},
+                                                          {"round": 1, "draft_slot": 2, "roster_id": 1, "player_id": "p2"}],
+        }
+        players = {"p1": {"full_name": "Rookie One", "position": "WR"}, "p2": {"full_name": "Rookie Two", "position": "RB"}}
+        with mock.patch.object(sync_leagues, 'fetch_json', side_effect=lambda url: api.get(url)):
+            drafted, done = sync_leagues.draft_results({"league_id": "L26", "season": "2026", "previous_league_id": None}, {"2026"}, players)
+        self.assertEqual(done, {"2026"})
+        trades = [["2025", "9/1/2025", "Week 1", "A & B",
+                   "Team A (alpha) received: [2026 Round 1st Pick (originally from Old Name (beta))] <---> Team B (beta) received: [Vet (QB), "
+                   "2027 Round 2nd Pick (originally from Team A (alpha))]", "t1", ""]]
+        self.assertEqual(sync_leagues.open_pick_years(trades, "2026"), {"2026"})
+        self.assertEqual(sync_leagues.add_draft_lineage(trades, drafted), 1)
+        self.assertIn("2026 Round 1st Pick (originally from Old Name (beta)) -> Resulted in drafting: Rookie One (WR)]", trades[0][4])
+        self.assertEqual(sync_leagues.open_pick_years(trades, "2026"), set())
+        self.assertEqual(sync_leagues.add_draft_lineage(trades, drafted), 0)   # never added twice
 
 
 class FleaflickerProfileMarkers(unittest.TestCase):

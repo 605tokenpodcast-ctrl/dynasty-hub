@@ -3913,7 +3913,8 @@
                     const weeks = name ? idx.byKey[`${owner}||${normalizePlayerName(name)}`] || [] : [];
                     return {
                         label,
-                        pts: weeks.filter(w => w.ts > ts && w.ts <= end).reduce((a, w) => a + w.pts, 0),
+                        // From the trade's own week on: the owner key already limits it to weeks on the new team
+                        pts: weeks.filter(w => w.ts >= ts && w.ts <= end).reduce((a, w) => a + w.pts, 0),
                         value: pointsOnly ? 0 : frozen ? frozen.values[label] || 0 : hindsightItemValue(label, leagueName).value
                     };
                 });

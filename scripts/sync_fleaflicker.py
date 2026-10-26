@@ -13,6 +13,8 @@ Fleaflicker league like any other league:
       older seasons backfilled per run)
   --- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---        (current season, plus every older
       season that has none yet)
+  --- DRAFT HISTORY (ALL SEASONS) ---                    (every pick of every draft board, each
+      past season read once)
 
 A merge_into league (Fleaflicker years of a league that moved to Sleeper) gets the same
 history, spliced into the Sleeper league's block for its Fleaflicker seasons.
@@ -64,6 +66,10 @@ MOVES_HEADER = "--- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---"
 # season Fleaflicker has nothing for isn't asked for on every run
 LINEUPS_CHECKED = "Fleaflicker Lineups Checked"
 MOVES_CHECKED = "Fleaflicker Moves Checked"
+DRAFTS_CHECKED = "Fleaflicker Drafts Checked"
+DRAFTS_HEADER = "--- DRAFT HISTORY (ALL SEASONS) ---"
+DRAFTS_COLUMNS = ["Season", "Draft", "Round", "Pick", "Team / Manager", "Player", "Original Owner", "Notes"]
+STARTUP_ROUNDS = 8  # a draft with more rounds than this is a startup (every player), not a rookie draft
 _debug_seen = set()
 
 
@@ -740,6 +746,67 @@ def fetch_draft_results(league_id, trades, first, last):
     return out, failed, pickers
 
 
+def draft_board_rows(data, season, labels, redraft=False, traded=None):
+    """Every pick on one FetchLeagueDraftBoard response as draft-history rows (DRAFTS_COLUMNS), in pick
+    order. `labels` maps team id -> "Team (owner)" for that season. The original owner, filled in only
+    when another team made the pick, comes from parse_draft_board's reading of the slot order."""
+    data = data or {}
+    cells = [c for r in data.get("rows") or [] for c in r.get("cells") or [] if c]
+    ordered = bool(not cells)
+    if ordered:
+        cells = [c for c in data.get("orderedSelections") or [] if c]
+    picks = []
+    for i, c in enumerate(cells):
+        pro = unwrap_player(c.get("player")) if c.get("player") else {}
+        sl = c.get("slot") or {}
+        rnd = int(num(sl.get("round"), 0))
+        if not rnd or not (pro.get("nameFull") or pro.get("nameLast")):
+            continue
+        picks.append((rnd, int(num(sl.get("overall"), 0)), int(num(sl.get("slot"), 0)), i, c, player_label(pro)))
+    if not picks:
+        return []
+    n = max(Counter(p[0] for p in picks).values())
+    # Pick order: the overall number when the board has it, else the round, then the slot (or list order)
+    picks.sort(key=lambda p: (p[1] or (p[0] - 1) * n + (p[2] or 0), p[0], p[3] if ordered else p[2], p[3]))
+    origin = {(rnd, label): orig for (_, rnd, orig), label in parse_draft_board(data, season, traded).items()}
+    kind = "Redraft" if redraft else "Startup" if max(p[0] for p in picks) > STARTUP_ROUNDS else "Rookie"
+    rows = []
+    for overall, (rnd, _, _, _, c, label) in enumerate(picks, 1):
+        tid = team_id_of(c.get("team"))
+        team = labels.get(tid) or team_label(c.get("team"))
+        orig = origin.get((rnd, label))
+        orig_label = labels.get(orig, "") if orig and orig != tid else ""
+        rows.append([str(season), kind, str(rnd), str(overall), team, label, orig_label, ""])
+    return rows
+
+
+def fetch_draft_history(league, seasons, labels_by_season, trades):
+    """Draft-history rows for `seasons` and the seasons whose board was read (empty boards included,
+    e.g. a season drafted elsewhere), so past seasons are only asked for once."""
+    traded = {}
+    for t in sorted(trades, key=trade_time):
+        sides = t.get("teams") or []
+        for side in sides:
+            for pk in side.get("picksObtained") or []:
+                key = traded_pick_key(pk, side, sides)
+                if all(key):
+                    traded[key] = team_id_of(side.get("team"))
+    rows, done = [], set()
+    for season in sorted(seasons):
+        try:
+            data = api("FetchLeagueDraftBoard", league_id=league["id"], season=season)
+            labels = labels_by_season.get(season) or {str(r["id"]): r["label"]
+                                                       for r in fetch_standings(league["id"], season) if r["id"] is not None}
+        except FleaError as e:
+            print(f"  draft board {season} skipped: {e}")
+            continue
+        got = draft_board_rows(data, season, labels, league.get("type") == "redraft", traded)
+        print(f"  draft board {season}: {len(got)} picks")
+        rows.extend(got)
+        done.add(season)
+    return rows, done
+
+
 def log_unmatched_picks(trades, drafted):
     """Traded picks from a draft we have that still found no player: log what the board has instead."""
     have = {(y, r) for y, r, _ in drafted}
@@ -1229,7 +1296,8 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     own_season = lambda r: first <= int(num(r[0], 0)) <= last and str(r[0]) != str(cur)  # noqa: E731
     old_lineups = [r for r in existing_section_rows(history, "LINEUPS") if own_season(r)]
     old_moves = [r for r in existing_section_rows(history, "FREE AGENT") if own_season(r)]
-    checked = {key: checked_seasons(history, key) for key in (LINEUPS_CHECKED, MOVES_CHECKED)}
+    old_drafts = [r for r in existing_section_rows(history, "DRAFT HISTORY") if first <= int(num(r[0], 0)) <= last]
+    checked = {key: checked_seasons(history, key) for key in (LINEUPS_CHECKED, MOVES_CHECKED, DRAFTS_CHECKED)}
     past = range(first, min(last, cur - 1) + 1)
     have_lineups = {int(r[0]) for r in old_lineups} | checked[LINEUPS_CHECKED]
     backfill = sorted((y for y in past if y not in have_lineups), reverse=True)[:LINEUP_BACKFILL_PER_RUN]
@@ -1366,6 +1434,18 @@ def collect_league(league, existing_rows=None, cache_rows=None):
         except FleaError as e:
             print(f"  moves skipped: {e}")
         print(f"  {len(move_rows)} moves")
+    # Every draft board: past seasons once (the profile row lists those read), this season on every run
+    draft_seasons = [y for y in range(first, min(last, cur) + 1) if y not in checked[DRAFTS_CHECKED]]
+    draft_rows, drafts_done = [], set()
+    if draft_seasons:
+        print(f"- draft boards {draft_seasons}")
+        draft_rows, drafts_done = fetch_draft_history(
+            league, draft_seasons, {y: {str(k): v for k, v in lab.items()} for y, lab in season_labels.items()}, trades)
+    fresh_draft_seasons = {r[0] for r in draft_rows}
+    draft_rows += [r for r in old_drafts if str(r[0]) not in fresh_draft_seasons]
+    draft_rows.sort(key=lambda r: (-int(num(r[0], 0)), str(r[1]), int(num(r[3], 0))))
+    # This season's board is read again every run (a slow draft can take weeks); it's done once the season rolls over
+    drafts_done -= {cur}
     move_rows.sort(key=lambda r: (-int(r[0]), -trade_date([r[0], r[2]]).timestamp()))
     lineup_rows.sort(key=lambda r: (-int(r[0]), int(r[1].split()[-1])))
     fresh_lineup_seasons = {r[0] for r in lineup_rows}
@@ -1373,10 +1453,11 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     old_moves = [r for r in old_moves if int(r[0]) not in moves_done]
     return {"standings": standings_rows, "matchups": matchup_rows, "trades": trade_rows,
             "rosters": roster_rows, "last": last,
-            "lineups": lineup_rows + old_lineups, "moves": move_rows + old_moves,
+            "lineups": lineup_rows + old_lineups, "moves": move_rows + old_moves, "drafts": draft_rows,
             # Seasons looked up in full, even when they came back empty, so they aren't asked for again
             "checked": {LINEUPS_CHECKED: checked[LINEUPS_CHECKED] | (lineups_done - {cur}),
-                        MOVES_CHECKED: checked[MOVES_CHECKED] | (moves_done - {cur})}}
+                        MOVES_CHECKED: checked[MOVES_CHECKED] | (moves_done - {cur}),
+                        DRAFTS_CHECKED: checked[DRAFTS_CHECKED] | drafts_done}}
 
 
 def build_standalone_block(league, data):
@@ -1412,7 +1493,11 @@ def build_standalone_block(league, data):
         BLANK,
         [MOVES_HEADER, "", "", "", "", "", "", ""],
         ["Season", "Week", "Date", "Team / Manager", "Type", "Added", "Dropped", "FAAB Bid"],
-    ] + data["moves"]
+    ] + data["moves"] + [
+        BLANK,
+        [DRAFTS_HEADER, "", "", "", "", "", "", ""],
+        DRAFTS_COLUMNS,
+    ] + data.get("drafts", [])
 
 
 def merge_into_existing(rows, data, first_season, last_season):
@@ -1423,7 +1508,8 @@ def merge_into_existing(rows, data, first_season, last_season):
     """
     seasons = {str(y) for y in range(first_season, last_season + 1)}
     wanted = {"standings": data["standings"], "trades": data["trades"], "matchups": data["matchups"],
-              "lineups": data.get("lineups") or [], "moves": data.get("moves") or []}
+              "lineups": data.get("lineups") or [], "moves": data.get("moves") or [],
+              "drafts": data.get("drafts") or []}
 
     kept, sec = [], None
     last_idx = {}   # section -> index in `kept` of its last non-blank row
@@ -1439,6 +1525,7 @@ def merge_into_existing(rows, data, first_season, last_season):
             elif "FREE AGENT" in u0: sec = "moves"
             elif "BOX SCORES" in u0: sec = "boxscores"
             elif "MATCHUPS" in u0: sec = "matchups"
+            elif "DRAFT HISTORY" in u0: sec = "drafts"
             else: sec = "other"
             kept.append(r)
             last_idx[sec] = len(kept) - 1
@@ -1449,7 +1536,11 @@ def merge_into_existing(rows, data, first_season, last_season):
         if any(str(c).strip() for c in r):
             last_idx[sec] = len(kept) - 1
 
-    missing = [k for k in wanted if k not in last_idx]
+    if "drafts" not in last_idx and wanted["drafts"]:
+        # A block written before draft history existed: start the section at the end
+        kept += [BLANK, [DRAFTS_HEADER, "", "", "", "", "", "", ""], DRAFTS_COLUMNS]
+        last_idx["drafts"] = len(kept) - 1
+    missing = [k for k in wanted if k not in last_idx and wanted[k]]
     if missing:
         print(f"!! target block has no {missing} section(s); those rows were not merged")
 

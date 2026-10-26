@@ -363,8 +363,8 @@ def add_draft_lineage(trades, drafted):
         r[4] = OPEN_PICK_RE.sub(fill, str(r[4]))
     return added
 
-def manager_labels(league_id):
-    """roster_id -> "Team Name (display)" for one Sleeper league."""
+def league_people(league_id):
+    """(roster_id -> label, user_id -> label) for one Sleeper league, labels as "Team Name (display)"."""
     rosters = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/rosters") or []
     users = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/users") or []
     user_map = {}
@@ -372,7 +372,86 @@ def manager_labels(league_id):
         display = u.get('display_name', 'Unknown').strip()
         team_name = ((u.get('metadata') or {}).get('team_name') or '').strip()
         user_map[u.get('user_id')] = f"{team_name} ({display})" if team_name and team_name.lower() != display.lower() else display
-    return {r.get('roster_id'): user_map.get(r.get('owner_id'), f"Team {r.get('roster_id')}") for r in rosters}
+    return {r.get('roster_id'): user_map.get(r.get('owner_id'), f"Team {r.get('roster_id')}") for r in rosters}, user_map
+
+def manager_labels(league_id):
+    """roster_id -> "Team Name (display)" for one Sleeper league."""
+    return league_people(league_id)[0]
+
+DRAFTS_HEADER = "--- DRAFT HISTORY (ALL SEASONS) ---"
+DRAFTS_COLUMNS = ["Season", "Draft", "Round", "Pick", "Team / Manager", "Player", "Original Owner", "Notes"]
+DRAFT_BOARDS_KEY = "Sleeper Drafts Synced"  # profile row: seasons whose finished drafts are saved in full
+
+def draft_kind(rounds, is_redraft):
+    """Rookie, Startup (more rounds than a rookie draft has) or Redraft."""
+    if is_redraft:
+        return "Redraft"
+    return "Startup" if int(rounds or 0) > STARTUP_ROUNDS else "Rookie"
+
+def season_draft_rows(league_id, season, is_redraft, players_data):
+    """One row per pick (DRAFTS_COLUMNS) of the league's finished drafts for `season`, in pick order.
+    The team is the one that made the pick (pick.roster_id); the original owner, filled in only when
+    it's someone else, is whoever held that draft slot (draft_order: user -> slot)."""
+    drafts = [d for d in fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/drafts") or []
+              if d.get('status') == 'complete' and str(d.get('season')) == str(season)]
+    if not drafts:
+        return []
+    roster_label, user_label = league_people(league_id)
+    rows, seen = [], {}
+    for d in sorted(drafts, key=lambda d: d.get('start_time') or 0):
+        kind = draft_kind((d.get('settings') or {}).get('rounds'), is_redraft)
+        seen[kind] = seen.get(kind, 0) + 1
+        if seen[kind] > 1:   # a second draft of the same kind in one season (rare): keep them apart
+            kind = f"{kind} {seen[kind]}"
+        auction = d.get('type') == 'auction'
+        slot_user = {} if auction else {str(slot): uid for uid, slot in (d.get('draft_order') or {}).items()}
+        picks = fetch_json(f"https://api.sleeper.app/v1/draft/{d.get('draft_id')}/picks") or []
+        for p in sorted(picks, key=lambda p: int(p.get('pick_no') or 0)):
+            if not p.get('player_id'):
+                continue
+            meta = p.get('metadata') or {}
+            if str(p['player_id']) in players_data or not meta.get('last_name'):
+                name, pos, _ = get_player_label(p['player_id'], players_data)
+            else:
+                name, pos = f"{meta.get('first_name', '')} {meta['last_name']}".strip(), meta.get('position') or 'FLEX'
+            team = roster_label.get(p.get('roster_id')) or user_label.get(p.get('picked_by')) or f"Team {p.get('roster_id')}"
+            orig = user_label.get(slot_user.get(str(p.get('draft_slot'))), '')
+            if orig and owner_key(orig) == owner_key(team):
+                orig = ''
+            notes = (["Keeper"] if p.get('is_keeper') else []) + ([f"${meta['amount']}"] if auction and meta.get('amount') else [])
+            rows.append([str(season), kind, str(p.get('round') or ''), str(p.get('pick_no') or ''),
+                         team, f"{name} ({pos})", orig, "; ".join(notes)])
+    return rows
+
+def backfill_drafts(league_info, done_seasons, is_redraft, players_data):
+    """Draft rows for this season and the league's earlier Sleeper seasons not in done_seasons:
+    ({season: rows}, seasons now done). A past season with no finished draft counts as done (nothing
+    to save); this season stays open until its draft is over. Failed requests skip that season."""
+    found, done = {}, set()
+    current = str(league_info.get('season') or '')
+    info, league_id = league_info, str(league_info.get('league_id'))
+    while info:
+        season = str(info.get('season') or '')
+        if season and season not in done_seasons:
+            rows = optional_fetches(lambda: season_draft_rows(league_id, season, is_redraft, players_data))
+            if rows is not None:
+                if rows:
+                    found[season] = rows
+                if rows or season != current:
+                    done.add(season)
+                print(f"  {season} draft: {len(rows)} pick(s) (league {league_id})")
+        prev = str(info.get('previous_league_id') or '')
+        if prev in ('', '0', 'None'):
+            break
+        league_id, info = prev, optional_fetches(lambda: fetch_league(prev))
+    return found, done
+
+def draft_sort_key(row):
+    """Newest season first, then each draft in pick order."""
+    try:
+        return (-int(row[0]), str(row[1]), int(row[3] or 0))
+    except (TypeError, ValueError):
+        return (0, str(row[1]), 0)
 
 def backfill_past_seasons(league_info, have_seasons, players_data):
     """Lineups and waiver moves for earlier Sleeper seasons of this league (via previous_league_id).
@@ -714,6 +793,7 @@ def build_master_data():
         historical_matchups = []
         historical_lineups = []
         historical_moves = []
+        historical_drafts = []
         profile_rows = []
 
         if existing_rows:
@@ -730,6 +810,7 @@ def build_master_data():
                     elif 'FREE AGENT' in u0: active_sec = 'moves'
                     elif 'BOX SCORES' in u0: active_sec = 'boxscores'
                     elif 'MATCHUPS' in u0: active_sec = 'matchups'
+                    elif 'DRAFT HISTORY' in u0: active_sec = 'drafts'
                     else: active_sec = 'other'
                     continue
 
@@ -754,6 +835,9 @@ def build_master_data():
                 elif active_sec == 'moves':
                     if c0 not in ('Season', season):
                         historical_moves.append(row)
+                elif active_sec == 'drafts':
+                    if c0 != 'Season':
+                        historical_drafts.append(row)
 
         have_seasons = {str(r[0]).strip() for r in historical_lineups}
         past_lineups, past_moves = backfill_past_seasons(league_info, have_seasons, players_data)
@@ -829,6 +913,17 @@ def build_master_data():
                 if done:
                     set_profile(profile_rows, DRAFTS_KEY, ", ".join(sorted(checked | done)))
 
+        # Every pick of every finished draft, read once per season (the profile row lists those saved).
+        # Rows of other seasons are kept, including the Fleaflicker-era drafts of a merged league.
+        done_drafts = set(re.findall(r'\d{4}', profile_value(profile_rows, DRAFT_BOARDS_KEY)))
+        new_drafts, drafts_done = backfill_drafts(league_info, done_drafts, is_redraft, players_data)
+        draft_rows = [r for r in historical_drafts if str(r[0]).strip() not in new_drafts]
+        for rows in new_drafts.values():
+            draft_rows.extend(rows)
+        draft_rows.sort(key=draft_sort_key)
+        if drafts_done:
+            set_profile(profile_rows, DRAFT_BOARDS_KEY, ", ".join(sorted(done_drafts | drafts_done)))
+
         compiled_rows = (
             [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""]] +
             profile_rows +
@@ -858,7 +953,11 @@ def build_master_data():
              [MOVES_HEADER, "", "", "", "", "", "", ""],
              ["Season", "Week", "Date", "Team / Manager", "Type", "Added", "Dropped", "FAAB Bid"]] +
             new_move_rows +
-            historical_moves
+            historical_moves +
+            [["", "", "", "", "", "", ""],
+             [DRAFTS_HEADER, "", "", "", "", "", "", ""],
+             DRAFTS_COLUMNS] +
+            draft_rows
         )
         # Never replace current-season data with less of it: a shrinking row count means
         # some API call silently returned nothing.

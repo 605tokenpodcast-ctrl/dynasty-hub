@@ -223,6 +223,35 @@ class FleaflickerDraftLineage(unittest.TestCase):
         sync_fleaflicker.resolve_pick_origins(trades, {(2024, 1, "2"): "3", (2024, 1, "1"): "1"})
         self.assertEqual(key(trades[1]), (2024, 1, "2"))
 
+    def test_board_naming_slot_owners_says_nothing_about_pickers(self):
+        def pick(rnd, slot, team, name):
+            return {"slot": {"round": rnd, "slot": slot}, "team": {"id": team}, "player": {"proPlayer": {"nameFull": name, "position": "WR"}}}
+        data = {"draftOrder": [{"id": 1}, {"id": 2}], "orderedSelections": [pick(1, 1, 1, "A"), pick(1, 2, 2, "B")]}
+        pickers = {}
+        self.assertEqual(sync_fleaflicker.parse_draft_board(data, 2025, {(2025, 1, "1"): "2"}, pickers)[(2025, 1, "1")], "A (WR)")
+        self.assertEqual(pickers, {})   # team 1's pick was traded to team 2, yet "team 1" made it
+        sync_fleaflicker.parse_draft_board(data, 2025, {}, pickers)
+        self.assertEqual(pickers, {(2025, 1, "1"): "1", (2025, 1, "2"): "2"})
+
+    def test_kept_pick_someone_else_drafted_with(self):
+        # The feed misses the trade that sent team 2's 1st to team 1. Teams 1 and 2 swap 1sts: tracking
+        # says each sent its own, but the board shows each made only the pick in its own slot.
+        trades = [{"approvedOn": 1, "teams": [{"team": {"id": 2}, "picksObtained": [{"season": 2019, "slot": {"round": 1}}]},
+                                              {"team": {"id": 1}, "picksObtained": [{"season": 2019, "slot": {"round": 1}}]}]}]
+        board = {(2019, 1, "1"): "1", (2019, 1, "2"): "2", (2019, 1, "3"): "1"}
+        key = lambda side: sync_fleaflicker.traded_pick_key(side["picksObtained"][0], side, trades[0]["teams"])  # noqa: E731
+        sync_fleaflicker.resolve_pick_origins(trades, board)
+        self.assertEqual(key(trades[0]["teams"][0]), (2019, 1, "2"))   # its own slot, the only pick it made
+        self.assertEqual(key(trades[0]["teams"][1]), (2019, 1, "3"))   # the pick it made that isn't its own
+        # A year whose later trades may be missing (drafted on Sleeper) keeps the tracked answer
+        sync_fleaflicker.resolve_pick_origins(trades, board, board_years=())
+        self.assertEqual(key(trades[0]["teams"][0]), (2019, 1, "1"))
+        # Passed on later: who drafted with it says nothing about this trade
+        trades.append({"approvedOn": 2, "teams": [{"team": {"id": 4}, "picksObtained": [{"season": 2019, "slot": {"round": 1}}]},
+                                                  {"team": {"id": 2}}]})
+        sync_fleaflicker.resolve_pick_origins(trades, board)
+        self.assertEqual(key(trades[0]["teams"][0]), (2019, 1, "1"))
+
     def test_fresh_lineage_replaces_stored(self):
         fresh = [["2020", "7/7/2020", "Week 1", "A & B", "A received: [2021 Round 2nd Pick -> Resulted in drafting: Right (QB)] <---> B received: [X (WR)]", "", ""]]
         old = ["2020", "7/7/2020", "Week 1", "A & B", "Old A received: [2021 Round 2nd Pick -> Resulted in drafting: Wrong (QB)] <---> Old B received: [X (WR)]", "", ""]
@@ -318,8 +347,8 @@ class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
             f"{S}/league/{target['id']}/users": [{"user_id": "u1", "display_name": "jarvisevans"}, {"user_id": "u2", "display_name": "Kronik"}],
             f"{S}/league/{target['id']}/drafts": [{"draft_id": "d22", "season": "2022", "status": "complete",
                                                   "settings": {"rounds": 5}, "draft_order": {"u1": 1, "u2": 2}}],
-            f"{S}/draft/d22/picks": [{"round": 1, "draft_slot": 1, "player_id": "p1", "metadata": {"first_name": "Rook", "last_name": "Ie", "position": "WR"}},
-                                     {"round": 1, "draft_slot": 2, "player_id": "p2", "metadata": {"first_name": "Other", "last_name": "Guy", "position": "RB"}}],
+            f"{S}/draft/d22/picks": [{"round": 1, "draft_slot": 1, "picked_by": "u2", "player_id": "p1", "metadata": {"first_name": "Rook", "last_name": "Ie", "position": "WR"}},
+                                     {"round": 1, "draft_slot": 2, "picked_by": "u2", "player_id": "p2", "metadata": {"first_name": "Other", "last_name": "Guy", "position": "RB"}}],
         }
         # Jarvis1983 (Fleaflicker team 7) sent its own 2022 1st to team 8 in 2020
         trades = [{"approvedOn": 1, "teams": [{"team": {"id": 8, "name": "Eight"}, "picksObtained": [{"season": 2022, "slot": {"round": 1}}]},
@@ -330,9 +359,11 @@ class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
         sync_leagues._LEAGUES.clear()
         with mock.patch.object(sync_leagues, 'fetch_json', side_effect=lambda url: api.get(url)), \
                 mock.patch.object(sync_fleaflicker, 'api', return_value=standings):
-            out, failed = sync_fleaflicker.sleeper_draft_results({"id": "181202", "merge_into": "Hail Mary Jane Congregation"}, trades, 2020)
+            out, failed, pickers = sync_fleaflicker.sleeper_draft_results({"id": "181202", "merge_into": "Hail Mary Jane Congregation"}, trades, 2020)
         sync_leagues._LEAGUES.clear()
-        self.assertEqual(out, {(2022, 1, "7"): "Rook Ie (WR)"})
+        # andylang1031 is Kronik (managers_config.json), who made both picks
+        self.assertEqual(out, {(2022, 1, "7"): "Rook Ie (WR)", (2022, 1, "8"): "Other Guy (RB)"})
+        self.assertEqual(pickers, {(2022, 1, "7"): "8", (2022, 1, "8"): "8"})
         self.assertEqual(failed, set())
 
 

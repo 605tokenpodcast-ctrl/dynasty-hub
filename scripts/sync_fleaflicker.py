@@ -418,6 +418,8 @@ def parse_draft_board(data, season, traded=None, pickers=None):
     `traded` ({(season, round, original owner id): id of the team that ended up with it}) fills in
     picks whose slot owner can't be read off the board, e.g. a team that traded away a whole round.
     `pickers`, if given, is filled with the id of the team that made each pick, by the same key.
+    Some boards name each slot's original owner as the team instead; when every pick was made by
+    its slot's owner although trades moved some of them, the board says nothing about who made them.
     """
     data = data or {}
     order = [team_id_of(t) for t in data.get("draftOrder") or []]
@@ -485,7 +487,7 @@ def parse_draft_board(data, season, traded=None, pickers=None):
         return sum(1 for i, rnd, c in cells if untraded(c) and f(i, rnd, c) == owner(c))
 
     orig_of = max(strategies, key=agreement)
-    out, unplaced, slots = {}, [], {}
+    out, unplaced, slots, made_by = {}, [], {}, {}
     for i, rnd, c in cells:
         if not c.get("player"):
             continue
@@ -497,8 +499,7 @@ def parse_draft_board(data, season, traded=None, pickers=None):
         pos = (slot_of(c), snake_pos(rnd, c))
         if orig and key not in out:
             out[key] = player_label(pro)
-            if pickers is not None:
-                pickers[key] = owner(c)
+            made_by[key] = owner(c)
             slots.setdefault(orig, set()).update({("linear", pos[0]), ("snake", pos[1])})
         else:
             unplaced.append((rnd, owner(c), pos, player_label(pro)))
@@ -511,8 +512,10 @@ def parse_draft_board(data, season, traded=None, pickers=None):
             cands = [k for k in cands if slots.get(k[2], set()) & {("linear", pos[0]), ("snake", pos[1])}] or cands
         if len(cands) == 1:
             out[cands[0]] = label
-            if pickers is not None:
-                pickers[cands[0]] = picker
+            made_by[cands[0]] = picker
+    moved = any(k[0] == int(season) and to != k[2] for k, to in (traded or {}).items())
+    if pickers is not None and (not moved or any(by != k[2] for k, by in made_by.items())):
+        pickers.update(made_by)
     return out
 
 
@@ -520,15 +523,31 @@ def trade_time(t):
     return num(t.get("approvedOn") or t.get("tradeTime") or t.get("createdOn"))
 
 
-def resolve_pick_origins(trades, pickers=None):
+def resolve_pick_origins(trades, pickers=None, board_years=None):
     """Fill in the original owner of traded picks that Fleaflicker left it off (every trade before
     2024 or so), as pk["_orig"]. Walks the trades oldest first, tracking who holds each pick. The
     pick sent is one of the sender's own and the ones it picked up in earlier trades of that year
     and round. With `pickers` (draft board: who made each pick), the one candidate the receiving
     team went on to draft with decides. Otherwise: its own while it still has it, else the single
-    one it picked up; with several picked up the pick gets no owner rather than a wrong one."""
+    one it picked up; with several picked up the pick gets no owner rather than a wrong one.
+    The trade feed misses some moves, so tracking can still land on a pick another team made. When
+    the receiver kept the pick (never sent one of that year and round on), it is the one pick of
+    that round the receiver made that no tracked trade explains, or none. That check needs every
+    later trade of the pick, so it only runs for `board_years` (default: every year in `pickers`)."""
+    pickers = pickers or {}
+    board_years = set(board_years) if board_years is not None else {k[0] for k in pickers}
+    ordered = sorted(trades, key=trade_time)
+    sent = {}   # (team id, year, round) -> times that team sent a pick of that year and round
+    for t in ordered:
+        sides = t.get("teams") or []
+        for side in sides:
+            for other in sides:
+                if other is not side:
+                    for pk in side.get("picksObtained") or []:
+                        yr, rnd, _ = pick_key_parts(pk)
+                        sent.setdefault((team_id_of(other.get("team")), yr, rnd), []).append(trade_time(t))
     holder = {}   # (year, round, original owner id) -> id of the team holding it, for picks that moved
-    for t in sorted(trades, key=trade_time):
+    for t in ordered:
         sides = t.get("teams") or []
         moves = []
         for side in sides:
@@ -538,13 +557,19 @@ def resolve_pick_origins(trades, pickers=None):
                 if not orig and len(sides) == 2 and yr and rnd:
                     giver = team_id_of((sides[1] if side is sides[0] else sides[0]).get("team"))
                     held = [k[2] for k, h in holder.items() if k[:2] == (yr, rnd) and h == giver and k[2] != giver]
-                    drafted_by_recv = [c for c in [giver] + held if (pickers or {}).get((yr, rnd, c)) == recv]
+                    drafted_by_recv = [c for c in [giver] + held if pickers.get((yr, rnd, c)) == recv]
                     if len(drafted_by_recv) == 1:
                         orig = drafted_by_recv[0]
                     elif holder.get((yr, rnd, giver), giver) == giver:
                         orig = giver
                     else:
                         orig = held[0] if len(held) == 1 else None
+                    kept = not any(ts > trade_time(t) for ts in sent.get((recv, yr, rnd), []))
+                    if kept and yr in board_years and orig and pickers.get((yr, rnd, orig)) not in (None, recv):
+                        made = [k for k, p in pickers.items() if k[:2] == (yr, rnd) and p == recv and holder.get(k) != recv]
+                        if len(made) > 1:
+                            made = [k for k in made if k[2] != recv]
+                        orig = made[0][2] if len(made) == 1 else None
                     pk["_orig"] = orig or ""
                 if yr and rnd and orig and recv:
                     moves.append(((yr, rnd, orig), recv))
@@ -566,7 +591,8 @@ def traded_pick_key(pk, side, sides):
 
 
 def fetch_draft_results(league_id, trades, first, last):
-    """Draft boards for every season whose picks were traded (finished drafts only)."""
+    """Draft boards for every season whose picks were traded (finished drafts only): the player
+    drafted with each pick, the seasons that couldn't be read, and who made each pick."""
     seasons = set()
     for t in trades:
         for side in t.get("teams") or []:
@@ -601,43 +627,45 @@ def fetch_draft_results(league_id, trades, first, last):
                      next((c for r in data.get("rows") or [] for c in r.get("cells") or [] if c), None)
             print(f"  (draft board keys: {sorted(data.keys())[:12]}; "
                   f"pick keys: {sorted(sample.keys())[:12] if isinstance(sample, dict) else None})")
-    # Now that the boards say who made each pick, work the traded picks' original owners out again
-    resolve_pick_origins(trades, pickers)
-    # Traded picks from a draft we have that still found no player: log what the board has instead
-    have = {(y, r) for y, r, _ in out}
+    return out, failed, pickers
+
+
+def log_unmatched_picks(trades, drafted):
+    """Traded picks from a draft we have that still found no player: log what the board has instead."""
+    have = {(y, r) for y, r, _ in drafted}
     missing = sorted({traded_pick_key(pk, side, t.get("teams") or [])
                       for t in trades for side in t.get("teams") or []
-                      for pk in side.get("picksObtained") or []} - set(out), key=str)
-    missing = [k for k in missing if all(k)]
-    for yr, rnd, orig in missing:
+                      for pk in side.get("picksObtained") or []} - set(drafted), key=str)
+    for yr, rnd, orig in (k for k in missing if all(k)):
         if (yr, rnd) in have:
-            owners = sorted(o for y, r, o in out if (y, r) == (yr, rnd))
+            owners = sorted(o for y, r, o in drafted if (y, r) == (yr, rnd))
             print(f"  unmatched pick {yr} round {rnd} from team {orig}; board round has teams {owners}")
-    return out, failed
 
 
 def sleeper_draft_results(league, trades, last):
-    """Draft results for traded picks of drafts held after a merge_into league moved to Sleeper
-    (e.g. HMJC's 2021-2023 picks traded on Fleaflicker, used in Sleeper drafts), keyed like
-    fetch_draft_results. The Sleeper draft names the manager who held each slot; a Fleaflicker
-    team is the same manager under the aliases in managers_config.json. Also returns the years
-    that couldn't be read, so stored results for them are kept."""
+    """Draft results for picks of drafts held after a merge_into league moved to Sleeper (e.g.
+    HMJC's 2021-2023 picks traded on Fleaflicker, used in Sleeper drafts), keyed like
+    fetch_draft_results by Fleaflicker team id. The Sleeper draft names the manager who held each
+    slot; a Fleaflicker team is the same manager under the aliases in managers_config.json.
+    Also returns the years that couldn't be read, so stored results for them are kept, and who
+    made each pick (as a Fleaflicker team id)."""
     years = {pick_key_parts(pk)[0] for t in trades for side in t.get("teams") or [] for pk in side.get("picksObtained") or []}
     years = {y for y in years if last < y <= current_season()}
     target = next((lg for lg in league_config.leagues("sleeper")
                    if lg["name"].strip().lower() == str(league.get("merge_into") or "").strip().lower()), None)
     if not years or not target:
-        return {}, set()
+        return {}, set(), {}
     import sync_leagues   # only needed here; it reads the Sleeper league list on import
+    picked = {}
     info = sync_leagues.optional_fetches(lambda: sync_leagues.fetch_league(target["id"]))
-    got = info and sync_leagues.optional_fetches(lambda: sync_leagues.draft_results(info, {str(y) for y in years}, {}, rookie_only=True))
+    got = info and sync_leagues.optional_fetches(
+        lambda: sync_leagues.draft_results(info, {str(y) for y in years}, {}, rookie_only=True, pickers=picked))
     if not got:
         print(f"  Sleeper drafts {sorted(years)} could not be read; stored results kept")
-        return {}, years
+        return {}, years, {}
     drafted, done = got
     aliases = league_config.manager_aliases()
-    by_manager = {(int(season), rnd, league_config.master_owner(user, aliases).lower()): player
-                  for (season, rnd, user), player in drafted.items()}
+    manager = lambda user: league_config.master_owner(user, aliases).lower()  # noqa: E731
     # Fleaflicker team id -> manager: the last season's standings name each team's owner
     managers = {}
     for t in trades:
@@ -648,18 +676,19 @@ def sleeper_draft_results(league, trades, last):
         managers.update({team_id_of(r["id"]): r["label"] for r in fetch_standings(league["id"], last)})
     except FleaError as e:
         print(f"  standings {last} for team owners: {e}")
-    managers = {tid: league_config.master_owner(label, aliases).lower() for tid, label in managers.items()}
-    out = {}
-    for t in trades:
-        sides = t.get("teams") or []
-        for side in sides:
-            for pk in side.get("picksObtained") or []:
-                key = traded_pick_key(pk, side, sides)
-                player = all(key) and by_manager.get((key[0], key[1], managers.get(key[2])))
-                if player and key[0] > last:
-                    out[key] = player
-    print(f"  Sleeper drafts {sorted(int(y) for y in done)}: {len(out)} traded picks matched")
-    return out, years - {int(y) for y in done}
+    team_of = {}
+    for tid, label in managers.items():
+        team_of.setdefault(manager(label), tid)
+    out, pickers = {}, {}
+    for (season, rnd, user), player in drafted.items():
+        tid = team_of.get(manager(user))
+        if tid and int(season) > last:
+            out[(int(season), rnd, tid)] = player
+            by = team_of.get(manager(picked.get((season, rnd, user), "")))
+            if by:
+                pickers[(int(season), rnd, tid)] = by
+    print(f"  Sleeper drafts {sorted(int(y) for y in done)}: {len(out)} picks of Fleaflicker teams")
+    return out, years - {int(y) for y in done}, pickers
 
 
 def copy_lineage(kept_rows, fresh_rows, keep_years=()):
@@ -1160,11 +1189,17 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     print("- trades")
     trades = fetch_all_trades(league_id)
     resolve_pick_origins(trades)
-    drafted, draft_failed = fetch_draft_results(league_id, trades, league["start_season"], min(last, cur))
+    drafted, draft_failed, pickers = fetch_draft_results(league_id, trades, league["start_season"], min(last, cur))
+    # Every later trade of a pick drafted on a Fleaflicker board is in this feed (not so for Sleeper drafts)
+    board_years = {k[0] for k in pickers}
     if league.get("merge_into") and last < cur:
-        later, later_failed = sleeper_draft_results(league, trades, last)
+        later, later_failed, later_pickers = sleeper_draft_results(league, trades, last)
         drafted.update(later)
         draft_failed |= later_failed
+        pickers.update(later_pickers)
+    # Now that the drafts say who made each pick, work the traded picks' original owners out again
+    resolve_pick_origins(trades, pickers, board_years)
+    log_unmatched_picks(trades, drafted)
     trade_rows = build_trade_rows(trades, season_labels, latest_label, drafted)
     # a league that has an end_season must not pick up trades from later seasons
     trade_rows = [t for t in trade_rows if int(t[0]) <= last]

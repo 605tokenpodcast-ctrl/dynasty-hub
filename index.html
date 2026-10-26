@@ -420,7 +420,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 class="text-2xl font-bold">📜 All-Time Trade & Draft Pick Lineage Log</h2>
-                            <p class="text-slate-400 text-sm">Complete history of trades with highlighted rookie draft selections. Dynasty trades are graded 3 years after the trade: 60% on the points each side's players scored for their new team in those 3 years, 40% on their dynasty value today (picks count as the player drafted). Redraft trades are graded at the end of that season on points alone.</p>
+                            <p class="text-slate-400 text-sm">Complete history of trades with highlighted rookie draft selections. Dynasty trades are graded 3 years after the trade: 60% on the points each side's players scored for their new team in those 3 years, 40% on their dynasty value at the 3-year mark (picks count as the player drafted). Redraft trades are graded at the end of that season on points alone.</p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                             <button onclick="toggleLineageOnly()" id="lineage-filter-btn" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">
@@ -832,13 +832,18 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const [masterRes, ktcRes, mgrRes, metaRes, leaguesRes] = await Promise.allSettled([
+                const [masterRes, ktcRes, mgrRes, metaRes, leaguesRes, tradeValuesRes] = await Promise.allSettled([
                     fetch('sleeper_leagues_master.json'),
                     fetch('ktc_values.json'),
                     fetch('managers_config.json'),
                     fetch('player_meta.json'),
-                    fetch('leagues.json')
+                    fetch('leagues.json'),
+                    fetch('trade_values.json')
                 ]);
+
+                if (tradeValuesRes.status === 'fulfilled' && tradeValuesRes.value.ok) {
+                    try { tradeValuesAtGrade = (await tradeValuesRes.value.json()).trades || {}; } catch (e) { /* grades fall back to today's values */ }
+                }
 
                 if (leaguesRes.status === 'fulfilled' && leaguesRes.value.ok) {
                     try { loadLeagueConfig(await leaguesRes.value.json()); } catch (e) { /* defaults apply */ }
@@ -3832,6 +3837,12 @@
         const TRADE_GRADE_YEARS = 3;
         // Points are what the trade actually delivered, so they carry more weight; value covers the years still to come
         const TRADE_GRADE_POINTS_WEIGHT = 0.6;
+        // Dynasty values frozen on each trade's grading date (scripts/sync_trade_values.py, from DynastyProcess):
+        // { "league||season||date||breakdown": { as_of, values: { item label: value } } }
+        let tradeValuesAtGrade = {};
+        function tradeValueKey(leagueName, r) {
+            return `${leagueName}||${r[0]}||${r[1]}||${r[4]}`;
+        }
 
         // Sunday of an NFL week: week 1 is the Sunday after Labor Day (first Monday of September)
         function nflWeekSunday(season, weekNum) {
@@ -3876,7 +3887,7 @@
 
         // { status: 'graded' | 'pending' | 'nodata', redraft, end,
         //   sides: [{ owner, pts, value, share, grade, items: [{ label, pts, value }] }], totalPts, totalValue }
-        function windowedTradeGrade(breakdown, leagueName, season, ts, now = Date.now()) {
+        function windowedTradeGrade(breakdown, leagueName, season, ts, now = Date.now(), frozen = null) {
             const redraft = leagueRules(leagueName).type === 'redraft';
             const endDate = new Date(ts);
             endDate.setFullYear(endDate.getFullYear() + TRADE_GRADE_YEARS);
@@ -3901,7 +3912,7 @@
                     return {
                         label,
                         pts: weeks.filter(w => w.ts > ts && w.ts <= end).reduce((a, w) => a + w.pts, 0),
-                        value: redraft ? 0 : hindsightItemValue(label, leagueName).value
+                        value: redraft ? 0 : frozen ? frozen.values[label] || 0 : hindsightItemValue(label, leagueName).value
                     };
                 });
                 return { owner, items, pts: items.reduce((a, b) => a + b.pts, 0), value: items.reduce((a, b) => a + b.value, 0) };
@@ -3914,11 +3925,11 @@
                 sd.share = (totalPts || totalValue) ? w * (totalPts ? sd.pts / totalPts : 0) + (1 - w) * (totalValue ? sd.value / totalValue : 0) : 1 / sides.length;
                 sd.grade = tradeLetter(sd.share, sides.length);
             });
-            return { ...out, status: 'graded', sides, totalPts, totalValue };
+            return { ...out, status: 'graded', sides, totalPts, totalValue, valueAsOf: frozen ? frozen.as_of : null };
         }
 
         function tradeGradeCell(r, leagueName, ts) {
-            const g = windowedTradeGrade(r[4], leagueName, parseInt(r[0], 10) || 0, ts);
+            const g = windowedTradeGrade(r[4], leagueName, parseInt(r[0], 10) || 0, ts, Date.now(), tradeValuesAtGrade[tradeValueKey(leagueName, r)]);
             const when = new Date(g.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             if (g.status === 'pending') {
                 return `<p class="font-bold text-amber-300">⏳ Grade on ${when}</p>
@@ -3937,7 +3948,7 @@
             const tip = sd => sd.items.map(i => `${i.label.replace(/\s*\(originally from.*?\)\)/, '')}: ${Math.round(i.pts)} pts${g.redraft ? '' : `, value ${Math.round(i.value)}`}`).join('\n');
             const pct = Math.round(TRADE_GRADE_POINTS_WEIGHT * 100);
             return `<p class="font-bold text-emerald-300">${verdict}</p>
-                <p class="text-slate-500 mb-1">${g.redraft ? 'Points scored rest of season' : `${pct}% points over ${TRADE_GRADE_YEARS} yrs, ${100 - pct}% dynasty value`}</p>`
+                <p class="text-slate-500 mb-1">${g.redraft ? 'Points scored rest of season' : `${pct}% points over ${TRADE_GRADE_YEARS} yrs, ${100 - pct}% dynasty value ${g.valueAsOf ? `at the 3-year mark (${escHtml(g.valueAsOf)})` : 'today'}`}</p>`
                 + g.sides.map(sd => `<p class="text-slate-400" title="${escHtml(tip(sd))}"><span class="inline-block w-7 text-center border rounded font-bold mr-1 ${gradeColor(sd.grade)}">${sd.grade}</span>${escHtml(sd.owner)}: <span class="font-mono text-slate-200">${Math.round(sd.pts).toLocaleString()} pts</span>${g.redraft ? '' : ` <span class="text-slate-500">·</span> <span class="font-mono text-slate-200">${Math.round(sd.value).toLocaleString()}</span> value`}</p>`).join('');
         }
 

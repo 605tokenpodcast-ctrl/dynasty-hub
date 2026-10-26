@@ -375,6 +375,51 @@ class SleeperDraftLineage(unittest.TestCase):
         self.assertEqual(sync_leagues.add_draft_lineage(trades, drafted), 0)   # never added twice
 
 
+class SleeperDraftHistory(unittest.TestCase):
+    S = "https://api.sleeper.app/v1"
+
+    def api(self):
+        S = self.S
+        users = [{"user_id": "u1", "display_name": "alpha", "metadata": {"team_name": "Team A"}}, {"user_id": "u2", "display_name": "beta"}]
+        rosters = [{"roster_id": 1, "owner_id": "u1"}, {"roster_id": 2, "owner_id": "u2"}]
+        pick = lambda no, rnd, slot, rid, first, last: {"pick_no": no, "round": rnd, "draft_slot": slot, "roster_id": rid,  # noqa: E731
+                                                       "player_id": f"p{no}", "metadata": {"first_name": first, "last_name": last, "position": "RB"}}
+        return {
+            f"{S}/league/L26": {"league_id": "L26", "season": "2026", "previous_league_id": "L25"},
+            f"{S}/league/L25": {"league_id": "L25", "season": "2025", "previous_league_id": "L24"},
+            f"{S}/league/L24": {"league_id": "L24", "season": "2024", "previous_league_id": None},
+            **{f"{S}/league/{lg}/users": users for lg in ("L26", "L25", "L24")},
+            **{f"{S}/league/{lg}/rosters": rosters for lg in ("L26", "L25", "L24")},
+            f"{S}/league/L26/drafts": [{"draft_id": "d26", "season": "2026", "status": "pre_draft", "settings": {"rounds": 4}}],
+            f"{S}/league/L25/drafts": [{"draft_id": "d25", "season": "2025", "status": "complete", "type": "snake",
+                                        "settings": {"rounds": 4}, "draft_order": {"u1": 1, "u2": 2}}],
+            f"{S}/league/L24/drafts": [],
+            f"{S}/draft/d25/picks": [pick(2, 1, 2, 2, "Rook", "Two"), pick(1, 1, 1, 1, "Rook", "One"),
+                                     pick(3, 2, 2, 2, "Rook", "Three"), pick(4, 2, 1, 2, "Rook", "Four")],
+        }
+
+    def test_finished_drafts_saved_once_and_upcoming_one_waits(self):
+        api = self.api()
+        sync_leagues._LEAGUES.clear()
+        with mock.patch.object(sync_leagues, 'fetch_json', side_effect=lambda url: api.get(url)):
+            found, done = sync_leagues.backfill_drafts(api[f"{self.S}/league/L26"], set(), False, {})
+        sync_leagues._LEAGUES.clear()
+        self.assertEqual(done, {"2025", "2024"})   # 2026's draft hasn't happened yet
+        self.assertEqual(found["2025"], [
+            ["2025", "Rookie", "1", "1", "Team A (alpha)", "Rook One (RB)", "", ""],
+            ["2025", "Rookie", "1", "2", "beta", "Rook Two (RB)", "", ""],
+            ["2025", "Rookie", "2", "3", "beta", "Rook Three (RB)", "", ""],
+            ["2025", "Rookie", "2", "4", "beta", "Rook Four (RB)", "Team A (alpha)", ""]])   # beta used alpha's slot
+        with mock.patch.object(sync_leagues, 'fetch_json', side_effect=lambda url: api.get(url) if not url.endswith('/drafts') else 1 / 0):
+            self.assertEqual(sync_leagues.backfill_drafts(api[f"{self.S}/league/L26"], {"2025", "2024", "2026"}, False, {}), ({}, set()))
+        sync_leagues._LEAGUES.clear()
+
+    def test_startup_and_redraft_kinds(self):
+        self.assertEqual(sync_leagues.draft_kind(25, False), "Startup")
+        self.assertEqual(sync_leagues.draft_kind(4, False), "Rookie")
+        self.assertEqual(sync_leagues.draft_kind(15, True), "Redraft")
+
+
 class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
     def test_pick_traded_on_fleaflicker_gets_sleeper_draft_result(self):
         target = next(lg for lg in sync_fleaflicker.league_config.leagues("sleeper") if lg["name"] == "Hail Mary Jane Congregation")
@@ -450,6 +495,14 @@ def fake_fleaflicker(endpoint, **p):
         ]}
     if endpoint == "FetchTrades":
         return {"trades": []}
+    if endpoint == "FetchLeagueDraftBoard":
+        if season != 2019:
+            return {}   # no board (drafted elsewhere)
+        pick = lambda rnd, slot, tid, name: {"slot": {"round": rnd, "slot": slot}, "team": {"id": tid},  # noqa: E731
+                                             "player": {"proPlayer": {"nameFull": name, "position": "WR"}}}
+        # snake: team 2 used team 1's 2nd-round pick (and its own)
+        return {"draftOrder": [{"id": 1}, {"id": 2}], "orderedSelections": [
+            pick(1, 1, 1, "First"), pick(1, 2, 2, "Second"), pick(2, 1, 2, "Third"), pick(2, 2, 2, "Fourth")]}
     return None
 
 
@@ -492,6 +545,26 @@ class FleaflickerMergedLeagueHistory(unittest.TestCase):
         for word in ("LINEUPS", "FREE AGENT", "MATCHUPS", "STANDINGS"):
             self.assertEqual(sync_fleaflicker.existing_section_rows(again, word),
                              sync_fleaflicker.existing_section_rows(merged, word), word)
+
+    def test_draft_boards_spliced_and_read_once(self):
+        merged = self.run_sync(self.sleeper_block())
+        drafts = sync_fleaflicker.existing_section_rows(merged, "DRAFT HISTORY")
+        self.assertEqual([r[:6] for r in drafts], [
+            ["2019", "Rookie", "1", "1", "T1 (o1)", "First (WR)"], ["2019", "Rookie", "1", "2", "T2 (o2)", "Second (WR)"],
+            ["2019", "Rookie", "2", "3", "T2 (o2)", "Third (WR)"], ["2019", "Rookie", "2", "4", "T2 (o2)", "Fourth (WR)"]])
+        self.assertEqual(sync_fleaflicker.checked_seasons(merged, sync_fleaflicker.DRAFTS_CHECKED), {2019, 2020})
+        # Team 2 made both round-2 picks: one of them was team 1's
+        self.assertEqual(sorted((r[2], r[4], r[6]) for r in drafts if r[6]), [("2", "T2 (o2)", "T1 (o1)")])
+
+        def no_boards(endpoint, **p):
+            if endpoint == "FetchLeagueDraftBoard":
+                raise AssertionError("board re-read")
+            return fake_fleaflicker(endpoint, **p)
+        with mock.patch.object(sync_fleaflicker, "api", side_effect=no_boards), \
+                mock.patch.object(sync_fleaflicker, "current_season", return_value=2026):
+            data = sync_fleaflicker.collect_league(self.LEAGUE, None, merged)
+        again = sync_fleaflicker.merge_into_existing(merged, data, 2019, data["last"])
+        self.assertEqual(sync_fleaflicker.existing_section_rows(again, "DRAFT HISTORY"), drafts)
 
     def test_season_with_a_missing_box_score_is_retried(self):
         def flaky(endpoint, **p):

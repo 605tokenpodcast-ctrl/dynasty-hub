@@ -407,7 +407,7 @@ def fetch_all_trades(league_id):
 PICK_RE = re.compile(r"(\d{4} Round \d+\w* Pick(?: \(originally from (?:[^()]|\([^()]*\))*\))?)( -> Resulted in drafting: [^,\]]*)?")
 
 
-def parse_draft_board(data, season):
+def parse_draft_board(data, season, traded=None):
     """
     (season, round, original owner id) -> "Player (POS)" from one FetchLeagueDraftBoard response.
     Picks come either as `rows` of `cells` (one row per round) or as a flat `orderedSelections`
@@ -415,6 +415,8 @@ def parse_draft_board(data, season):
     seasons have no `draftOrder`; there the owner of each slot is the team that used it most often.
     Cells may be listed by column or by pick order (and snake rounds run backwards), so use
     whichever reading agrees best with the picks nobody traded.
+    `traded` ({(season, round, original owner id): id of the team that ended up with it}) fills in
+    picks whose slot owner can't be read off the board, e.g. a team that traded away a whole round.
     """
     data = data or {}
     order = [team_id_of(t) for t in data.get("draftOrder") or []]
@@ -482,17 +484,41 @@ def parse_draft_board(data, season):
         return sum(1 for i, rnd, c in cells if untraded(c) and f(i, rnd, c) == owner(c))
 
     orig_of = max(strategies, key=agreement)
-    out = {}
+    out, unplaced, slots = {}, [], {}
     for i, rnd, c in cells:
         if not c.get("player"):
             continue
         pro = unwrap_player(c["player"])
-        if not (pro.get("nameFull") or pro.get("nameLast")):
+        if not (pro.get("nameFull") or pro.get("nameLast")) or not rnd:
             continue
         orig = orig_of(i, rnd, c)
-        if rnd and orig:
-            out[(int(season), rnd, orig)] = player_label(pro)
+        key = (int(season), rnd, orig)
+        pos = (slot_of(c), snake_pos(rnd, c))
+        if orig and key not in out:
+            out[key] = player_label(pro)
+            slots.setdefault(orig, set()).update({("linear", pos[0]), ("snake", pos[1])})
+        else:
+            unplaced.append((rnd, owner(c), pos, player_label(pro)))
+    # A traded pick the board couldn't place: the team that made it is the one the trades say ended up
+    # with it. When that team ended up with several, the original owner's slot in other rounds decides.
+    for rnd, picker, pos, label in unplaced:
+        cands = [k for k, to in (traded or {}).items()
+                 if k[0] == int(season) and k[1] == rnd and to == picker and k not in out]
+        if len(cands) > 1:
+            cands = [k for k in cands if slots.get(k[2], set()) & {("linear", pos[0]), ("snake", pos[1])}] or cands
+        if len(cands) == 1:
+            out[cands[0]] = label
     return out
+
+
+def traded_pick_key(pk, side, sides):
+    """(year, round, original owner id) for a pick in a trade. Fleaflicker leaves the original
+    owner off a team's own pick, so in a two-team trade it came from the other side."""
+    yr, rnd, orig = pick_key_parts(pk)
+    if not orig and len(sides) == 2:
+        other = sides[1] if side is sides[0] else sides[0]
+        orig = team_id_of(other.get("team"))
+    return yr, rnd, orig
 
 
 def fetch_draft_results(league_id, trades, first, last):
@@ -504,11 +530,20 @@ def fetch_draft_results(league_id, trades, first, last):
                 yr = pick_key_parts(pk)[0]
                 if first <= yr <= last:
                     seasons.add(yr)
+    # Who ended up with each traded pick (newest trade wins), to place picks the board can't
+    traded = {}
+    for t in sorted(trades, key=lambda t: num(t.get("approvedOn") or t.get("tradeTime") or t.get("createdOn"))):
+        sides = t.get("teams") or []
+        for side in sides:
+            for pk in side.get("picksObtained") or []:
+                key = traded_pick_key(pk, side, sides)
+                if all(key):
+                    traded[key] = team_id_of(side.get("team"))
     out = {}
     for season in sorted(seasons):
         try:
             data = api("FetchLeagueDraftBoard", league_id=league_id, season=season)
-            got = parse_draft_board(data, season)
+            got = parse_draft_board(data, season, traded)
         except FleaError as e:
             print(f"  draft {season} skipped: {e}")
             continue
@@ -521,6 +556,15 @@ def fetch_draft_results(league_id, trades, first, last):
                      next((c for r in data.get("rows") or [] for c in r.get("cells") or [] if c), None)
             print(f"  (draft board keys: {sorted(data.keys())[:12]}; "
                   f"pick keys: {sorted(sample.keys())[:12] if isinstance(sample, dict) else None})")
+    # Traded picks from a draft we have that still found no player: log what the board has instead
+    have = {(y, r) for y, r, _ in out}
+    missing = sorted({traded_pick_key(pk, side, t.get("teams") or [])
+                      for t in trades for side in t.get("teams") or []
+                      for pk in side.get("picksObtained") or []} - set(out), key=str)
+    for yr, rnd, orig in missing:
+        if (yr, rnd) in have:
+            owners = sorted(o for y, r, o in out if (y, r) == (yr, rnd))
+            print(f"  unmatched pick {yr} round {rnd} from team {orig}; board round has teams {owners}")
     return out
 
 
@@ -578,12 +622,7 @@ def build_trade_rows(trades, season_labels, latest_label, drafted=None):
                 orig = pk.get("originalOwner") or pk.get("originalTeam")
                 if orig:
                     desc += f" (originally from {label_for(orig, season)})"
-                yr, rnd_n, orig_id = pick_key_parts(pk)
-                if not orig_id and len(sides) == 2:
-                    # Fleaflicker leaves the original owner off a team's own pick: it came from the other side
-                    other = sides[1] if s is sides[0] else sides[0]
-                    orig_id = team_id_of(other.get("team"))
-                player = (drafted or {}).get((yr, rnd_n, orig_id))
+                player = (drafted or {}).get(traded_pick_key(pk, s, sides))
                 if player:
                     desc += f" -> Resulted in drafting: {player}"
                 items.append(desc.strip())

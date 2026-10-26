@@ -568,7 +568,8 @@ def settle_from_drafts(ordered, pickers, board_years, later_moves=(), max_nodes=
     Picks are tried oldest trade first, the sender's own pick before others; a pick the sender
     doesn't seem to hold (the feed misses some trades) costs one; a pick that ends up with a team
     other than the one that made it costs two. Every cheapest answer is kept: where they agree the
-    pick is settled; where they don't it stays unknown. `later_moves` are trades the feed doesn't
+    pick is settled; where they don't, or it still ends up with a team that didn't make it, it
+    stays unknown. `later_moves` are trades the feed doesn't
     have, as (time, receiving team id, year, round, original owner id): a merge_into league's trades
     made after it moved to Sleeper. Returns {id(pick record): original owner id or ""}."""
     groups = {}
@@ -621,6 +622,13 @@ def settle_from_drafts(ordered, pickers, board_years, later_moves=(), max_nodes=
         search(0, {}, 0, (), {})
         if nodes[0] > max_nodes or not best[1]:
             continue   # too many possibilities: leave these picks to the step-by-step tracking
+        # A pick whose last move leaves it with a team that didn't make it: the trades we have can't
+        # explain its path (one is missing, or HMJC's picks were re-entered by hand on Sleeper)
+        last_move, holder = {}, {}
+        for i, (o, (_, _, _, recv, _)) in enumerate(zip(best[1][0], moves)):
+            if o:
+                last_move[o], holder[o] = i, recv
+        unexplained = {last_move[o] for o in last_move if o in made and holder[o] != made[o]}
         # Picks one team got in one trade can swap places without changing anything: settle them as a set
         together = {}
         for i, (tid, _, _, recv, orig) in enumerate(moves):
@@ -629,7 +637,7 @@ def settle_from_drafts(ordered, pickers, board_years, later_moves=(), max_nodes=
         for idx in together.values():
             picks = {tuple(sorted(str(sol[i]) for i in idx)) for sol in best[1]}
             for n_, i in enumerate(idx):
-                if len(picks) == 1:
+                if len(picks) == 1 and i not in unexplained:
                     agreed = {sol[i] for sol in best[1]}
                     value = agreed.pop() if len(agreed) == 1 else sorted(str(best[1][0][j]) for j in idx)[n_]
                     out[id(moves[i][1])] = value if value not in (None, "None") else ""

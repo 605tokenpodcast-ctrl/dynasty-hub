@@ -359,8 +359,15 @@ class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
         sync_leagues._LEAGUES.clear()
         with mock.patch.object(sync_leagues, 'fetch_json', side_effect=lambda url: api.get(url)), \
                 mock.patch.object(sync_fleaflicker, 'api', return_value=standings):
-            out, failed, pickers = sync_fleaflicker.sleeper_draft_results({"id": "181202", "merge_into": "Hail Mary Jane Congregation"}, trades, 2020)
+            # back on Sleeper, Kronik sent that pick back to jarvisevans
+            history = [SEC("TRADE HISTORY"), ["Season"],
+                       ["2021", "8/1/2021", "Week 1", "A & B", "Beats (jarvisevans) received: [2022 Round 1st Pick (originally from Beats (jarvisevans))]"
+                        " <---> Kro (Kronik) received: [Vet (QB)]", "t1", ""],
+                       ["2020", "8/1/2020", "Week 1", "A & B", "Beats (Jarvis1983) received: [2022 Round 1st Pick] <---> Eight received: [Vet (QB)]", "", ""]]
+            out, failed, pickers, later = sync_fleaflicker.sleeper_draft_results(
+                {"id": "181202", "merge_into": "Hail Mary Jane Congregation"}, trades, 2020, history)
         sync_leagues._LEAGUES.clear()
+        self.assertEqual([m[1:] for m in later], [("7", 2022, 1, "7")])
         # andylang1031 is Kronik (managers_config.json), who made both picks
         self.assertEqual(out, {(2022, 1, "7"): "Rook Ie (WR)", (2022, 1, "8"): "Other Guy (RB)"})
         self.assertEqual(pickers, {(2022, 1, "7"): "8", (2022, 1, "8"): "8"})

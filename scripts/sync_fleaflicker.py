@@ -441,13 +441,16 @@ def parse_draft_board(data, season, traded=None, pickers=None):
         per_round = Counter(rnd for _, rnd, _ in cells)
         n = max(per_round.values())
 
-    def slot_of(c):
+    per_round = Counter(rnd for _, rnd, _ in cells)
+    gap = {}   # round -> slot left out of a round one pick short (its later slots are numbered one lower)
+
+    def slot_of(c, rnd=None):
         sl = c.get("slot") or {}
         s_ = int(num(sl.get("slot"), 0))
         if not s_ and n:
             overall = int(num(sl.get("overall"), 0))
             s_ = (overall - 1) % n + 1 if overall else 0
-        return s_
+        return s_ + 1 if rnd in gap and s_ >= gap[rnd] else s_
 
     def owner(c):
         return team_id_of(c.get("team"))
@@ -457,7 +460,7 @@ def parse_draft_board(data, season, traded=None, pickers=None):
 
     def snake_pos(rnd, c):
         # Position in the round-1 order: snake rounds reverse it
-        s_ = slot_of(c)
+        s_ = slot_of(c, rnd)
         backwards = c.get("descending") if "descending" in c else rnd % 2 == 0
         return n + 1 - s_ if backwards else s_
 
@@ -472,19 +475,54 @@ def parse_draft_board(data, season, traded=None, pickers=None):
         best = {pos: cnt.most_common(1)[0][0] for pos, cnt in votes.items() if pos}
         return lambda i, rnd, c: best.get(position(i, rnd, c))
 
-    linear_pos = lambda i, rnd, c: slot_of(c)
+    def holder(rnd, o):
+        return (traded or {}).get((int(season), rnd, o), o)
+
+    teams = (set(order) | {owner(c) for _, _, c in cells} |
+             {k[2] for k in traded or {} if k[0] == int(season)}) - {None}
+
+    def assigned(position, rounds=None):
+        # The slot order that best explains who made each pick: each position goes to the team whose
+        # pick, after the trades, was most often in the hands of the team picking there
+        score = Counter()
+        for i, rnd, c in cells:
+            pos = position(i, rnd, c)
+            if pos and (rounds is None or rnd in rounds):
+                for o in teams:
+                    if holder(rnd, o) == owner(c):
+                        score[(pos, o)] += 1
+        best, taken = {}, set()
+        for (pos, o), _ in sorted(score.items(), key=lambda kv: (-kv[1], str(kv[0]))):
+            if pos not in best and o not in taken:
+                best[pos] = o
+                taken.add(o)
+        return lambda i, rnd, c: best.get(position(i, rnd, c))
+
+    linear_pos = lambda i, rnd, c: slot_of(c, rnd)
     snake = lambda i, rnd, c: snake_pos(rnd, c)
+
+    def agreement(f):
+        return sum(1 for i, rnd, c in cells if f(i, rnd, c) and holder(rnd, f(i, rnd, c)) == owner(c))
+
+    # A round one pick short (a pick nobody made) numbers its slots without the gap: put the gap
+    # where it best fits the order the full rounds show
+    full = {rnd for rnd, k in per_round.items() if k == n}
+    if full and len(full) < len(per_round):
+        guide = max([assigned(linear_pos, full), assigned(snake, full)], key=agreement)
+        for rnd in [r for r, k in per_round.items() if k == n - 1]:
+            def fit(g):
+                gap[rnd] = g
+                return sum(1 for i, r, c in cells if r == rnd and guide(i, r, c) and holder(r, guide(i, r, c)) == owner(c))
+            gap[rnd] = max(range(1, n + 1), key=fit)
+
     strategies = []
     if order:
         strategies += [
             lambda i, rnd, c: order[i] if i is not None and i < n else None,   # by column
-            lambda i, rnd, c: from_order(slot_of(c)),                          # by slot
+            lambda i, rnd, c: from_order(slot_of(c, rnd)),                     # by slot
             lambda i, rnd, c: from_order(snake_pos(rnd, c)),                   # snake by slot
         ]
-    strategies += [inferred(linear_pos), inferred(snake)]
-
-    def agreement(f):
-        return sum(1 for i, rnd, c in cells if untraded(c) and f(i, rnd, c) == owner(c))
+    strategies += [inferred(linear_pos), inferred(snake), assigned(linear_pos), assigned(snake)]
 
     orig_of = max(strategies, key=agreement)
     out, unplaced, slots, made_by = {}, [], {}, {}
@@ -496,7 +534,7 @@ def parse_draft_board(data, season, traded=None, pickers=None):
             continue
         orig = orig_of(i, rnd, c)
         key = (int(season), rnd, orig)
-        pos = (slot_of(c), snake_pos(rnd, c))
+        pos = (slot_of(c, rnd), snake_pos(rnd, c))
         if orig and key not in out:
             out[key] = player_label(pro)
             made_by[key] = owner(c)
@@ -523,29 +561,96 @@ def trade_time(t):
     return num(t.get("approvedOn") or t.get("tradeTime") or t.get("createdOn"))
 
 
-def resolve_pick_origins(trades, pickers=None, board_years=None):
-    """Fill in the original owner of traded picks that Fleaflicker left it off (every trade before
-    2024 or so), as pk["_orig"]. Walks the trades oldest first, tracking who holds each pick. The
-    pick sent is one of the sender's own and the ones it picked up in earlier trades of that year
-    and round. With `pickers` (draft board: who made each pick), the one candidate the receiving
-    team went on to draft with decides. Otherwise: its own while it still has it, else the single
-    one it picked up; with several picked up the pick gets no owner rather than a wrong one.
-    The trade feed misses some moves, so tracking can still land on a pick another team made. When
-    the receiver kept the pick (never sent one of that year and round on), it is the one pick of
-    that round the receiver made that no tracked trade explains, or none. That check needs every
-    later trade of the pick, so it only runs for `board_years` (default: every year in `pickers`)."""
-    pickers = pickers or {}
-    board_years = set(board_years) if board_years is not None else {k[0] for k in pickers}
-    ordered = sorted(trades, key=trade_time)
-    sent = {}   # (team id, year, round) -> times that team sent a pick of that year and round
+def settle_from_drafts(ordered, pickers, board_years, later_moves=(), max_nodes=200000):
+    """For picks of drafts in `board_years`, the original owners that best fit the draft board.
+    Each year and round is a small puzzle: every trade sent one of the picks the sender held then,
+    and after the last trade each pick must be in the hands of the team the board shows making it.
+    Picks are tried oldest trade first, the sender's own pick before others; a pick the sender
+    doesn't seem to hold (the feed misses some trades) costs one; a pick that ends up with a team
+    other than the one that made it costs two. Every cheapest answer is kept: where they agree the
+    pick is settled; where they don't it stays unknown. `later_moves` are trades the feed doesn't
+    have, as (time, receiving team id, year, round, original owner id): a merge_into league's trades
+    made after it moved to Sleeper. Returns {id(pick record): original owner id or ""}."""
+    groups = {}
+    for n_, (when, recv, yr, rnd, orig) in enumerate(later_moves):
+        if yr in board_years and orig and recv:
+            groups.setdefault((yr, rnd), []).append((when, ("later", n_), {}, None, recv, orig))
     for t in ordered:
         sides = t.get("teams") or []
         for side in sides:
-            for other in sides:
-                if other is not side:
-                    for pk in side.get("picksObtained") or []:
-                        yr, rnd, _ = pick_key_parts(pk)
-                        sent.setdefault((team_id_of(other.get("team")), yr, rnd), []).append(trade_time(t))
+            recv = team_id_of(side.get("team"))
+            others = [o for o in sides if o is not side]
+            giver = team_id_of(others[0].get("team")) if len(others) == 1 else None
+            for pk in side.get("picksObtained") or []:
+                yr, rnd, orig = pick_key_parts(pk)
+                if yr in board_years and rnd and recv:
+                    groups.setdefault((yr, rnd), []).append((trade_time(t), id(t), pk, giver, recv, orig))
+    out = {}
+    for (yr, rnd), moves in groups.items():
+        moves = [m[1:] for m in sorted(moves, key=lambda m: m[0])]
+        made = {k[2]: p for k, p in pickers.items() if k[:2] == (yr, rnd) and k[2]}   # slot owner -> picker
+        best, nodes = [None, []], [0]
+
+        def options(giver, recv, orig, holder):
+            if orig or not giver:
+                return [(orig, 0)]
+            held = sorted((o for o in set(made) | set(holder) | {giver} if holder.get(o, o) == giver),
+                          key=lambda o: (o != giver, o))
+            return [(o, 0) for o in held] + [(o, 1) for o in sorted(made) if made[o] == recv and o not in held]
+
+        def search(i, holder, cost, choice, before):
+            # `before`: who held what when this trade started (a trade can't send back what it brings in)
+            nodes[0] += 1
+            if nodes[0] > max_nodes or (best[0] is not None and cost > best[0]):
+                return
+            if i == len(moves):
+                cost += sum(2 for o, by in made.items() if holder.get(o, o) != by)
+                if best[0] is None or cost < best[0]:
+                    best[0], best[1] = cost, [choice]
+                elif cost == best[0] and len(best[1]) < 200:
+                    best[1].append(choice)
+                return
+            tid, _, giver, recv, orig = moves[i]
+            if i and moves[i - 1][0] != tid:
+                before = holder
+            for o, c in options(giver, recv, orig, before):
+                if o and o in choice[len(choice) - sum(1 for m in moves[:i] if m[0] == tid):]:
+                    continue   # one pick can't go twice in the same trade
+                search(i + 1, {**holder, o: recv} if o else holder, cost + c, choice + (o,), before)
+
+        search(0, {}, 0, (), {})
+        if nodes[0] > max_nodes or not best[1]:
+            continue   # too many possibilities: leave these picks to the step-by-step tracking
+        # Picks one team got in one trade can swap places without changing anything: settle them as a set
+        together = {}
+        for i, (tid, _, _, recv, orig) in enumerate(moves):
+            if not orig:
+                together.setdefault((tid, recv), []).append(i)
+        for idx in together.values():
+            picks = {tuple(sorted(str(sol[i]) for i in idx)) for sol in best[1]}
+            for n_, i in enumerate(idx):
+                if len(picks) == 1:
+                    agreed = {sol[i] for sol in best[1]}
+                    value = agreed.pop() if len(agreed) == 1 else sorted(str(best[1][0][j]) for j in idx)[n_]
+                    out[id(moves[i][1])] = value if value not in (None, "None") else ""
+                else:
+                    out[id(moves[i][1])] = ""
+    return out
+
+
+def resolve_pick_origins(trades, pickers=None, board_years=None, later_moves=()):
+    """Fill in the original owner of traded picks that Fleaflicker left it off (every trade before
+    2024 or so), as pk["_orig"]. Picks of drafts on a board we have (`board_years`, default every
+    year in `pickers`) are settled against who made each pick (settle_from_drafts, which also takes
+    `later_moves`). Others are
+    tracked trade by trade: the pick sent is one of the sender's own and the ones it picked up in
+    earlier trades of that year and round; the one candidate the receiving team went on to draft
+    with decides (when `pickers` knows), else its own while it still has it, else the single one it
+    picked up; with several picked up the pick gets no owner rather than a wrong one."""
+    pickers = pickers or {}
+    board_years = set(board_years) if board_years is not None else {k[0] for k in pickers}
+    ordered = sorted(trades, key=trade_time)
+    settled = settle_from_drafts(ordered, pickers, board_years, later_moves) if pickers else {}
     holder = {}   # (year, round, original owner id) -> id of the team holding it, for picks that moved
     for t in ordered:
         sides = t.get("teams") or []
@@ -554,7 +659,10 @@ def resolve_pick_origins(trades, pickers=None, board_years=None):
             recv = team_id_of(side.get("team"))
             for pk in side.get("picksObtained") or []:
                 yr, rnd, orig = pick_key_parts(pk)
-                if not orig and len(sides) == 2 and yr and rnd:
+                if not orig and id(pk) in settled:
+                    orig = settled[id(pk)] or None
+                    pk["_orig"] = orig or ""
+                elif not orig and len(sides) == 2 and yr and rnd:
                     giver = team_id_of((sides[1] if side is sides[0] else sides[0]).get("team"))
                     held = [k[2] for k, h in holder.items() if k[:2] == (yr, rnd) and h == giver and k[2] != giver]
                     drafted_by_recv = [c for c in [giver] + held if pickers.get((yr, rnd, c)) == recv]
@@ -564,12 +672,6 @@ def resolve_pick_origins(trades, pickers=None, board_years=None):
                         orig = giver
                     else:
                         orig = held[0] if len(held) == 1 else None
-                    kept = not any(ts > trade_time(t) for ts in sent.get((recv, yr, rnd), []))
-                    if kept and yr in board_years and orig and pickers.get((yr, rnd, orig)) not in (None, recv):
-                        made = [k for k, p in pickers.items() if k[:2] == (yr, rnd) and p == recv and holder.get(k) != recv]
-                        if len(made) > 1:
-                            made = [k for k in made if k[2] != recv]
-                        orig = made[0][2] if len(made) == 1 else None
                     pk["_orig"] = orig or ""
                 if yr and rnd and orig and recv:
                     moves.append(((yr, rnd, orig), recv))
@@ -642,19 +744,41 @@ def log_unmatched_picks(trades, drafted):
             print(f"  unmatched pick {yr} round {rnd} from team {orig}; board round has teams {owners}")
 
 
-def sleeper_draft_results(league, trades, last):
+SLEEPER_PICK_RE = re.compile(r"(\d{4}) Round (\d+)\w* Pick \(originally from ((?:[^()]|\([^()]*\))*)\)")
+
+
+def sleeper_era_moves(rows, team_of, manager, last):
+    """Pick moves from the merge target's trade rows after `last` (trades made on Sleeper), as
+    (time, receiving team id, year, round, original owner id) with Fleaflicker team ids."""
+    moves = []
+    for r in rows or []:
+        if int(num(r[0], 0)) <= last:
+            continue
+        when = trade_date(r).replace(tzinfo=timezone.utc).timestamp() * 1000
+        for side in str(r[4]).split(" <---> "):
+            m = re.match(r"^(.*?) received: \[(.*)\]$", side, re.S)
+            recv = m and team_of.get(manager(m.group(1)))
+            for p in SLEEPER_PICK_RE.finditer(m.group(2) if m else ""):
+                orig = team_of.get(manager(p.group(3)))
+                if recv and orig:
+                    moves.append((when, recv, int(p.group(1)), int(p.group(2)), orig))
+    return moves
+
+
+def sleeper_draft_results(league, trades, last, history_rows=None):
     """Draft results for picks of drafts held after a merge_into league moved to Sleeper (e.g.
     HMJC's 2021-2023 picks traded on Fleaflicker, used in Sleeper drafts), keyed like
     fetch_draft_results by Fleaflicker team id. The Sleeper draft names the manager who held each
     slot; a Fleaflicker team is the same manager under the aliases in managers_config.json.
-    Also returns the years that couldn't be read, so stored results for them are kept, and who
-    made each pick (as a Fleaflicker team id)."""
+    Also returns the years that couldn't be read, so stored results for them are kept, who made
+    each pick (as a Fleaflicker team id), and the picks' moves in later Sleeper trades (from the
+    merge target's trade rows in `history_rows`; see sleeper_era_moves)."""
     years = {pick_key_parts(pk)[0] for t in trades for side in t.get("teams") or [] for pk in side.get("picksObtained") or []}
     years = {y for y in years if last < y <= current_season()}
     target = next((lg for lg in league_config.leagues("sleeper")
                    if lg["name"].strip().lower() == str(league.get("merge_into") or "").strip().lower()), None)
     if not years or not target:
-        return {}, set(), {}
+        return {}, set(), {}, []
     import sync_leagues   # only needed here; it reads the Sleeper league list on import
     picked = {}
     info = sync_leagues.optional_fetches(lambda: sync_leagues.fetch_league(target["id"]))
@@ -662,7 +786,7 @@ def sleeper_draft_results(league, trades, last):
         lambda: sync_leagues.draft_results(info, {str(y) for y in years}, {}, rookie_only=True, pickers=picked))
     if not got:
         print(f"  Sleeper drafts {sorted(years)} could not be read; stored results kept")
-        return {}, years, {}
+        return {}, years, {}, []
     drafted, done = got
     aliases = league_config.manager_aliases()
     manager = lambda user: league_config.master_owner(user, aliases).lower()  # noqa: E731
@@ -687,8 +811,10 @@ def sleeper_draft_results(league, trades, last):
             by = team_of.get(manager(picked.get((season, rnd, user), "")))
             if by:
                 pickers[(int(season), rnd, tid)] = by
-    print(f"  Sleeper drafts {sorted(int(y) for y in done)}: {len(out)} picks of Fleaflicker teams")
-    return out, years - {int(y) for y in done}, pickers
+    later = sleeper_era_moves(existing_section_rows(history_rows, "TRADE"), team_of, manager, last)
+    print(f"  Sleeper drafts {sorted(int(y) for y in done)}: {len(out)} picks of Fleaflicker teams, "
+          f"{len(later)} later Sleeper pick moves")
+    return out, years - {int(y) for y in done}, pickers, later
 
 
 def copy_lineage(kept_rows, fresh_rows, keep_years=()):
@@ -1190,15 +1316,14 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     trades = fetch_all_trades(league_id)
     resolve_pick_origins(trades)
     drafted, draft_failed, pickers = fetch_draft_results(league_id, trades, league["start_season"], min(last, cur))
-    # Every later trade of a pick drafted on a Fleaflicker board is in this feed (not so for Sleeper drafts)
-    board_years = {k[0] for k in pickers}
+    later_moves = []
     if league.get("merge_into") and last < cur:
-        later, later_failed, later_pickers = sleeper_draft_results(league, trades, last)
+        later, later_failed, later_pickers, later_moves = sleeper_draft_results(league, trades, last, cache_rows)
         drafted.update(later)
         draft_failed |= later_failed
         pickers.update(later_pickers)
     # Now that the drafts say who made each pick, work the traded picks' original owners out again
-    resolve_pick_origins(trades, pickers, board_years)
+    resolve_pick_origins(trades, pickers, {k[0] for k in pickers}, later_moves)
     log_unmatched_picks(trades, drafted)
     trade_rows = build_trade_rows(trades, season_labels, latest_label, drafted)
     # a league that has an end_season must not pick up trades from later seasons

@@ -313,6 +313,7 @@
                             <select id="awardcenter-week" onchange="renderAwardsCenter()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"></select>
                         </div>
                     </div>
+                    <section id="sleeper-posts" class="hidden bg-cardbg border border-slate-700 rounded-xl p-4 space-y-3"></section>
                     <section class="space-y-3">
                         <h3 id="weekly-awards-title" class="text-lg font-bold text-slate-200">📅 Weekly Awards</h3>
                         <div id="weekly-awards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -1002,6 +1003,7 @@
             const mOwner = document.getElementById('matchups-owner')?.value;
             if (currentActiveTab === 'matchups' && mOwner) url.searchParams.set('owner', mOwner);
             else url.searchParams.delete('owner');
+            ['league', 'season', 'week'].forEach(k => url.searchParams.delete(k));
             if (newEntry && url.href !== window.location.href) window.history.pushState({}, '', url);
             else window.history.replaceState({}, '', url);
         }
@@ -2535,6 +2537,26 @@
             populateSeasonSelect('awardcenter-season', 'awardcenter-league', false);
             populateSeasonSelect('review-season', 'review-league', false);
             populateAwardWeeks();
+            applyLeagueDeepLink();
+        }
+
+        // ?league=&season=&week= (from the Post to Sleeper links) pick that league on the award and review tabs
+        // Read once at load: the tabs' own URL updates drop these params
+        const LEAGUE_LINK_PARAMS = new URLSearchParams(window.location.search);
+        function applyLeagueDeepLink() {
+            const params = LEAGUE_LINK_PARAMS;
+            const pick = (id, v) => {
+                const sel = document.getElementById(id);
+                if (!sel || !v || ![...sel.options].some(o => o.value === v)) return false;
+                sel.value = v;
+                return true;
+            };
+            const league = params.get('league'), season = params.get('season'), week = params.get('week');
+            if (pick('awardcenter-league', league)) populateSeasonSelect('awardcenter-season', 'awardcenter-league', false);
+            if (pick('awardcenter-season', season) || league) populateAwardWeeks();
+            pick('awardcenter-week', week);
+            if (pick('review-league', league)) populateSeasonSelect('review-season', 'review-league', false);
+            pick('review-season', season);
         }
 
         function seasonsFor(league) {
@@ -2861,6 +2883,112 @@
             document.getElementById('career-awards-grid').innerHTML = careerAwardCards(league).join('');
             document.getElementById('weekly-awards-title').innerText = `📅 Weekly Awards • ${season} Week ${week || '?'}`;
             document.getElementById('annual-awards-title').innerText = `🗓️ Annual Awards • ${season}`;
+            renderSleeperPosts(league, season, week);
+        }
+
+        // --- POST TO SLEEPER ---
+        // Sleeper has no approved way for a bot to post in league chat (its terms ban scripted posting),
+        // so this builds paste-ready messages: copy one, open the league, paste it into the chat.
+        let sleeperPostStore = [];
+        let sleeperPostsToken = 0;
+        const gazetteCache = {};
+
+        function siteLink(tab, league, season, week) {
+            const qs = new URLSearchParams({ tab, league, season });
+            if (week) qs.set('week', week);
+            return `${window.location.origin}${window.location.pathname}?${qs}`;
+        }
+
+        function sleeperAwardsText(league, season, week) {
+            const A = weeklyAwards(league, season, week);
+            const rows = [
+                ['🥊', 'High Score Belt', A.belt], ['🚽', 'Toilet Bowl', A.toilet], ['🥷', 'Robbed', A.robbed],
+                ['🍀', 'Lucky Win', A.lucky], ['😱', 'Upset of the Week', A.upset], ['💪', 'One-Man Army', A.army],
+                ['🤡', 'Lineup Blunder', A.blunder], ['🎣', 'Waiver Hero', A.hero]
+            ].filter(r => r[2][0]).map(([icon, title, e]) => `${icon} ${title}: ${e[0].name} • ${e[0].value}`);
+            if (!rows.length) return '';
+            return `🏆 ${league} • Week ${week} Awards\n${rows.join('\n')}\n\nFull awards: ${siteLink('awardcenter', league, season, week)}`;
+        }
+
+        // Sleeper chat shows plain text, so drop the Markdown the Gazette is written in
+        function gazettePlainText(md) {
+            return String(md || '').replace(/\r/g, '')
+                .replace(/^#{1,6}\s*/gm, '')
+                .replace(/\*\*(.+?)\*\*/g, '$1')
+                .replace(/\*(\S[^*]*?)\*/g, '$1')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+                .replace(/^\s*[-*]\s+/gm, '• ')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+        }
+
+        function sleeperGazetteText(league, season, article) {
+            return `📰 The Dynasty Gazette • ${league} Week ${article.week}\n\n${gazettePlainText(article.text)}\n\nEvery issue: ${siteLink('review', league, season)}`;
+        }
+
+        function fetchGazette(league, season) {
+            const key = `${league}|${season}`;
+            if (!gazetteCache[key]) {
+                gazetteCache[key] = LEAGUE_BOT_ENDPOINT
+                    ? chatFetchJson(`${LEAGUE_BOT_ENDPOINT}/gazette?league=${encodeURIComponent(league)}&season=${season}`).then(l => Array.isArray(l) ? l : []).catch(() => { delete gazetteCache[key]; return []; })
+                    : Promise.resolve([]);
+            }
+            return gazetteCache[key];
+        }
+
+        function sleeperCopyButton(text, label) {
+            const idx = sleeperPostStore.push(text) - 1;
+            return `<button type="button" onclick="copySleeperPost(this, ${idx})" class="bg-slate-900 border border-slate-700 hover:border-accent rounded-lg px-3 py-1.5 text-xs font-bold text-slate-200">${label}</button>`;
+        }
+
+        async function copySleeperPost(btn, idx) {
+            const text = sleeperPostStore[idx];
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                window.prompt('Copy this message:', text);
+                return;
+            }
+            const label = btn.textContent;
+            btn.textContent = '✓ Copied, now paste it in Sleeper';
+            btn.classList.add('text-emerald-400');
+            setTimeout(() => { btn.textContent = label; btn.classList.remove('text-emerald-400'); }, 2500);
+        }
+
+        function renderSleeperPosts(league, season, week) {
+            const box = document.getElementById('sleeper-posts');
+            if (!box) return;
+            const token = ++sleeperPostsToken;
+            sleeperPostStore = [];
+            const names = week ? [...new Set(buildHubData().games
+                .filter(g => g.season === season && g.weekNum === week && (league === 'ALL' || g.league === league))
+                .map(g => g.league))].filter(l => leagueRules(l).platform === 'sleeper').sort() : [];
+            if (!names.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            box.classList.remove('hidden');
+            box.innerHTML = `
+                <div>
+                    <h3 class="font-bold text-white">📲 Post to Sleeper • ${season} Week ${week}</h3>
+                    <p class="text-[11px] text-slate-500">Copy a message, open the league, and paste it into the league chat.</p>
+                </div>
+                <div class="divide-y divide-slate-800">${names.map((lg, i) => {
+                    const id = leagueRules(lg).id;
+                    const awards = sleeperAwardsText(lg, season, week);
+                    return `<div class="py-2 flex flex-wrap items-center gap-2">
+                        <span class="font-bold text-accent text-sm w-full sm:w-auto sm:mr-auto">${escHtml(lg)}</span>
+                        ${awards ? sleeperCopyButton(awards, '📋 Copy awards') : '<span class="text-xs text-slate-500">No awards yet</span>'}
+                        <span id="sleeper-gazette-${i}"></span>
+                        ${id ? `<a href="https://sleeper.com/leagues/${encodeURIComponent(id)}" target="_blank" rel="noopener" class="text-xs font-bold text-slate-400 hover:text-accent">Open in Sleeper ↗</a>` : ''}
+                    </div>`;
+                }).join('')}</div>`;
+            names.forEach((lg, i) => {
+                fetchGazette(lg, season).then(list => {
+                    if (token !== sleeperPostsToken) return;
+                    const article = list.find(a => Number(a.week) === week);
+                    const slot = document.getElementById(`sleeper-gazette-${i}`);
+                    if (article && slot) slot.innerHTML = sleeperCopyButton(sleeperGazetteText(lg, season, article), '📰 Copy Gazette');
+                });
+            });
         }
 
         // Each team's average score in a season before a given week (for upset detection)
@@ -3182,12 +3310,15 @@
             const box = document.getElementById('review-gazette');
             if (!box || !LEAGUE_BOT_ENDPOINT) return;
             try {
-                const list = await chatFetchJson(`${LEAGUE_BOT_ENDPOINT}/gazette?league=${encodeURIComponent(league)}&season=${season}`);
-                if (!Array.isArray(list) || !list.length) return;
+                const list = [...await fetchGazette(league, season)];
+                if (!list.length) return;
                 box.innerHTML = `<div class="bg-cardbg border border-slate-700 rounded-xl p-4 space-y-4">
                     <h3 class="font-bold text-white">📰 The Dynasty Gazette</h3>
                     ${list.sort((a, b) => b.week - a.week).map(a => `<article class="border-t border-slate-800 pt-3 first:border-0 first:pt-0">
-                        <p class="text-xs text-slate-400 font-bold uppercase">Week ${escHtml(a.week)}</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <p class="text-xs text-slate-400 font-bold uppercase">Week ${escHtml(a.week)}</p>
+                            ${sleeperCopyButton(sleeperGazetteText(league, season, a), '📋 Copy for Sleeper')}
+                        </div>
                         <div class="text-sm text-slate-200 leading-relaxed">${DOMPurify.sanitize(marked.parse(String(a.text || '')))}</div>
                     </article>`).join('')}
                 </div>`;

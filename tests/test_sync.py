@@ -212,6 +212,17 @@ class FleaflickerDraftLineage(unittest.TestCase):
                    for t in trades]
         self.assertEqual(origins, ["2", "1", "2", "3", "1", "5", "6", None])
 
+    def test_draft_board_picker_decides_which_pick_was_sent(self):
+        # Team 1 picks up team 2's 1st, then sends "a 1st" to team 3. Without the board that's its own;
+        # the board shows team 3 made the pick in team 2's slot, so it was team 2's.
+        trades = [{"approvedOn": n, "teams": [{"team": {"id": to}, "picksObtained": [{"season": 2024, "slot": {"round": 1}}]},
+                                              {"team": {"id": frm}}]} for n, (frm, to) in enumerate([(2, 1), (1, 3)], 1)]
+        key = lambda t: sync_fleaflicker.traded_pick_key(t["teams"][0]["picksObtained"][0], t["teams"][0], t["teams"])  # noqa: E731
+        sync_fleaflicker.resolve_pick_origins(trades)
+        self.assertEqual(key(trades[1]), (2024, 1, "1"))
+        sync_fleaflicker.resolve_pick_origins(trades, {(2024, 1, "2"): "3", (2024, 1, "1"): "1"})
+        self.assertEqual(key(trades[1]), (2024, 1, "2"))
+
     def test_fresh_lineage_replaces_stored(self):
         fresh = [["2020", "7/7/2020", "Week 1", "A & B", "A received: [2021 Round 2nd Pick -> Resulted in drafting: Right (QB)] <---> B received: [X (WR)]", "", ""]]
         old = ["2020", "7/7/2020", "Week 1", "A & B", "Old A received: [2021 Round 2nd Pick -> Resulted in drafting: Wrong (QB)] <---> Old B received: [X (WR)]", "", ""]

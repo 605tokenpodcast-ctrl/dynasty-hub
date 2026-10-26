@@ -569,7 +569,12 @@ def build_trade_rows(trades, season_labels, latest_label, drafted=None):
                 orig = pk.get("originalOwner") or pk.get("originalTeam")
                 if orig:
                     desc += f" (originally from {label_for(orig, season)})"
-                player = (drafted or {}).get(pick_key_parts(pk))
+                yr, rnd_n, orig_id = pick_key_parts(pk)
+                if not orig_id and len(sides) == 2:
+                    # Fleaflicker leaves the original owner off a team's own pick: it came from the other side
+                    other = sides[1] if s is sides[0] else sides[0]
+                    orig_id = team_id_of(other.get("team"))
+                player = (drafted or {}).get((yr, rnd_n, orig_id))
                 if player:
                     desc += f" -> Resulted in drafting: {player}"
                 items.append(desc.strip())

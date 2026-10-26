@@ -298,6 +298,33 @@ class SleeperDraftLineage(unittest.TestCase):
         self.assertEqual(sync_leagues.add_draft_lineage(trades, drafted), 0)   # never added twice
 
 
+class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
+    def test_pick_traded_on_fleaflicker_gets_sleeper_draft_result(self):
+        target = next(lg for lg in sync_fleaflicker.league_config.leagues("sleeper") if lg["name"] == "Hail Mary Jane Congregation")
+        S = "https://api.sleeper.app/v1"
+        api = {
+            f"{S}/league/{target['id']}": {"league_id": target["id"], "season": "2022", "previous_league_id": "L21"},
+            f"{S}/league/{target['id']}/users": [{"user_id": "u1", "display_name": "jarvisevans"}, {"user_id": "u2", "display_name": "Kronik"}],
+            f"{S}/league/{target['id']}/drafts": [{"draft_id": "d22", "season": "2022", "status": "complete",
+                                                  "settings": {"rounds": 5}, "draft_order": {"u1": 1, "u2": 2}}],
+            f"{S}/draft/d22/picks": [{"round": 1, "draft_slot": 1, "player_id": "p1", "metadata": {"first_name": "Rook", "last_name": "Ie", "position": "WR"}},
+                                     {"round": 1, "draft_slot": 2, "player_id": "p2", "metadata": {"first_name": "Other", "last_name": "Guy", "position": "RB"}}],
+        }
+        # Jarvis1983 (Fleaflicker team 7) sent its own 2022 1st to team 8 in 2020
+        trades = [{"approvedOn": 1, "teams": [{"team": {"id": 8, "name": "Eight"}, "picksObtained": [{"season": 2022, "slot": {"round": 1}}]},
+                                              {"team": {"id": 7, "name": "Beats by J"}}]}]
+        sync_fleaflicker.resolve_pick_origins(trades)
+        standings = {"teams": [{"id": 7, "name": "Beats by J", "owners": [{"displayName": "Jarvis1983"}]},
+                               {"id": 8, "name": "Eight", "owners": [{"displayName": "andylang1031"}]}]}
+        sync_leagues._LEAGUES.clear()
+        with mock.patch.object(sync_leagues, 'fetch_json', side_effect=lambda url: api.get(url)), \
+                mock.patch.object(sync_fleaflicker, 'api', return_value=standings):
+            out, failed = sync_fleaflicker.sleeper_draft_results({"id": "181202", "merge_into": "Hail Mary Jane Congregation"}, trades, 2020)
+        sync_leagues._LEAGUES.clear()
+        self.assertEqual(out, {(2022, 1, "7"): "Rook Ie (WR)"})
+        self.assertEqual(failed, set())
+
+
 class FleaflickerProfileMarkers(unittest.TestCase):
     def test_set_and_read_checked_seasons(self):
         rows = [SEC("LEAGUE PROFILE"), ["League ID", "1", "", "", "", "", ""], ["", "", "", "", "", "", ""],

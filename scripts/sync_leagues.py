@@ -307,10 +307,13 @@ def open_pick_years(trades, season):
     """Draft years up to `season` that traded picks without a draft result are waiting on."""
     return {m.group(1) for r in trades for m in OPEN_PICK_RE.finditer(str(r[4])) if int(m.group(1)) <= int(season)}
 
-def draft_results(league_info, years, players_data):
+STARTUP_ROUNDS = 8  # a draft with more rounds than this is a startup (every player), not a rookie draft
+
+def draft_results(league_info, years, players_data, rookie_only=False):
     """(season, round, original owner's owner_key) -> "Name (POS)" from the finished drafts of
     `years`, read from this league and its earlier seasons, plus the seasons whose draft was done.
-    The original owner is whoever held the draft slot (draft_order: user -> slot), not who made the pick."""
+    The original owner is whoever held the draft slot (draft_order: user -> slot), not who made the pick.
+    rookie_only skips startup drafts (their picks aren't the rookie picks a trade named)."""
     out, done = {}, set()
     info, league_id = league_info, str(league_info.get('league_id'))
     while info and years - done:
@@ -322,11 +325,19 @@ def draft_results(league_info, years, players_data):
                 slot_owner = {str(slot): owner_key(users.get(uid) or '') for uid, slot in (d.get('draft_order') or {}).items()}
                 if d.get('status') != 'complete' or str(d.get('season')) != season or not slot_owner:
                     continue
+                if rookie_only and int((d.get('settings') or {}).get('rounds') or 0) > STARTUP_ROUNDS:
+                    print(f"  {season} draft is a startup ({d['settings']['rounds']} rounds); its picks aren't matched")
+                    done.add(season)
+                    continue
                 for p in fetch_json(f"https://api.sleeper.app/v1/draft/{d.get('draft_id')}/picks") or []:
                     owner = slot_owner.get(str(p.get('draft_slot')))
                     if not owner or not p.get('player_id') or not p.get('round'):
                         continue
-                    name, pos, _ = get_player_label(p['player_id'], players_data)
+                    meta = p.get('metadata') or {}
+                    if str(p['player_id']) in players_data or not meta.get('last_name'):
+                        name, pos, _ = get_player_label(p['player_id'], players_data)
+                    else:   # without the players database (the Fleaflicker sync), the pick's own name
+                        name, pos = f"{meta.get('first_name', '')} {meta['last_name']}".strip(), meta.get('position') or 'FLEX'
                     out.setdefault((season, int(p['round']), owner), f"{name} ({pos})")
                 done.add(season)
         prev = str(info.get('previous_league_id') or '')

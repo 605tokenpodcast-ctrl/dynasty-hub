@@ -605,6 +605,52 @@ def fetch_draft_results(league_id, trades, first, last):
     return out, failed
 
 
+def sleeper_draft_results(league, trades, last):
+    """Draft results for traded picks of drafts held after a merge_into league moved to Sleeper
+    (e.g. HMJC's 2021-2023 picks traded on Fleaflicker, used in Sleeper drafts), keyed like
+    fetch_draft_results. The Sleeper draft names the manager who held each slot; a Fleaflicker
+    team is the same manager under the aliases in managers_config.json. Also returns the years
+    that couldn't be read, so stored results for them are kept."""
+    years = {pick_key_parts(pk)[0] for t in trades for side in t.get("teams") or [] for pk in side.get("picksObtained") or []}
+    years = {y for y in years if last < y <= current_season()}
+    target = next((lg for lg in league_config.leagues("sleeper")
+                   if lg["name"].strip().lower() == str(league.get("merge_into") or "").strip().lower()), None)
+    if not years or not target:
+        return {}, set()
+    import sync_leagues   # only needed here; it reads the Sleeper league list on import
+    info = sync_leagues.optional_fetches(lambda: sync_leagues.fetch_league(target["id"]))
+    got = info and sync_leagues.optional_fetches(lambda: sync_leagues.draft_results(info, {str(y) for y in years}, {}, rookie_only=True))
+    if not got:
+        print(f"  Sleeper drafts {sorted(years)} could not be read; stored results kept")
+        return {}, years
+    drafted, done = got
+    aliases = league_config.manager_aliases()
+    by_manager = {(int(season), rnd, league_config.master_owner(user, aliases).lower()): player
+                  for (season, rnd, user), player in drafted.items()}
+    # Fleaflicker team id -> manager: the last season's standings name each team's owner
+    managers = {}
+    for t in trades:
+        for side in t.get("teams") or []:
+            if team_id_of(side.get("team")):
+                managers[team_id_of(side.get("team"))] = team_label(side.get("team"))
+    try:
+        managers.update({team_id_of(r["id"]): r["label"] for r in fetch_standings(league["id"], last)})
+    except FleaError as e:
+        print(f"  standings {last} for team owners: {e}")
+    managers = {tid: league_config.master_owner(label, aliases).lower() for tid, label in managers.items()}
+    out = {}
+    for t in trades:
+        sides = t.get("teams") or []
+        for side in sides:
+            for pk in side.get("picksObtained") or []:
+                key = traded_pick_key(pk, side, sides)
+                player = all(key) and by_manager.get((key[0], key[1], managers.get(key[2])))
+                if player and key[0] > last:
+                    out[key] = player
+    print(f"  Sleeper drafts {sorted(int(y) for y in done)}: {len(out)} traded picks matched")
+    return out, years - {int(y) for y in done}
+
+
 def copy_lineage(kept_rows, fresh_rows, keep_years=()):
     """Stored trade rows (kept for their old team names) get the draft results from the
     freshly built copy of the same trade: same date and the same picks in the same order.
@@ -1104,6 +1150,10 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     trades = fetch_all_trades(league_id)
     resolve_pick_origins(trades)
     drafted, draft_failed = fetch_draft_results(league_id, trades, league["start_season"], min(last, cur))
+    if league.get("merge_into") and last < cur:
+        later, later_failed = sleeper_draft_results(league, trades, last)
+        drafted.update(later)
+        draft_failed |= later_failed
     trade_rows = build_trade_rows(trades, season_labels, latest_label, drafted)
     # a league that has an end_season must not pick up trades from later seasons
     trade_rows = [t for t in trade_rows if int(t[0]) <= last]

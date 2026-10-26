@@ -5003,7 +5003,8 @@
                                 date: r[1] || '',
                                 week: r[2] || '',
                                 teams: r[3],
-                                breakdown: r[4]
+                                breakdown: r[4],
+                                row: r
                             });
                         }
                     }
@@ -5053,6 +5054,10 @@
                     </div>
                     <p class="font-bold text-white text-xs">${escHtml(t.teams)}</p>
                     <div class="text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(t.breakdown)}</div>
+                    <div class="mt-2 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs leading-relaxed">
+                        <p class="text-slate-500 text-[11px] uppercase tracking-wide mb-1">Trade Grade</p>
+                        ${tradeGradeCell(t.row, t.league, tradeTimestamp(t.row))}
+                    </div>
                 </div>
             `).join('');
 

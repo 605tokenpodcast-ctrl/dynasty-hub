@@ -233,6 +233,43 @@ class FleaflickerDraftLineage(unittest.TestCase):
         sync_fleaflicker.parse_draft_board(data, 2025, {}, pickers)
         self.assertEqual(pickers, {(2025, 1, "1"): "1", (2025, 1, "2"): "2"})
 
+    def test_board_without_trade_flags_reads_order_from_who_held_each_pick(self):
+        # Slots run 1, 2, 3 every round. Team 1's 1st went to team 3, which made two picks in round 1;
+        # the board flags nothing, so "most often picking there" would hand slot 1 to team 3.
+        def pick(rnd, slot, team, name):
+            return {"slot": {"round": rnd, "slot": slot}, "team": {"id": team}, "player": {"proPlayer": {"nameFull": name, "position": "WR"}}}
+        data = {"orderedSelections": [pick(1, 1, 3, "A"), pick(1, 2, 2, "B"), pick(1, 3, 3, "C"),
+                                      pick(2, 1, 3, "D"), pick(2, 2, 2, "E"), pick(2, 3, 1, "F")]}
+        # team 1's 2nd also went to team 3, and team 3's 2nd to team 1
+        traded = {(2026, 1, "1"): "3", (2026, 2, "1"): "3", (2026, 2, "3"): "1"}
+        got = sync_fleaflicker.parse_draft_board(data, 2026, traded)
+        self.assertEqual(got[(2026, 1, "1")], "A (WR)")
+        self.assertEqual(got[(2026, 1, "3")], "C (WR)")
+        self.assertEqual(got[(2026, 2, "3")], "F (WR)")
+
+    def test_round_one_pick_short_puts_the_gap_where_it_fits(self):
+        def pick(rnd, slot, team, name):
+            return {"slot": {"round": rnd, "slot": slot}, "team": {"id": team}, "player": {"proPlayer": {"nameFull": name, "position": "WR"}}}
+        # round 2: team 2 made no pick, so team 3's pick is numbered slot 2
+        data = {"orderedSelections": [pick(1, 1, 1, "A"), pick(1, 2, 2, "B"), pick(1, 3, 3, "C"),
+                                      pick(2, 1, 1, "D"), pick(2, 2, 3, "E")]}
+        got = sync_fleaflicker.parse_draft_board(data, 2026, {})
+        self.assertEqual(got[(2026, 2, "3")], "E (WR)")
+        self.assertNotIn((2026, 2, "2"), got)
+
+    def test_pick_whose_path_cannot_end_with_its_drafter_stays_blank(self):
+        # Team 2 sends a 1st to team 1, which never makes a pick in team 2's slot (team 3 does)
+        # and sends no 1st on: a trade is missing, so the pick isn't named
+        trades = [{"approvedOn": 1, "teams": [{"team": {"id": 1}, "picksObtained": [{"season": 2019, "slot": {"round": 1}}]},
+                                              {"team": {"id": 2}}]}]
+        board = {(2019, 1, "1"): "1", (2019, 1, "2"): "3", (2019, 1, "3"): "3"}
+        sync_fleaflicker.resolve_pick_origins(trades, board)
+        side = trades[0]["teams"][0]
+        self.assertEqual(sync_fleaflicker.traded_pick_key(side["picksObtained"][0], side, trades[0]["teams"]), (2019, 1, None))
+        # ...unless a later trade (on Sleeper, say) sent it on to team 3
+        sync_fleaflicker.resolve_pick_origins(trades, board, later_moves=[(5, "3", 2019, 1, "2")])
+        self.assertEqual(sync_fleaflicker.traded_pick_key(side["picksObtained"][0], side, trades[0]["teams"]), (2019, 1, "2"))
+
     def test_kept_pick_someone_else_drafted_with(self):
         # The feed misses the trade that sent team 2's 1st to team 1. Teams 1 and 2 swap 1sts: tracking
         # says each sent its own, but the board shows each made only the pick in its own slot.

@@ -23,8 +23,6 @@ jobs:
           python-version: '3.10'
       - name: Unit tests
         run: python -m unittest discover tests -v
-      - name: Check traded-pick lineage with live data (temporary)
-        run: python scripts/check_pick_lineage.py
 
   page:
     runs-on: ubuntu-latest

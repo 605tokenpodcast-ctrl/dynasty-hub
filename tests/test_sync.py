@@ -184,6 +184,21 @@ class FleaflickerDraftLineage(unittest.TestCase):
         rows = sync_fleaflicker.build_trade_rows([trade], {}, {}, drafted)
         self.assertIn("2024 Round 1st Pick -> Resulted in drafting: B Two (WR)", rows[0][4])
 
+    def test_team_that_traded_a_whole_round(self):
+        # no draftOrder; team 7 traded both its picks, so its slot can't be read off the board
+        def pick(rnd, slot, team, name, traded=False):
+            return {"slot": {"round": rnd, "slot": slot}, "team": {"id": team}, "fromOtherTeam": traded,
+                    "player": {"proPlayer": {"nameFull": name, "position": "WR"}}}
+        data = {"orderedSelections": [
+            pick(1, 1, 9, "A", True), pick(1, 2, 8, "B"), pick(1, 3, 9, "C"),
+            pick(2, 1, 8, "D", True), pick(2, 2, 8, "E"), pick(2, 3, 9, "F"),
+        ]}
+        traded = {(2019, 1, "7"): "9", (2019, 2, "7"): "8"}
+        got = sync_fleaflicker.parse_draft_board(data, 2019, traded)
+        self.assertEqual(got[(2019, 1, "7")], "A (WR)")
+        self.assertEqual(got[(2019, 2, "7")], "D (WR)")
+        self.assertEqual(got[(2019, 1, "9")], "C (WR)")
+
     def test_empty_board(self):
         self.assertEqual(sync_fleaflicker.parse_draft_board({}, 2017), {})
 

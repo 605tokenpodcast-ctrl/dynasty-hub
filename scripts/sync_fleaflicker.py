@@ -398,7 +398,7 @@ def fetch_all_trades(league_id):
 PICK_RE = re.compile(r"(\d{4} Round \d+\w* Pick(?: \(originally from (?:[^()]|\([^()]*\))*\))?)( -> Resulted in drafting: [^,\]]*)?")
 
 
-def parse_draft_board(data, season):
+def parse_draft_board(data, season, traded=None):
     """
     (season, round, original owner id) -> "Player (POS)" from one FetchLeagueDraftBoard response.
     Picks come either as `rows` of `cells` (one row per round) or as a flat `orderedSelections`
@@ -406,6 +406,8 @@ def parse_draft_board(data, season):
     seasons have no `draftOrder`; there the owner of each slot is the team that used it most often.
     Cells may be listed by column or by pick order (and snake rounds run backwards), so use
     whichever reading agrees best with the picks nobody traded.
+    `traded` ({(season, round, original owner id): id of the team that ended up with it}) fills in
+    picks whose slot owner can't be read off the board, e.g. a team that traded away a whole round.
     """
     data = data or {}
     order = [team_id_of(t) for t in data.get("draftOrder") or []]
@@ -473,16 +475,25 @@ def parse_draft_board(data, season):
         return sum(1 for i, rnd, c in cells if untraded(c) and f(i, rnd, c) == owner(c))
 
     orig_of = max(strategies, key=agreement)
-    out = {}
+    out, unplaced = {}, []
     for i, rnd, c in cells:
         if not c.get("player"):
             continue
         pro = unwrap_player(c["player"])
-        if not (pro.get("nameFull") or pro.get("nameLast")):
+        if not (pro.get("nameFull") or pro.get("nameLast")) or not rnd:
             continue
         orig = orig_of(i, rnd, c)
-        if rnd and orig:
-            out[(int(season), rnd, orig)] = player_label(pro)
+        key = (int(season), rnd, orig)
+        if orig and key not in out:
+            out[key] = player_label(pro)
+        else:
+            unplaced.append((rnd, owner(c), player_label(pro)))
+    # A traded pick the board couldn't place: the team that made it is the one the trades say ended up with it
+    for rnd, picker, label in unplaced:
+        cands = [k for k, to in (traded or {}).items()
+                 if k[0] == int(season) and k[1] == rnd and to == picker and k not in out]
+        if len(cands) == 1:
+            out[cands[0]] = label
     return out
 
 
@@ -505,11 +516,20 @@ def fetch_draft_results(league_id, trades, first, last):
                 yr = pick_key_parts(pk)[0]
                 if first <= yr <= last:
                     seasons.add(yr)
+    # Who ended up with each traded pick (newest trade wins), to place picks the board can't
+    traded = {}
+    for t in sorted(trades, key=lambda t: num(t.get("approvedOn") or t.get("tradeTime") or t.get("createdOn"))):
+        sides = t.get("teams") or []
+        for side in sides:
+            for pk in side.get("picksObtained") or []:
+                key = traded_pick_key(pk, side, sides)
+                if all(key):
+                    traded[key] = team_id_of(side.get("team"))
     out = {}
     for season in sorted(seasons):
         try:
             data = api("FetchLeagueDraftBoard", league_id=league_id, season=season)
-            got = parse_draft_board(data, season)
+            got = parse_draft_board(data, season, traded)
         except FleaError as e:
             print(f"  draft {season} skipped: {e}")
             continue

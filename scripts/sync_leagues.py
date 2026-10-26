@@ -18,6 +18,7 @@ FUTURE_PICK_YEARS = 3  # how many draft classes to list per team
 LAST_PLAYOFF_WEEK = 17  # every league's championship is week 17; week 18 is unused
 LINEUPS_HEADER = "--- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) ---"
 MOVES_HEADER = "--- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---"
+PAST_TRADES_KEY = "Past Trades Synced"  # profile row: earlier seasons whose Sleeper trades were read
 PLACEMENT_LABELS = {1: "🏆 League Champion", 2: "🥈 Runner-Up", 3: "🥉 3rd Place"}
 
 # URLs that still failed after all retries. Any entry here means the sync is incomplete,
@@ -183,6 +184,113 @@ def move_row(season, week, tx, roster_to_manager, players_data):
             names(tx.get('adds')), names(tx.get('drops')),
             str(bid) if bid is not None else ""]
 
+def trade_row(season, week, tx, roster_to_manager, players_data):
+    """A completed trade as a Trade History row (Sleeper transaction_id in column 6), else None."""
+    if tx.get('type') != 'trade' or tx.get('status') != 'complete':
+        return None
+    created_ms = tx.get('created', 0)
+    dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
+    dt_str = f"{dt.month}/{dt.day}/{dt.year}" if dt else ""
+    rids = tx.get('roster_ids') or []
+    if len(rids) < 2:
+        return None
+    teams_involved = " & ".join(roster_to_manager.get(rid, f"Team {rid}") for rid in rids)
+    adds = tx.get('adds') or {}
+    side_strs = []
+    for rid in rids:
+        mgr = roster_to_manager.get(rid, f"Team {rid}")
+        received_items = []
+        for pid, target_rid in adds.items():
+            if target_rid == rid:
+                p_name, p_pos, _ = get_player_label(pid, players_data)
+                received_items.append(f"{p_name} ({p_pos})")
+        for dp in tx.get('draft_picks') or []:
+            if dp.get('owner_id') == rid:
+                orig_mgr = roster_to_manager.get(dp.get('roster_id'), f"Team {dp.get('roster_id')}")
+                received_items.append(f"{dp.get('season')} Round {ordinal(dp.get('round', 1))} Pick (originally from {orig_mgr})")
+        items_joined = ", ".join(received_items) if received_items else "Nothing"
+        side_strs.append(f"{mgr} received: [{items_joined}]")
+    return [str(season), dt_str, f"Week {week}", teams_involved, " <---> ".join(side_strs),
+            str(tx.get('transaction_id') or ''), ""]
+
+def trade_items_key(row):
+    """What each side received, without team names, pick owners or draft results: the same trade
+    stored under other team names (or a renamed team) gives the same key."""
+    sides = []
+    for side in LINEAGE_RE.sub('', str(row[4])).split(' <---> '):
+        m = re.match(r'^.*? received: \[(.*)\]$', side.strip())
+        items = re.sub(r'\s*\(originally from (?:[^()]|\([^()]*\))*\)', '', m.group(1) if m else side)
+        sides.append(tuple(sorted(i.strip() for i in items.split(', ') if i.strip() and i.strip() != 'Nothing')))
+    return tuple(sorted(sides))
+
+def row_date(row):
+    try:
+        return datetime.strptime(str(row[1]).strip(), "%m/%d/%Y")
+    except ValueError:
+        return None
+
+def merge_past_trades(trades, found):
+    """Add Sleeper trades from past seasons (`found`, rows with a transaction_id) to `trades`.
+
+    Past seasons' trades were first loaded without IDs. A found trade within a week of a stored
+    ID-less row that has the same items (or mostly the same, as a player may be spelled another
+    way) is that row: the row just gets the ID. Returns how many trades were new."""
+    known = {str(r[5]).strip() for r in trades if str(r[5]).strip()}
+    legacy = [r for r in trades if not str(r[5]).strip()]
+
+    def close(r, f):
+        a, b = row_date(r), row_date(f)
+        return abs((a - b).days) <= 7 if a and b else str(r[0]) == str(f[0])
+
+    def overlap(r, f):
+        a = {i for side in trade_items_key(r) for i in side}
+        b = {i for side in trade_items_key(f) for i in side}
+        return len(a & b) / len(a | b) if a | b else 0.0
+
+    added = 0
+    for f in found:
+        if f[5] in known:
+            continue
+        near = [r for r in legacy if close(r, f)]
+        twin = next((r for r in near if trade_items_key(r) == trade_items_key(f)), None) or \
+            max((r for r in near if overlap(r, f) >= 0.5), key=lambda r: overlap(r, f), default=None)
+        if twin is not None:
+            twin[5] = f[5]
+            legacy.remove(twin)
+        else:
+            trades.append(f)
+            added += 1
+        known.add(f[5])
+    return added
+
+def backfill_past_trades(league_info, done_seasons, players_data):
+    """Trades from earlier Sleeper seasons of this league (via previous_league_id), for seasons
+    not in done_seasons. Returns (rows, seasons fully read); failed requests are logged, not fatal."""
+    rows, done = [], set()
+    prev_id = league_info.get('previous_league_id')
+    while prev_id and prev_id != '0':
+        prev = optional_fetches(lambda: fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}"))
+        if not prev:
+            break
+        season = str(prev.get('season', ''))
+        if season and season not in done_seasons:
+            def read():
+                labels = manager_labels(prev_id)
+                found = []
+                for week in range(1, 19):
+                    for tx in fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}/transactions/{week}") or []:
+                        row = trade_row(season, week, tx, labels, players_data)
+                        if row:
+                            found.append(row)
+                return found
+            found = optional_fetches(read)
+            if found is not None:
+                print(f"  {season}: {len(found)} trade(s) on Sleeper (league {prev_id})")
+                rows.extend(found)
+                done.add(season)
+        prev_id = prev.get('previous_league_id')
+    return rows, done
+
 def manager_labels(league_id):
     """roster_id -> "Team Name (display)" for one Sleeper league."""
     rosters = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/rosters") or []
@@ -288,6 +396,12 @@ def apply_placements(standings_rows, placements):
             row[4] = place
             changed += 1
     return changed
+
+def profile_value(profile_rows, key):
+    for row in profile_rows:
+        if str(row[0]).strip() == key:
+            return str(row[1])
+    return ''
 
 def set_profile(profile_rows, key, value):
     for row in profile_rows:
@@ -500,7 +614,7 @@ def build_master_data():
                     matchup_map.setdefault(mid, []).append({'mgr': mgr, 'pts': pts})
 
             for mid, pair in sorted(matchup_map.items()):
-                if len(pair) == 2:
+                if mid and len(pair) == 2:  # no matchup_id (or 0): a bye / eliminated team, not a game
                     new_matchup_rows.append([
                         season, f"Week {week}", str(mid),
                         pair[0]['mgr'], f"{pair[0]['pts']:.2f}",
@@ -516,37 +630,9 @@ def build_master_data():
                 row = move_row(season, week, tx, roster_to_manager, players_data)
                 if row:
                     new_move_rows.append(row)
-                if tx.get('type') == 'trade' and tx.get('status') == 'complete':
-                    created_ms = tx.get('created', 0)
-                    dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
-                    dt_str = f"{dt.month}/{dt.day}/{dt.year}" if dt else ""
-                    rids = tx.get('roster_ids') or []
-                    if len(rids) < 2:
-                        continue
-                    teams_involved = " & ".join(roster_to_manager.get(rid, f"Team {rid}") for rid in rids)
-                    adds = tx.get('adds') or {}
-                    draft_picks_tx = tx.get('draft_picks') or []
-
-                    side_strs = []
-                    for rid in rids:
-                        mgr = roster_to_manager.get(rid, f"Team {rid}")
-                        received_items = []
-                        for pid, target_rid in adds.items():
-                            if target_rid == rid:
-                                p_name, p_pos, _ = get_player_label(pid, players_data)
-                                received_items.append(f"{p_name} ({p_pos})")
-                        for dp in draft_picks_tx:
-                            if dp.get('owner_id') == rid:
-                                orig_mgr = roster_to_manager.get(dp.get('roster_id'), f"Team {dp.get('roster_id')}")
-                                received_items.append(f"{dp.get('season')} Round {ordinal(dp.get('round', 1))} Pick (originally from {orig_mgr})")
-                        items_joined = ", ".join(received_items) if received_items else "Nothing"
-                        side_strs.append(f"{mgr} received: [{items_joined}]")
-
-                    breakdown = " <---> ".join(side_strs)
-                    live_trades.append([
-                        season, dt_str, f"Week {week}", teams_involved, breakdown,
-                        str(tx.get('transaction_id') or ''), ""
-                    ])
+                row = trade_row(season, week, tx, roster_to_manager, players_data)
+                if row:
+                    live_trades.append(row)
 
         # --- 5. MERGE WITH HISTORICAL SECTIONS SAFELY ---
         # A league that isn't in the master file yet starts with empty history and a generated
@@ -587,7 +673,8 @@ def build_master_data():
                     if c0 != 'Season':
                         historical_trades.append(row)
                 elif active_sec == 'matchups':
-                    if c0 not in ('Season', season):
+                    # Matchup ID 0 rows were never games (older syncs paired up teams without one)
+                    if c0 not in ('Season', season) and str(row[2] if len(row) > 2 else '').strip() not in ('', '0'):
                         historical_matchups.append(row)
                 elif active_sec == 'lineups':
                     if c0 not in ('Season', season):
@@ -648,6 +735,14 @@ def build_master_data():
                 merged_trades.insert(0, lt)
             if tx_id:
                 known_tx_ids.add(tx_id)
+        # Earlier Sleeper seasons' trades, read once per season (the profile row lists those done)
+        done_trades = set(re.findall(r'\d{4}', profile_value(profile_rows, PAST_TRADES_KEY)))
+        found, newly_done = backfill_past_trades(league_info, done_trades, players_data)
+        if found:
+            print(f"  past seasons: {merge_past_trades(merged_trades, found)} trade(s) were missing and added")
+            merged_trades.sort(key=lambda r: (str(r[0]), row_date(r) or datetime(int(r[0]), 1, 1)), reverse=True)
+        if newly_done:
+            set_profile(profile_rows, PAST_TRADES_KEY, ", ".join(sorted(done_trades | newly_done)))
         merged_trades, dupes = drop_duplicate_trades(merged_trades)
         if dupes:
             print(f"{league_key}: removed {dupes} duplicate legacy trade row(s)")

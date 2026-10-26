@@ -17,6 +17,7 @@ Set FLEA_DEBUG=1 to also dump the first raw response of every endpoint into
 ./fleaflicker_debug/ (the workflow uploads that folder as a build artifact).
 """
 import json
+from collections import Counter
 import os
 import re
 import sys
@@ -400,48 +401,88 @@ PICK_RE = re.compile(r"(\d{4} Round \d+\w* Pick(?: \(originally from (?:[^()]|\(
 def parse_draft_board(data, season):
     """
     (season, round, original owner id) -> "Player (POS)" from one FetchLeagueDraftBoard response.
-    The board has one row per round and one cell per pick; `team` is whoever made the pick, so the
-    original owner comes from the draft order. Cells may be listed by column or by pick order (and
-    snake rounds run backwards), so use whichever reading agrees with the picks nobody traded.
+    Picks come either as `rows` of `cells` (one row per round) or as a flat `orderedSelections`
+    list. `team` is whoever made the pick, so the original owner comes from the draft order. Older
+    seasons have no `draftOrder`; there the owner of each slot is the team that used it most often.
+    Cells may be listed by column or by pick order (and snake rounds run backwards), so use
+    whichever reading agrees best with the picks nobody traded.
     """
-    order = [team_id_of(t) for t in (data or {}).get("draftOrder") or []]
-    n = len(order)
-    rows = (data or {}).get("rows") or []
-    if not n or not rows:
+    data = data or {}
+    order = [team_id_of(t) for t in data.get("draftOrder") or []]
+    cells = []   # (column index or None, round, cell)
+    for r in data.get("rows") or []:
+        for i, c in enumerate(r.get("cells") or []):
+            if c:
+                cells.append((i, int(num((c.get("slot") or {}).get("round") or r.get("round"), 0)), c))
+    if not cells:
+        for c in data.get("orderedSelections") or []:
+            if c:
+                cells.append((None, int(num((c.get("slot") or {}).get("round"), 0)), c))
+    if not cells:
         return {}
 
+    n = len(order) or max((int(num((c.get("slot") or {}).get("slot"), 0)) for _, _, c in cells), default=0)
+    if not n:
+        # Only an overall pick number: the busiest round gives the league size
+        per_round = Counter(rnd for _, rnd, _ in cells)
+        n = max(per_round.values())
+
     def slot_of(c):
-        return int(num((c.get("slot") or {}).get("slot"), 0))
+        sl = c.get("slot") or {}
+        s_ = int(num(sl.get("slot"), 0))
+        if not s_ and n:
+            overall = int(num(sl.get("overall"), 0))
+            s_ = (overall - 1) % n + 1 if overall else 0
+        return s_
 
-    def by_column(i, c):
-        return order[i] if i < n else None
+    def owner(c):
+        return team_id_of(c.get("team"))
 
-    def by_slot(i, c):
+    def untraded(c):
+        return not c.get("fromOtherTeam") and owner(c)
+
+    def snake_pos(rnd, c):
+        # Position in the round-1 order: snake rounds reverse it
         s_ = slot_of(c)
-        return order[s_ - 1] if 1 <= s_ <= n else None
+        backwards = c.get("descending") if "descending" in c else rnd % 2 == 0
+        return n + 1 - s_ if backwards else s_
 
-    def by_snake_slot(i, c):
-        s_ = slot_of(c)
-        return (order[n - s_] if c.get("descending") else order[s_ - 1]) if 1 <= s_ <= n else None
+    def from_order(pos):
+        return order[pos - 1] if order and 1 <= pos <= n else None
+
+    def inferred(position):
+        votes = {}
+        for i, rnd, c in cells:
+            if untraded(c):
+                votes.setdefault(position(i, rnd, c), Counter())[owner(c)] += 1
+        best = {pos: cnt.most_common(1)[0][0] for pos, cnt in votes.items() if pos}
+        return lambda i, rnd, c: best.get(position(i, rnd, c))
+
+    linear_pos = lambda i, rnd, c: slot_of(c)
+    snake = lambda i, rnd, c: snake_pos(rnd, c)
+    strategies = []
+    if order:
+        strategies += [
+            lambda i, rnd, c: order[i] if i is not None and i < n else None,   # by column
+            lambda i, rnd, c: from_order(slot_of(c)),                          # by slot
+            lambda i, rnd, c: from_order(snake_pos(rnd, c)),                   # snake by slot
+        ]
+    strategies += [inferred(linear_pos), inferred(snake)]
 
     def agreement(f):
-        return sum(1 for r in rows for i, c in enumerate(r.get("cells") or [])
-                   if c and not c.get("fromOtherTeam") and team_id_of(c.get("team"))
-                   and f(i, c) == team_id_of(c.get("team")))
+        return sum(1 for i, rnd, c in cells if untraded(c) and f(i, rnd, c) == owner(c))
 
-    orig_of = max((by_column, by_slot, by_snake_slot), key=agreement)
+    orig_of = max(strategies, key=agreement)
     out = {}
-    for r in rows:
-        for i, c in enumerate(r.get("cells") or []):
-            if not c or not c.get("player"):
-                continue
-            pro = unwrap_player(c["player"])
-            if not (pro.get("nameFull") or pro.get("nameLast")):
-                continue
-            rnd = int(num((c.get("slot") or {}).get("round") or r.get("round"), 0))
-            orig = orig_of(i, c)
-            if rnd and orig:
-                out[(int(season), rnd, orig)] = player_label(pro)
+    for i, rnd, c in cells:
+        if not c.get("player"):
+            continue
+        pro = unwrap_player(c["player"])
+        if not (pro.get("nameFull") or pro.get("nameLast")):
+            continue
+        orig = orig_of(i, rnd, c)
+        if rnd and orig:
+            out[(int(season), rnd, orig)] = player_label(pro)
     return out
 
 
@@ -464,9 +505,13 @@ def fetch_draft_results(league_id, trades, first, last):
             continue
         out.update(got)
         print(f"  draft {season}: {len(got)} picks made")
-        if not got and season < current_season() and not out:
+        if not got and season < current_season():
             # Unexpected response shape: log enough to fix the parser from the run log
-            print(f"  (draft board keys: {sorted((data or {}).keys())[:12]})")
+            data = data or {}
+            sample = (data.get("orderedSelections") or [None])[0] or \
+                     next((c for r in data.get("rows") or [] for c in r.get("cells") or [] if c), None)
+            print(f"  (draft board keys: {sorted(data.keys())[:12]}; "
+                  f"pick keys: {sorted(sample.keys())[:12] if isinstance(sample, dict) else None})")
     return out
 
 

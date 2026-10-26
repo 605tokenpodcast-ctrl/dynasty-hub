@@ -39,6 +39,14 @@ def fetch_json(url, retries=4):
     FAILED_URLS.append(url)
     return None
 
+_LEAGUES = {}
+
+def fetch_league(league_id):
+    """A Sleeper league object, fetched once per run (several steps walk the same previous seasons)."""
+    if league_id not in _LEAGUES:
+        _LEAGUES[league_id] = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}")
+    return _LEAGUES[league_id]
+
 def played_score(row):
     """Score column (4) of a lineup row as a number, 0 for an unplayed week."""
     try:
@@ -269,7 +277,7 @@ def backfill_past_trades(league_info, done_seasons, players_data):
     rows, done = [], set()
     prev_id = league_info.get('previous_league_id')
     while prev_id and prev_id != '0':
-        prev = optional_fetches(lambda: fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}"))
+        prev = optional_fetches(lambda: fetch_league(prev_id))
         if not prev:
             break
         season = str(prev.get('season', ''))
@@ -291,6 +299,67 @@ def backfill_past_trades(league_info, done_seasons, players_data):
         prev_id = prev.get('previous_league_id')
     return rows, done
 
+DRAFTS_KEY = "Draft Results Checked"  # profile row: seasons whose finished rookie draft was read
+# A traded Sleeper pick that names its original owner and has no draft result yet
+OPEN_PICK_RE = re.compile(r'\b(\d{4}) Round (\d+)\w* Pick \(originally from ((?:[^()]|\([^()]*\))*)\)(?! -> Resulted in drafting)')
+
+def open_pick_years(trades, season):
+    """Draft years up to `season` that traded picks without a draft result are waiting on."""
+    return {m.group(1) for r in trades for m in OPEN_PICK_RE.finditer(str(r[4])) if int(m.group(1)) <= int(season)}
+
+STARTUP_ROUNDS = 8  # a draft with more rounds than this is a startup (every player), not a rookie draft
+
+def draft_results(league_info, years, players_data, rookie_only=False):
+    """(season, round, original owner's owner_key) -> "Name (POS)" from the finished drafts of
+    `years`, read from this league and its earlier seasons, plus the seasons whose draft was done.
+    The original owner is whoever held the draft slot (draft_order: user -> slot), not who made the pick.
+    rookie_only skips startup drafts (their picks aren't the rookie picks a trade named)."""
+    out, done = {}, set()
+    info, league_id = league_info, str(league_info.get('league_id'))
+    while info and years - done:
+        season = str(info.get('season', ''))
+        if season in years:
+            users = {u.get('user_id'): u.get('display_name', '') for u in
+                     fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/users") or []}
+            for d in fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/drafts") or []:
+                slot_owner = {str(slot): owner_key(users.get(uid) or '') for uid, slot in (d.get('draft_order') or {}).items()}
+                if d.get('status') != 'complete' or str(d.get('season')) != season or not slot_owner:
+                    continue
+                if rookie_only and int((d.get('settings') or {}).get('rounds') or 0) > STARTUP_ROUNDS:
+                    print(f"  {season} draft is a startup ({d['settings']['rounds']} rounds); its picks aren't matched")
+                    done.add(season)
+                    continue
+                for p in fetch_json(f"https://api.sleeper.app/v1/draft/{d.get('draft_id')}/picks") or []:
+                    owner = slot_owner.get(str(p.get('draft_slot')))
+                    if not owner or not p.get('player_id') or not p.get('round'):
+                        continue
+                    meta = p.get('metadata') or {}
+                    if str(p['player_id']) in players_data or not meta.get('last_name'):
+                        name, pos, _ = get_player_label(p['player_id'], players_data)
+                    else:   # without the players database (the Fleaflicker sync), the pick's own name
+                        name, pos = f"{meta.get('first_name', '')} {meta['last_name']}".strip(), meta.get('position') or 'FLEX'
+                    out.setdefault((season, int(p['round']), owner), f"{name} ({pos})")
+                done.add(season)
+        prev = str(info.get('previous_league_id') or '')
+        if prev in ('', '0', 'None') or season <= min(years):
+            break
+        league_id, info = prev, fetch_league(prev)
+    return out, done
+
+def add_draft_lineage(trades, drafted):
+    """Append "-> Resulted in drafting: X" to traded picks whose draft is in `drafted`; returns how many."""
+    added = 0
+    def fill(m):
+        nonlocal added
+        player = drafted.get((m.group(1), int(m.group(2)), owner_key(m.group(3))))
+        if not player:
+            return m.group(0)
+        added += 1
+        return f"{m.group(0)} -> Resulted in drafting: {player}"
+    for r in trades:
+        r[4] = OPEN_PICK_RE.sub(fill, str(r[4]))
+    return added
+
 def manager_labels(league_id):
     """roster_id -> "Team Name (display)" for one Sleeper league."""
     rosters = fetch_json(f"https://api.sleeper.app/v1/league/{league_id}/rosters") or []
@@ -310,7 +379,7 @@ def backfill_past_seasons(league_info, have_seasons, players_data):
     lineups, moves = [], []
     prev_id = league_info.get('previous_league_id')
     while prev_id and prev_id != '0':
-        prev = fetch_json(f"https://api.sleeper.app/v1/league/{prev_id}")
+        prev = fetch_league(prev_id)
         if not prev:
             break
         season = str(prev.get('season', ''))
@@ -746,6 +815,16 @@ def build_master_data():
         merged_trades, dupes = drop_duplicate_trades(merged_trades)
         if dupes:
             print(f"{league_key}: removed {dupes} duplicate legacy trade row(s)")
+        # Which player each traded pick became, once its draft is done (read once per draft season)
+        if not is_redraft:
+            checked = set(re.findall(r'\d{4}', profile_value(profile_rows, DRAFTS_KEY)))
+            waiting = open_pick_years(merged_trades, season) - checked
+            got = optional_fetches(lambda: draft_results(league_info, waiting, players_data)) if waiting else None
+            if got:
+                drafted, done = got
+                print(f"  draft results {sorted(done)}: {add_draft_lineage(merged_trades, drafted)} traded pick(s) filled in")
+                if done:
+                    set_profile(profile_rows, DRAFTS_KEY, ", ".join(sorted(checked | done)))
 
         compiled_rows = (
             [["--- LEAGUE PROFILE ---", "", "", "", "", "", ""]] +

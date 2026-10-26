@@ -27,6 +27,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # The branch as it is now, not the commit the run was queued on: a run that waited behind
+          # another sync would otherwise start from data that run already replaced, and its push
+          # would then fail on a merge conflict
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5

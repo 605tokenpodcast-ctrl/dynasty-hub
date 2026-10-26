@@ -1,9 +1,33 @@
 {
   "_about": [
-    "Optional extras for the site, merged on top of the defaults in index.html.",
-    "aliasOverrides: lower-case text found in a team label -> the manager it belongs to, e.g. \"oldusername\": \"Smokers Haven\".",
+    "Manager names, read by the site (index.html) and the Fleaflicker sync.",
+    "aliasOverrides: lower-case text found anywhere in a team label -> the manager it belongs to, e.g. \"oldusername\": \"Smokers Haven\".",
+    "exactAliases: one person's other username (lower case, matched exactly, e.g. their Fleaflicker name) -> the manager name.",
     "managers: manager -> { \"tagline\": \"...\", \"color\": \"#3b82f6\" } for the Trophy Room cards."
   ],
-  "aliasOverrides": {},
+  "aliasOverrides": {
+    "anthonyz": "Smokers Haven",
+    "smokers haven": "Smokers Haven",
+    "smokershaven": "Smokers Haven",
+    "dantefish": "Dontiddy",
+    "pokelegoej": "BigDEddie"
+  },
+  "exactAliases": {
+    "derrickfish": "DerrickFish",
+    "thecards": "KillerCards",
+    "peopleaters420": "Burntcooks",
+    "andylang1031": "Kronik",
+    "leno": "JayLeno",
+    "jarvis2023": "jarvisevans",
+    "jarvis1983": "jarvisevans",
+    "insideinsight36": "InsideInsightt",
+    "insightinside": "InsideInsightt",
+    "insideinsightt": "InsideInsightt",
+    "easy-e_lliott": "michaelpacheco",
+    "buffalo bills": "joester526",
+    "fishy012": "lilfishy",
+    "ismurda": "Miksimus80",
+    "sohigh420": "tokenwhiteguy"
+  },
   "managers": {}
 }

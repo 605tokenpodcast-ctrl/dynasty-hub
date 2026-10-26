@@ -11,7 +11,11 @@ Fleaflicker league like any other league:
   --- ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS) --- (every game, every season)
   --- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) --- (current season, plus a few
       older seasons backfilled per run)
-  --- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---
+  --- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---        (current season, plus every older
+      season that has none yet)
+
+A merge_into league (Fleaflicker years of a league that moved to Sleeper) gets the same
+history, spliced into the Sleeper league's block for its Fleaflicker seasons.
 
 Set FLEA_DEBUG=1 to also dump the first raw response of every endpoint into
 ./fleaflicker_debug/ (the workflow uploads that folder as a build artifact).
@@ -42,7 +46,8 @@ SEASON_RETRY_COOLDOWN = 150   # extra cooldown before re-trying a season that fa
 LAST_PLAYOFF_WEEK = 17        # every league's championship is week 17; week 18 is unused
 FALLBACK_REG_SEASON_WEEKS = 14
 FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
-LINEUP_BACKFILL_PER_RUN = 2  # older seasons of lineups fetched per run (one boxscore call per game)
+LINEUP_BACKFILL_PER_RUN = 5  # older seasons of lineups fetched per run (one boxscore call per game)
+MAX_TRANSACTION_PAGES = 3000  # FetchLeagueTransactions pages read per run (newest first, all seasons)
 DEBUG = os.environ.get("FLEA_DEBUG") == "1"
 FULL_REFRESH = os.environ.get("FLEA_FULL_REFRESH") == "1"  # re-fetch finished seasons too
 DEBUG_DIR = "fleaflicker_debug"
@@ -55,6 +60,10 @@ PLACEMENT_OVERRIDES = {}
 BLANK = ["", "", "", "", "", "", ""]
 LINEUPS_HEADER = "--- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) ---"
 MOVES_HEADER = "--- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---"
+# Profile rows listing the past seasons whose lineups / waiver moves were fully looked up, so a
+# season Fleaflicker has nothing for isn't asked for on every run
+LINEUPS_CHECKED = "Fleaflicker Lineups Checked"
+MOVES_CHECKED = "Fleaflicker Moves Checked"
 _debug_seen = set()
 
 
@@ -713,8 +722,9 @@ def optimal_points(slot_eligibility, pool):
 
 
 def fetch_lineup_rows(league_id, season, periods, labels):
-    """One row per team per played week, same columns as the Sleeper sync."""
-    rows = []
+    """One row per team per played week, same columns as the Sleeper sync, and how many
+    games could not be read (a season with any is not saved, so the next run tries it again)."""
+    rows, failed = [], 0
     for p in sorted(periods):
         for g in periods[p]:
             if not g["final"] and g["hs"] == 0 and g["as"] == 0:
@@ -726,8 +736,10 @@ def fetch_lineup_rows(league_id, season, periods, labels):
                        or api("FetchLeagueBoxscore", league_id=league_id, fantasy_game_id=g["gid"]))
             except FleaError as e:
                 print(f"  lineup {season} week {p}: {e}")
+                failed += 1
                 continue
             if not box:
+                failed += 1
                 continue
             sides = {"home": {"start": [], "bench": [], "slots": []}, "away": {"start": [], "bench": [], "slots": []}}
             for grp in box.get("lineups") or []:
@@ -756,15 +768,17 @@ def fetch_lineup_rows(league_id, season, periods, labels):
                 rows.append([str(season), f"Week {p}", labels.get(g[side]["id"]) or team_label(g[side]),
                              f"{score:.2f}", f"{best:.2f}", fmt(d["start"]),
                              fmt(sorted(d["bench"], key=lambda x: -x[1]))])
-    return rows
+    return rows, failed
 
 
-def fetch_move_rows(league_id, labels, season):
-    """Waiver claims and free-agent adds for one season, newest first. Fleaflicker lists the drop
-    that goes with an add as its own item, so a team's drops within a minute of an add are joined to it."""
+def fetch_move_rows(league_id, labels_by_season, seasons, season_param=None):
+    """Waiver claims and free-agent adds for `seasons`, newest first, plus the seasons whose list
+    is complete (the feed went past them or ran out). Fleaflicker lists the drop that goes with an
+    add as its own item, so a team's drops within a minute of an add are joined to it."""
     rows, drops, offset, seen = [], [], None, set()
-    for _ in range(200):
-        data = api("FetchLeagueTransactions", league_id=league_id, result_offset=offset)
+    oldest, done = min(seasons), False
+    for _ in range(MAX_TRANSACTION_PAGES):
+        data = api("FetchLeagueTransactions", league_id=league_id, season=season_param, result_offset=offset)
         if not data:
             break
         older = False
@@ -774,10 +788,10 @@ def fetch_move_rows(league_id, labels, season):
             if not dt:
                 continue
             tx_season, week = season_and_week(dt)
-            if tx_season < season:
+            if tx_season < oldest:
                 older = True
                 continue
-            if tx_season != season:
+            if tx_season not in seasons:
                 continue
             kind = str(tx.get("type") or "")
             team = tx.get("team") or {}
@@ -787,17 +801,34 @@ def fetch_move_rows(league_id, labels, season):
             if kind not in ("TRANSACTION_CLAIM", "TRANSACTION_ADD"):
                 continue
             bid = tx.get("bidAmount") if tx.get("bidAmount") is not None else (tx.get("waiverBid") or "")
-            rows.append([str(season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}",
+            labels = labels_by_season.get(tx_season) or {}
+            rows.append([str(tx_season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}",
                          labels.get(team.get("id")) or team_label(team),
                          "Waiver" if kind == "TRANSACTION_CLAIM" else "Free Agent",
                          player_label(unwrap_player(tx.get("player"))), "", f"{num(bid, 0):g}" if bid != "" else "",
                          (dt, team.get("id"))])
         nxt = data.get("resultOffsetNext")
         if older or nxt is None or nxt in seen:
+            done = True
             break
         seen.add(nxt)
         offset = nxt
-    return [attach_drops(r, drops) for r in rows]
+    # Without reaching the end of the feed, the oldest season in it may be cut short
+    complete = set(seasons) if done else {s_ for s_ in seasons if any(int(r[0]) < s_ for r in rows)}
+    return [attach_drops(r, drops) for r in rows if int(r[0]) in complete], complete
+
+
+def fetch_season_moves(league_id, labels_by_season, seasons):
+    """fetch_move_rows over the whole feed, then once per season still empty with a season
+    parameter (in case Fleaflicker only lists one season's transactions at a time)."""
+    rows, complete = fetch_move_rows(league_id, labels_by_season, set(seasons))
+    found = {int(r[0]) for r in rows}
+    for season in sorted(set(seasons) - found):
+        more, _ = fetch_move_rows(league_id, labels_by_season, {season}, season_param=season)
+        rows.extend(more)
+        if more:
+            complete.add(season)
+    return rows, complete
 
 
 def attach_drops(row, drops):
@@ -820,6 +851,38 @@ def existing_section_rows(rows, word):
         if active and c0 and c0 != "Season":
             out.append(r)
     return out
+
+
+def checked_seasons(rows, key):
+    """Seasons listed on the profile row `key` (a comma-separated list) of a league block."""
+    for r in rows or []:
+        c0 = str(r[0] if r else "").strip()
+        if c0.upper().startswith("---") and "PROFILE" not in c0.upper():
+            break
+        if c0 == key:
+            return {int(x) for x in re.findall(r"\d{4}", str(r[1]))}
+    return set()
+
+
+def set_checked(rows, key, seasons):
+    """Write `seasons` to the profile row `key`, merged with what it lists; adds the row if needed."""
+    seasons = sorted(set(seasons) | checked_seasons(rows, key))
+    if not seasons:
+        return rows
+    value = ", ".join(str(y) for y in seasons)
+    end = len(rows)
+    for i, r in enumerate(rows):
+        c0 = str(r[0] if r else "").strip()
+        if c0 == key:
+            rows[i] = [key, value, *([""] * 5)]
+            return rows
+        if i and c0.upper().startswith("---"):
+            end = i
+            break
+    while end > 1 and not any(str(c).strip() for c in rows[end - 1]):
+        end -= 1   # before the blank line that ends the profile
+    rows.insert(end, [key, value, *([""] * 5)])
+    return rows
 
 
 # --------------------------------------------------------------------------- #
@@ -847,31 +910,41 @@ def trade_date(row):
 
 
 def collect_league(league, existing_rows=None, cache_rows=None):
-    """Pull standings / matchups / trades (and rosters if it's a live season).
-    Standalone leagues also get lineups and waiver moves; older seasons already in
-    `existing_rows` are kept, and a few missing ones are backfilled each run.
-    Finished seasons found in `cache_rows` (this league's current block) are reused, not re-fetched."""
+    """Pull standings / matchups / trades (and rosters if it's a live season), lineups and waiver
+    moves. Older seasons' lineups and moves already in the file are kept, and missing ones are
+    backfilled: a few seasons of lineups per run, all seasons of moves at once.
+    Finished seasons found in `cache_rows` (this league's current block, or the merge target's)
+    are reused, not re-fetched."""
     league_id, name = league["id"], league["name"]
     last = league.get("end_season") or current_season()
     cur = current_season()
-    print(f"== {name} ({league_id}), seasons {league['start_season']}-{last}")
+    first = league["start_season"]
+    print(f"== {name} ({league_id}), seasons {first}-{last}")
 
     standings_rows, matchup_rows = [], []
     season_labels, latest_label = {}, {}
     current_rows = []
-    want_lineups = not league.get("merge_into")
-    old_lineups = [r for r in existing_section_rows(existing_rows, "LINEUPS") if str(r[0]) != str(cur)]
-    old_moves = [r for r in existing_section_rows(existing_rows, "FREE AGENT") if str(r[0]) != str(cur)]
-    have_lineup_seasons = {str(r[0]) for r in old_lineups}
-    backfill = sorted((y for y in range(league["start_season"], cur) if str(y) not in have_lineup_seasons),
-                      reverse=True)[:LINEUP_BACKFILL_PER_RUN] if want_lineups else []
+    # A merge_into league's lineups and moves live in the target block, next to the Sleeper seasons
+    history = cache_rows if league.get("merge_into") else existing_rows
+    own_season = lambda r: first <= int(num(r[0], 0)) <= last and str(r[0]) != str(cur)  # noqa: E731
+    old_lineups = [r for r in existing_section_rows(history, "LINEUPS") if own_season(r)]
+    old_moves = [r for r in existing_section_rows(history, "FREE AGENT") if own_season(r)]
+    checked = {key: checked_seasons(history, key) for key in (LINEUPS_CHECKED, MOVES_CHECKED)}
+    past = range(first, min(last, cur - 1) + 1)
+    have_lineups = {int(r[0]) for r in old_lineups} | checked[LINEUPS_CHECKED]
+    backfill = sorted((y for y in past if y not in have_lineups), reverse=True)[:LINEUP_BACKFILL_PER_RUN]
+    have_moves = {int(r[0]) for r in old_moves} | checked[MOVES_CHECKED]
+    moves_backfill = [y for y in past if y not in have_moves]
+    refresh = set(backfill) | set(moves_backfill)   # seasons whose team names this run needs
     lineup_rows = []
-    cached = {} if FULL_REFRESH else finished_seasons(cache_rows, league["start_season"], min(last, cur - 1))
+    cached = {} if FULL_REFRESH else finished_seasons(cache_rows, first, min(last, cur - 1))
     if cached:
         print(f"  reusing {len(cached)} finished season(s) already in the file: {sorted(cached)}")
+    if backfill or moves_backfill:
+        print(f"  backfilling lineups {sorted(backfill)} and waiver moves {moves_backfill}")
 
     def load_season(season):
-        if season in cached and season not in backfill:
+        if season in cached and season not in refresh:
             standings_rows.extend(cached[season][0])
             matchup_rows.extend(cached[season][1])
             return
@@ -900,9 +973,13 @@ def collect_league(league, existing_rows=None, cache_rows=None):
                 a = lab.get(g["away"]["id"]) or team_label(g["away"])
                 matchup_rows.append([str(season), f"Week {p}", str(idx), h, f"{g['hs']:.2f}", a, f"{g['as']:.2f}"])
                 n_games += 1
-        if want_lineups and (season == cur or season in backfill):
-            new_rows = fetch_lineup_rows(league_id, season, periods, season_labels[season])
-            lineup_rows.extend(new_rows)
+        if season == cur or season in backfill:
+            new_rows, missed = fetch_lineup_rows(league_id, season, periods, season_labels[season])
+            if missed and season != cur:
+                print(f"  {missed} game(s) had no box score; {season} lineups will be retried next run")
+            else:
+                lineup_rows.extend(new_rows)
+                lineups_done.add(season)
             print(f"  {len(new_rows)} lineup rows")
         print(f"  {len(rows)} teams, {n_games} games, regular season = {info['reg_weeks']} wks, placements = {placements or 'n/a'}")
 
@@ -912,8 +989,9 @@ def collect_league(league, existing_rows=None, cache_rows=None):
         matchup_rows[:] = [r for r in matchup_rows if r[0] != s_]
         season_labels.pop(season, None)
 
+    lineups_done = set()
     failed = []
-    for season in range(league["start_season"], last + 1):
+    for season in range(first, last + 1):
         try:
             load_season(season)
         except FleaError as e:
@@ -949,7 +1027,7 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     # a league that has an end_season must not pick up trades from later seasons
     trade_rows = [t for t in trade_rows if int(t[0]) <= last]
     # Reused seasons keep their stored trade rows, which were labelled with that season's team names
-    reused = {s for s in cached if s not in backfill}
+    reused = {s for s in cached if s not in refresh}
     if reused:
         kept = copy_lineage([t for t in existing_section_rows(cache_rows, "TRADE") if int(t[0]) in reused],
                             trade_rows)
@@ -968,19 +1046,26 @@ def collect_league(league, existing_rows=None, cache_rows=None):
                 pick_strs.get(str(r["id"]), "None"),
                 "", "",
             ])
-    move_rows = []
-    if want_lineups and current_rows:
-        print("- waiver & free agent moves")
+    move_rows, moves_done = [], set()
+    move_seasons = set(moves_backfill) | ({cur} if current_rows else set())
+    if move_seasons:
+        print(f"- waiver & free agent moves {sorted(move_seasons)}")
+        labels = {y: season_labels.get(y) or latest_label for y in move_seasons}
         try:
-            move_rows = fetch_move_rows(league_id, latest_label, cur)
+            move_rows, moves_done = fetch_season_moves(league_id, labels, move_seasons)
         except FleaError as e:
             print(f"  moves skipped: {e}")
         print(f"  {len(move_rows)} moves")
+    move_rows.sort(key=lambda r: (-int(r[0]), -trade_date([r[0], r[2]]).timestamp()))
     lineup_rows.sort(key=lambda r: (-int(r[0]), int(r[1].split()[-1])))
     old_lineups = [r for r in old_lineups if str(r[0]) not in {x[0] for x in lineup_rows}]
+    old_moves = [r for r in old_moves if int(r[0]) not in moves_done]
     return {"standings": standings_rows, "matchups": matchup_rows, "trades": trade_rows,
             "rosters": roster_rows, "last": last,
-            "lineups": lineup_rows + old_lineups, "moves": move_rows + old_moves}
+            "lineups": lineup_rows + old_lineups, "moves": move_rows + old_moves,
+            # Seasons looked up in full, even when they came back empty, so they aren't asked for again
+            "checked": {LINEUPS_CHECKED: checked[LINEUPS_CHECKED] | (lineups_done - {cur}),
+                        MOVES_CHECKED: checked[MOVES_CHECKED] | (moves_done - {cur})}}
 
 
 def build_standalone_block(league, data):
@@ -991,6 +1076,8 @@ def build_standalone_block(league, data):
         ["League ID", league["id"], "", "", "", "", ""],
         ["League Type", league["type"].capitalize(), "", "", "", "", ""],
         ["Current Season", str(cur), "", "", "", "", ""],
+    ] + [[key, ", ".join(str(y) for y in sorted(seasons)), "", "", "", "", ""]
+         for key, seasons in data.get("checked", {}).items() if seasons] + [
         BLANK,
         ["--- PAST SEASONS STANDINGS & CHAMPIONS ---", "", "", "", "", "", ""],
         ["Season", "Team / Manager", "Record", "Points For (PF)", "Playoff Finish / Placement", "", ""],
@@ -1024,7 +1111,8 @@ def merge_into_existing(rows, data, first_season, last_season):
     run of this script) and appends the fresh ones at the end of each section.
     """
     seasons = {str(y) for y in range(first_season, last_season + 1)}
-    wanted = {"standings": data["standings"], "trades": data["trades"], "matchups": data["matchups"]}
+    wanted = {"standings": data["standings"], "trades": data["trades"], "matchups": data["matchups"],
+              "lineups": data.get("lineups") or [], "moves": data.get("moves") or []}
 
     kept, sec = [], None
     last_idx = {}   # section -> index in `kept` of its last non-blank row
@@ -1036,6 +1124,8 @@ def merge_into_existing(rows, data, first_season, last_season):
             elif "STANDINGS" in u0: sec = "standings"
             elif "ROSTERS" in u0: sec = "rosters"
             elif "TRADE" in u0: sec = "trades"
+            elif "LINEUPS" in u0: sec = "lineups"
+            elif "FREE AGENT" in u0: sec = "moves"
             elif "BOX SCORES" in u0: sec = "boxscores"
             elif "MATCHUPS" in u0: sec = "matchups"
             else: sec = "other"
@@ -1055,6 +1145,8 @@ def merge_into_existing(rows, data, first_season, last_season):
     for sec_name in sorted((k for k in wanted if k in last_idx), key=lambda k: -last_idx[k]):
         pos = last_idx[sec_name] + 1
         kept[pos:pos] = wanted[sec_name]
+    for key, done in (data.get("checked") or {}).items():
+        set_checked(kept, key, done)
     return kept
 
 

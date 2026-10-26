@@ -215,6 +215,125 @@ class FleaflickerFinishedSeasons(unittest.TestCase):
         self.assertEqual(sync_fleaflicker.finished_seasons(None, 2023, 2025), {})
 
 
+class PastSleeperTrades(unittest.TestCase):
+    def row(self, date, breakdown, tx=""):
+        return ["2022", date, "Week 3", "A & B", breakdown, tx, ""]
+
+    def test_legacy_row_gets_id_instead_of_a_copy(self):
+        legacy = self.row("9/20/2022", "Old A received: [X (WR), 2023 Round 1st Pick (originally from Old B)] <---> Old B received: [Y (RB)]")
+        trades = [legacy]
+        found = [self.row("9/21/2022", "A received: [2023 Round 1st Pick (originally from B), X (WR)] <---> B received: [Y (RB)]", "t1"),
+                 self.row("10/1/2022", "A received: [Z (QB)] <---> B received: [Nothing]", "t2")]
+        self.assertEqual(sync_leagues.merge_past_trades(trades, found), 1)
+        self.assertEqual(len(trades), 2)
+        self.assertEqual(legacy[5], "t1")
+        self.assertIn("Old A", legacy[4])      # stored text (old team names) kept
+        self.assertEqual(trades[1][5], "t2")
+        self.assertEqual(sync_leagues.merge_past_trades(trades, found), 0)   # nothing added twice
+
+    def test_mostly_same_items_match_far_dates_do_not(self):
+        legacy = self.row("9/20/2022", "A received: [Kenneth Walker (RB), X (WR)] <---> B received: [Y (RB)]")
+        far = self.row("12/20/2022", "A received: [X (WR)] <---> B received: [Y (RB)]")
+        trades = [legacy, far]
+        found = [self.row("9/20/2022", "A received: [Kenneth Walker III (RB), X (WR)] <---> B received: [Y (RB)]", "t1")]
+        self.assertEqual(sync_leagues.merge_past_trades(trades, found), 0)
+        self.assertEqual((legacy[5], far[5]), ("t1", ""))
+
+
+class FleaflickerProfileMarkers(unittest.TestCase):
+    def test_set_and_read_checked_seasons(self):
+        rows = [SEC("LEAGUE PROFILE"), ["League ID", "1", "", "", "", "", ""], ["", "", "", "", "", "", ""],
+                SEC("PAST SEASONS STANDINGS & CHAMPIONS")]
+        sync_fleaflicker.set_checked(rows, "Fleaflicker Moves Checked", {2017, 2016})
+        self.assertEqual(rows[2][:2], ["Fleaflicker Moves Checked", "2016, 2017"])
+        sync_fleaflicker.set_checked(rows, "Fleaflicker Moves Checked", {2018})
+        self.assertEqual(sync_fleaflicker.checked_seasons(rows, "Fleaflicker Moves Checked"), {2016, 2017, 2018})
+        self.assertEqual(len(rows), 5)
+
+
+def fake_fleaflicker(endpoint, **p):
+    """A two-team Fleaflicker league that ran 2019-2020: one game a week, weeks 1-2."""
+    season = p.get("season")
+    team = lambda i: {"id": i, "name": f"T{i}", "owners": [{"displayName": f"o{i}"}]}  # noqa: E731
+    if endpoint == "FetchLeagueStandings":
+        return {"divisions": [{"teams": [dict(team(1), recordOverall={"wins": 2, "losses": 0}, pointsFor=200),
+                                         dict(team(2), recordOverall={"wins": 0, "losses": 2}, pointsFor=150)]}]}
+    if endpoint == "FetchLeagueScoreboard":
+        if p["scoring_period"] > 2:
+            return {"games": []}
+        return {"eligibleSchedulePeriods": [{"ordinal": 1}, {"ordinal": 2}], "games": [{
+            "id": f"{season}{p['scoring_period']}", "home": team(1), "away": team(2), "isFinalScore": True,
+            "isChampionshipGame": p["scoring_period"] == 2, "homeScore": {"score": {"value": 100}}, "awayScore": {"score": {"value": 75}}}]}
+    if endpoint == "FetchLeagueBoxscore":
+        slot = lambda pos, a, b: {"position": {"label": pos, "eligibility": [pos]},  # noqa: E731
+                                  "home": {"proPlayer": {"nameFull": a, "position": pos}, "viewingActualPoints": {"value": 100}},
+                                  "away": {"proPlayer": {"nameFull": b, "position": pos}, "viewingActualPoints": {"value": 75}}}
+        return {"lineups": [{"group": "START", "slots": [slot("QB", "Home QB", "Away QB")]}]}
+    if endpoint == "FetchLeagueTransactions":
+        ms = lambda y, m, d: int(__import__("datetime").datetime(y, m, d, 12).timestamp() * 1000)  # noqa: E731
+        return {"items": [
+            {"timeEpochMilli": ms(2021, 9, 20), "transaction": {"type": "TRANSACTION_ADD", "team": team(1), "player": {"proPlayer": {"nameFull": "Too New", "position": "WR"}}}},
+            {"timeEpochMilli": ms(2020, 10, 1), "transaction": {"type": "TRANSACTION_CLAIM", "team": team(2), "bidAmount": 4, "player": {"proPlayer": {"nameFull": "Waiver Guy", "position": "RB"}}}},
+            {"timeEpochMilli": ms(2019, 10, 1), "transaction": {"type": "TRANSACTION_ADD", "team": team(1), "player": {"proPlayer": {"nameFull": "Old Add", "position": "TE"}}}},
+            {"timeEpochMilli": ms(2018, 10, 1), "transaction": {"type": "TRANSACTION_ADD", "team": team(1), "player": {"proPlayer": {"nameFull": "Before", "position": "K"}}}},
+        ]}
+    if endpoint == "FetchTrades":
+        return {"trades": []}
+    return None
+
+
+class FleaflickerMergedLeagueHistory(unittest.TestCase):
+    """A league's Fleaflicker years (merge_into) get lineups and waiver moves in the Sleeper block."""
+    LEAGUE = {"name": "Old (Fleaflicker era)", "platform": "fleaflicker", "id": "9", "type": "dynasty",
+              "start_season": 2019, "end_season": 2020, "merge_into": "Main"}
+
+    def sleeper_block(self):
+        return [SEC("LEAGUE PROFILE"), ["League ID", "S1", "", "", "", "", ""], ["", "", "", "", "", "", ""],
+                SEC("PAST SEASONS STANDINGS & CHAMPIONS"), ["Season"], ["2021", "T1 (o1)", "9-5", "1", "Regular Season", "", ""],
+                ["", "", "", "", "", "", ""], SEC("TRADE HISTORY (ALL-TIME & ALL SEASONS)"), ["Season"],
+                ["", "", "", "", "", "", ""], SEC("ALL-TIME MATCHUPS & SCHEDULE (ALL SEASONS)"), ["Season"],
+                ["2021", "Week 1", "1", "T1 (o1)", "1", "T2 (o2)", "2"], ["", "", "", "", "", "", ""],
+                [sync_fleaflicker.LINEUPS_HEADER, "", "", "", "", "", ""], ["Season"],
+                ["2021", "Week 1", "T1 (o1)", "1", "1", "", ""], ["", "", "", "", "", "", ""],
+                [sync_fleaflicker.MOVES_HEADER, "", "", "", "", "", "", ""], ["Season"],
+                ["2021", "Week 2", "9/20/2021", "T1 (o1)", "Free Agent", "Sleeper Add (WR)", "", ""]]
+
+    def run_sync(self, block):
+        with mock.patch.object(sync_fleaflicker, "api", side_effect=fake_fleaflicker), \
+                mock.patch.object(sync_fleaflicker, "current_season", return_value=2026):
+            data = sync_fleaflicker.collect_league(self.LEAGUE, None, block)
+        return sync_fleaflicker.merge_into_existing(block, data, 2019, data["last"])
+
+    def test_lineups_and_moves_spliced_into_sleeper_block(self):
+        merged = self.run_sync(self.sleeper_block())
+        lineups = sync_fleaflicker.existing_section_rows(merged, "LINEUPS")
+        self.assertEqual(sorted({r[0] for r in lineups}), ["2019", "2020", "2021"])
+        self.assertEqual(len([r for r in lineups if r[0] == "2020"]), 4)   # 2 teams x 2 weeks
+        self.assertIn("Home QB (QB) 100.00", next(r for r in lineups if r[0] == "2020")[5])
+        moves = sync_fleaflicker.existing_section_rows(merged, "FREE AGENT")
+        self.assertEqual([(r[0], r[5]) for r in moves],
+                         [("2021", "Sleeper Add (WR)"), ("2020", "Waiver Guy (RB)"), ("2019", "Old Add (TE)")])
+        self.assertEqual(sync_fleaflicker.checked_seasons(merged, sync_fleaflicker.MOVES_CHECKED), {2019, 2020})
+
+        # A second run reuses what is stored: no duplicate rows, no more box score calls
+        with mock.patch.object(sync_fleaflicker, "fetch_lineup_rows", side_effect=AssertionError("refetched")):
+            again = self.run_sync(merged)
+        for word in ("LINEUPS", "FREE AGENT", "MATCHUPS", "STANDINGS"):
+            self.assertEqual(sync_fleaflicker.existing_section_rows(again, word),
+                             sync_fleaflicker.existing_section_rows(merged, word), word)
+
+    def test_season_with_a_missing_box_score_is_retried(self):
+        def flaky(endpoint, **p):
+            if endpoint == "FetchLeagueBoxscore" and str(p.get("fantasy_game_id")) == "20192":
+                return None
+            return fake_fleaflicker(endpoint, **p)
+        with mock.patch.object(sync_fleaflicker, "api", side_effect=flaky), \
+                mock.patch.object(sync_fleaflicker, "current_season", return_value=2026):
+            data = sync_fleaflicker.collect_league(self.LEAGUE, None, self.sleeper_block())
+        self.assertEqual(sorted({r[0] for r in data["lineups"]}), ["2020"])
+        self.assertEqual(data["checked"][sync_fleaflicker.LINEUPS_CHECKED], {2020})
+
+
 if __name__ == '__main__':
     unittest.main()
 

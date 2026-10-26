@@ -475,7 +475,7 @@ def parse_draft_board(data, season, traded=None):
         return sum(1 for i, rnd, c in cells if untraded(c) and f(i, rnd, c) == owner(c))
 
     orig_of = max(strategies, key=agreement)
-    out, unplaced = {}, []
+    out, unplaced, slots = {}, [], {}
     for i, rnd, c in cells:
         if not c.get("player"):
             continue
@@ -484,14 +484,19 @@ def parse_draft_board(data, season, traded=None):
             continue
         orig = orig_of(i, rnd, c)
         key = (int(season), rnd, orig)
+        pos = (slot_of(c), snake_pos(rnd, c))
         if orig and key not in out:
             out[key] = player_label(pro)
+            slots.setdefault(orig, set()).update({("linear", pos[0]), ("snake", pos[1])})
         else:
-            unplaced.append((rnd, owner(c), player_label(pro)))
-    # A traded pick the board couldn't place: the team that made it is the one the trades say ended up with it
-    for rnd, picker, label in unplaced:
+            unplaced.append((rnd, owner(c), pos, player_label(pro)))
+    # A traded pick the board couldn't place: the team that made it is the one the trades say ended up
+    # with it. When that team ended up with several, the original owner's slot in other rounds decides.
+    for rnd, picker, pos, label in unplaced:
         cands = [k for k, to in (traded or {}).items()
                  if k[0] == int(season) and k[1] == rnd and to == picker and k not in out]
+        if len(cands) > 1:
+            cands = [k for k in cands if slots.get(k[2], set()) & {("linear", pos[0]), ("snake", pos[1])}] or cands
         if len(cands) == 1:
             out[cands[0]] = label
     return out

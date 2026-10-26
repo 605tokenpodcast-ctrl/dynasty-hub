@@ -444,6 +444,108 @@
     "2025 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: TreVeyon Henderson (RB)": 3312
    }
   },
+  "Branden's League||2016||10/24/2016||Fish's Team (DERRICKFISH) received: [DeMarco Murray (RB), Giovani Bernard (RB)] <---> Leno'S Team (Leno) received: [Dez Bryant (WR)]": {
+   "as_of": "2019-10-05",
+   "values": {
+    "DeMarco Murray (RB)": 9,
+    "Giovani Bernard (RB)": 195,
+    "Dez Bryant (WR)": 9
+   }
+  },
+  "Branden's League||2016||10/5/2016||Smokers Haven (SmokersHaven) received: [Denver Broncos (D/ST), 2017 Round 2nd Pick] <---> Leno'S Team (Leno) received: [Cincinnati Bengals (D/ST), 2017 Round 1st Pick]": {
+   "as_of": "2019-10-05",
+   "values": {
+    "Denver Broncos (D/ST)": 0,
+    "2017 Round 2nd Pick": 0,
+    "Cincinnati Bengals (D/ST)": 0,
+    "2017 Round 1st Pick": 0
+   }
+  },
+  "Branden's League||2016||5/13/2016||Killer Cardinals (TheCards) received: [Allen Robinson (WR)] <---> Smokers Haven (SmokersHaven) received: [2016 Round 1st Pick -> Resulted in drafting: Sterling Shepard (WR), 2016 Round 3rd Pick -> Resulted in drafting: Alex Collins (RB)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Allen Robinson (WR)": 2996,
+    "2016 Round 1st Pick -> Resulted in drafting: Sterling Shepard (WR)": 951,
+    "2016 Round 3rd Pick -> Resulted in drafting: Alex Collins (RB)": 47
+   }
+  },
+  "Branden's League||2016||5/16/2016||Fish's Team (DERRICKFISH) received: [Derrick Henry (RB)] <---> Leno'S Team (Leno) received: [Tyler Boyd (WR), Vincent Jackson (WR)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Derrick Henry (RB)": 3266,
+    "Tyler Boyd (WR)": 1815,
+    "Vincent Jackson (WR)": 0
+   }
+  },
+  "Branden's League||2016||5/16/2016||Jarvis's Team (Jarvis1983) received: [Paxton Lynch (QB), 2017 Round 3rd Pick] <---> Leno'S Team (Leno) received: [Jared Cook (TE)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Paxton Lynch (QB)": 7,
+    "2017 Round 3rd Pick": 0,
+    "Jared Cook (TE)": 286
+   }
+  },
+  "Branden's League||2016||5/16/2016||Killer Cardinals (TheCards) received: [Malcolm Mitchell (WR), De'Runnya Wilson (WR)] <---> Scotts Team (Branden2) received: [2017 Round 4th Pick, 2018 Round 4th Pick, 2018 Round 5th Pick]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Malcolm Mitchell (WR)": 9,
+    "De'Runnya Wilson (WR)": 0,
+    "2017 Round 4th Pick": 0,
+    "2018 Round 4th Pick": 0,
+    "2018 Round 5th Pick": 0
+   }
+  },
+  "Branden's League||2016||5/16/2016||Scotts Team (Branden2) received: [2017 Round 2nd Pick, 2017 Round 3rd Pick, 2018 Round 1st Pick] <---> Andy's Team (andylang1031) received: [Laquon Treadwell (WR)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "2017 Round 2nd Pick": 0,
+    "2017 Round 3rd Pick": 0,
+    "2018 Round 1st Pick": 0,
+    "Laquon Treadwell (WR)": 13
+   }
+  },
+  "Branden's League||2016||5/16/2016||Scotts Team (Branden2) received: [2017 Round 3rd Pick, 2018 Round 1st Pick, 2018 Round 3rd Pick] <---> broncos all day (joester526) received: [C.J. Prosise (RB)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "2017 Round 3rd Pick": 0,
+    "2018 Round 1st Pick": 0,
+    "2018 Round 3rd Pick": 0,
+    "C.J. Prosise (RB)": 5
+   }
+  },
+  "Branden's League||2016||5/16/2016||Scotts Team (Branden2) received: [2017 Round 3rd Pick, 2018 Round 2nd Pick, 2018 Round 3rd Pick] <---> Fish's Team (DERRICKFISH) received: [Braxton Miller (WR)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "2017 Round 3rd Pick": 0,
+    "2018 Round 2nd Pick": 0,
+    "2018 Round 3rd Pick": 0,
+    "Braxton Miller (WR)": 4
+   }
+  },
+  "Branden's League||2016||5/16/2016||Smokers Haven (SmokersHaven) received: [Daniel Lasco (RB)] <---> Leno'S Team (Leno) received: [Kamar Aiken (WR)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Daniel Lasco (RB)": 0,
+    "Kamar Aiken (WR)": 9
+   }
+  },
+  "Branden's League||2016||5/16/2016||Smokers Haven (SmokersHaven) received: [Pharoh Cooper (WR)] <---> Andy's Team (andylang1031) received: [Markus Wheaton (WR)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Pharoh Cooper (WR)": 9,
+    "Markus Wheaton (WR)": 9
+   }
+  },
+  "Branden's League||2016||5/9/2016||Killer Cardinals (TheCards) received: [Andre Ellington (RB), 2016 Round 1st Pick -> Resulted in drafting: Ezekiel Elliott (RB)] <---> Fish's Team (DERRICKFISH) received: [Adrian Peterson (RB), Justin Forsett (RB), 2016 Round 1st Pick -> Resulted in drafting: Sterling Shepard (WR)]": {
+   "as_of": "2019-05-09",
+   "values": {
+    "Andre Ellington (RB)": 9,
+    "2016 Round 1st Pick -> Resulted in drafting: Ezekiel Elliott (RB)": 9628,
+    "Adrian Peterson (RB)": 83,
+    "Justin Forsett (RB)": 0,
+    "2016 Round 1st Pick -> Resulted in drafting: Sterling Shepard (WR)": 951
+   }
+  },
   "Branden's League||2017||10/5/2017||Smokers Haven (SmokersHaven) received: [Doug Martin (RB)] <---> Leno'S Team (Leno) received: [2018 Round 1st Pick]": {
    "as_of": "2020-10-02",
    "values": {
@@ -490,6 +592,13 @@
     "2019 Round 3rd Pick -> Resulted in drafting: Dwayne Haskins (QB)": 2,
     "Kenneth Dixon (RB)": 2,
     "Keelan Cole (WR)": 13
+   }
+  },
+  "Branden's League||2017||3/26/2017||Inside Insight (InsightInside) received: [DeSean Jackson (WR)] <---> Soontobechamp (joester526) received: [2017 Round 2nd Pick]": {
+   "as_of": "2020-02-06",
+   "values": {
+    "DeSean Jackson (WR)": 190,
+    "2017 Round 2nd Pick": 0
    }
   },
   "Branden's League||2017||7/17/2017||Smokers Haven (SmokersHaven) received: [2018 Round 1st Pick] <---> Jarvis's Team (Jarvis1983) received: [2018 Round 3rd Pick]": {
@@ -1761,6 +1870,68 @@
     "2024 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: Xavier Worthy (WR)": 971
    }
   },
+  "Hail Mary Jane Congregation||2016||11/11/2016||Leno's Team (Leno) received: [Jacquizz Rodgers (RB), 2017 Round 2nd Pick] <---> EarthWakeSuhNami (EarthWake) received: [Terrance West (RB)]": {
+   "as_of": "2019-10-05",
+   "values": {
+    "Jacquizz Rodgers (RB)": 9,
+    "2017 Round 2nd Pick": 0,
+    "Terrance West (RB)": 9
+   }
+  },
+  "Hail Mary Jane Congregation||2016||2/14/2017||DonkeyPuncher (SoHigh420) received: [Mohamed Sanu (WR), 2017 Round 2nd Pick] <---> Bud Smoker (andylang1031) received: [Cam Newton (QB), Brandin Cooks (WR)]": {
+   "as_of": "2020-02-06",
+   "values": {
+    "Mohamed Sanu (WR)": 156,
+    "2017 Round 2nd Pick": 0,
+    "Cam Newton (QB)": 508,
+    "Brandin Cooks (WR)": 1934
+   }
+  },
+  "Hail Mary Jane Congregation||2016||7/19/2016||Smokers Haven (SmokersHaven) received: [2017 Round 3rd Pick] <---> Killer Cards (TheCards) received: [2017 Round 1st Pick]": {
+   "as_of": "2019-07-12",
+   "values": {
+    "2017 Round 3rd Pick": 0,
+    "2017 Round 1st Pick": 0
+   }
+  },
+  "Hail Mary Jane Congregation||2016||8/16/2016||Leno's Team (Leno) received: [Jared Abbrederis (WR)] <---> Killer Cards (TheCards) received: [2017 Round 2nd Pick]": {
+   "as_of": "2019-08-09",
+   "values": {
+    "Jared Abbrederis (WR)": 0,
+    "2017 Round 2nd Pick": 0
+   }
+  },
+  "Hail Mary Jane Congregation||2016||8/30/2016||Easy-E_lliott received: [Carson Palmer (QB), Golden Tate (WR), 2017 Round 5th Pick, 2018 Round 5th Pick] <---> EarthWakeSuhNami (EarthWake) received: [Jarvis Landry (WR), 2017 Round 2nd Pick, 2017 Round 4th Pick]": {
+   "as_of": "2019-08-29",
+   "values": {
+    "Carson Palmer (QB)": 0,
+    "Golden Tate (WR)": 608,
+    "2017 Round 5th Pick": 0,
+    "2018 Round 5th Pick": 0,
+    "Jarvis Landry (WR)": 2712,
+    "2017 Round 2nd Pick": 0,
+    "2017 Round 4th Pick": 0
+   }
+  },
+  "Hail Mary Jane Congregation||2016||8/30/2016||Leno's Team (Leno) received: [2017 Round 2nd Pick] <---> Killer Cards (TheCards) received: [Jordan Matthews (WR)]": {
+   "as_of": "2019-08-29",
+   "values": {
+    "2017 Round 2nd Pick": 0,
+    "Jordan Matthews (WR)": 6
+   }
+  },
+  "Hail Mary Jane Congregation||2016||9/24/2016||Leno's Team (Leno) received: [Terrance West (RB), Stefon Diggs (WR), Jared Cook (TE), 2017 Round 2nd Pick] <---> EarthWakeSuhNami (EarthWake) received: [Matt Forte (RB), Theo Riddick (RB), Jordan Cameron (TE)]": {
+   "as_of": "2019-09-13",
+   "values": {
+    "Terrance West (RB)": 9,
+    "Stefon Diggs (WR)": 6247,
+    "Jared Cook (TE)": 372,
+    "2017 Round 2nd Pick": 0,
+    "Matt Forte (RB)": 0,
+    "Theo Riddick (RB)": 15,
+    "Jordan Cameron (TE)": 0
+   }
+  },
   "Hail Mary Jane Congregation||2017||10/21/2017||Leno's Team (Leno) received: [Josh McCown (QB)] <---> Smokers Haven (SmokersHaven) received: [2018 Round 3rd Pick]": {
    "as_of": "2020-10-18",
    "values": {
@@ -1807,6 +1978,33 @@
    "values": {
     "2019 Round 3rd Pick -> Resulted in drafting: Benny Snell (RB)": 82,
     "C.J. Prosise (RB)": 1
+   }
+  },
+  "Hail Mary Jane Congregation||2017||4/10/2017||Easy-E_lliott received: [Antonio Brown (WR)] <---> IsMurda received: [Amari Cooper (WR), 2017 Round 3rd Pick, 2018 Round 2nd Pick]": {
+   "as_of": "2020-02-06",
+   "values": {
+    "Antonio Brown (WR)": 211,
+    "Amari Cooper (WR)": 7451,
+    "2017 Round 3rd Pick": 0,
+    "2018 Round 2nd Pick": 0
+   }
+  },
+  "Hail Mary Jane Congregation||2017||4/29/2017||Easy-E_lliott received: [Theo Riddick (RB), 2017 Round 1st Pick] <---> EarthWakeSuhNami (EarthWake) received: [Jay Ajayi (RB), 2017 Round 1st Pick]": {
+   "as_of": "2020-04-27",
+   "values": {
+    "Theo Riddick (RB)": 0,
+    "2017 Round 1st Pick": 0,
+    "Jay Ajayi (RB)": 0
+   }
+  },
+  "Hail Mary Jane Congregation||2017||5/14/2017||Bud Smoker (andylang1031) received: [William Fuller (WR), 2017 Round 2nd Pick] <---> Little fishtick (Fishy012) received: [Michael Floyd (WR), Minnesota Vikings (D/ST), 2017 Round 4th Pick]": {
+   "as_of": "2020-05-08",
+   "values": {
+    "William Fuller (WR)": 0,
+    "2017 Round 2nd Pick": 0,
+    "Michael Floyd (WR)": 0,
+    "Minnesota Vikings (D/ST)": 0,
+    "2017 Round 4th Pick": 0
    }
   },
   "Hail Mary Jane Congregation||2017||7/10/2017||EarthWakeSuhNami (EarthWake) received: [Isaiah Crowell (RB)] <---> Little fishtick (Fishy012) received: [Matt Forte (RB), 2017 Round 1st Pick]": {

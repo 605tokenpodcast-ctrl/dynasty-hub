@@ -3902,6 +3902,8 @@
                 if (nflWeekSunday(s, 1) <= end && nflWeekSunday(s, 18) > ts && !idx.seasons.has(s)) return { ...out, status: 'nodata' };
             }
 
+            // A mark that passed long ago with nothing frozen predates the value history (2019): grade on points alone
+            const pointsOnly = redraft || (!frozen && now - end > 30 * 86400000);
             const sides = String(breakdown || '').split(' <---> ').map(side => {
                 const m = side.match(/^(.*?) received: \[(.*)\]$/);
                 if (!m) return null;
@@ -3912,7 +3914,7 @@
                     return {
                         label,
                         pts: weeks.filter(w => w.ts > ts && w.ts <= end).reduce((a, w) => a + w.pts, 0),
-                        value: redraft ? 0 : frozen ? frozen.values[label] || 0 : hindsightItemValue(label, leagueName).value
+                        value: pointsOnly ? 0 : frozen ? frozen.values[label] || 0 : hindsightItemValue(label, leagueName).value
                     };
                 });
                 return { owner, items, pts: items.reduce((a, b) => a + b.pts, 0), value: items.reduce((a, b) => a + b.value, 0) };
@@ -3925,7 +3927,7 @@
                 sd.share = (totalPts || totalValue) ? w * (totalPts ? sd.pts / totalPts : 0) + (1 - w) * (totalValue ? sd.value / totalValue : 0) : 1 / sides.length;
                 sd.grade = tradeLetter(sd.share, sides.length);
             });
-            return { ...out, status: 'graded', sides, totalPts, totalValue, valueAsOf: frozen ? frozen.as_of : null };
+            return { ...out, status: 'graded', sides, totalPts, totalValue, pointsOnly, valueAsOf: frozen ? frozen.as_of : null };
         }
 
         function tradeGradeCell(r, leagueName, ts) {
@@ -3945,11 +3947,11 @@
                 : best.share >= 0.65 ? `🦈 ${escHtml(best.owner)} fleeced` : best.share >= 0.55 ? `✅ ${escHtml(best.owner)} won` : '⚖️ Even';
             const gradeColor = gr => gr.startsWith('A') ? 'text-emerald-300 border-emerald-500/30' : gr === 'B' ? 'text-sky-300 border-sky-500/30'
                 : gr === 'C' ? 'text-slate-300 border-slate-600' : 'text-rose-300 border-rose-500/30';
-            const tip = sd => sd.items.map(i => `${i.label.replace(/\s*\(originally from.*?\)\)/, '')}: ${Math.round(i.pts)} pts${g.redraft ? '' : `, value ${Math.round(i.value)}`}`).join('\n');
+            const tip = sd => sd.items.map(i => `${i.label.replace(/\s*\(originally from.*?\)\)/, '')}: ${Math.round(i.pts)} pts${g.pointsOnly ? '' : `, value ${Math.round(i.value)}`}`).join('\n');
             const pct = Math.round(TRADE_GRADE_POINTS_WEIGHT * 100);
             return `<p class="font-bold text-emerald-300">${verdict}</p>
-                <p class="text-slate-500 mb-1">${g.redraft ? 'Points scored rest of season' : `${pct}% points over ${TRADE_GRADE_YEARS} yrs, ${100 - pct}% dynasty value ${g.valueAsOf ? `at the 3-year mark (${escHtml(g.valueAsOf)})` : 'today'}`}</p>`
-                + g.sides.map(sd => `<p class="text-slate-400" title="${escHtml(tip(sd))}"><span class="inline-block w-7 text-center border rounded font-bold mr-1 ${gradeColor(sd.grade)}">${sd.grade}</span>${escHtml(sd.owner)}: <span class="font-mono text-slate-200">${Math.round(sd.pts).toLocaleString()} pts</span>${g.redraft ? '' : ` <span class="text-slate-500">·</span> <span class="font-mono text-slate-200">${Math.round(sd.value).toLocaleString()}</span> value`}</p>`).join('');
+                <p class="text-slate-500 mb-1">${g.redraft ? 'Points scored rest of season' : g.pointsOnly ? `Points over ${TRADE_GRADE_YEARS} yrs (no dynasty values that far back)` : `${pct}% points over ${TRADE_GRADE_YEARS} yrs, ${100 - pct}% dynasty value ${g.valueAsOf ? `at the 3-year mark (${escHtml(g.valueAsOf)})` : 'today'}`}</p>`
+                + g.sides.map(sd => `<p class="text-slate-400" title="${escHtml(tip(sd))}"><span class="inline-block w-7 text-center border rounded font-bold mr-1 ${gradeColor(sd.grade)}">${sd.grade}</span>${escHtml(sd.owner)}: <span class="font-mono text-slate-200">${Math.round(sd.pts).toLocaleString()} pts</span>${g.pointsOnly ? '' : ` <span class="text-slate-500">·</span> <span class="font-mono text-slate-200">${Math.round(sd.value).toLocaleString()}</span> value`}</p>`).join('');
         }
 
         function filterTrades() {

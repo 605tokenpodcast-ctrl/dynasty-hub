@@ -309,11 +309,12 @@ def open_pick_years(trades, season):
 
 STARTUP_ROUNDS = 8  # a draft with more rounds than this is a startup (every player), not a rookie draft
 
-def draft_results(league_info, years, players_data, rookie_only=False):
+def draft_results(league_info, years, players_data, rookie_only=False, pickers=None):
     """(season, round, original owner's owner_key) -> "Name (POS)" from the finished drafts of
     `years`, read from this league and its earlier seasons, plus the seasons whose draft was done.
     The original owner is whoever held the draft slot (draft_order: user -> slot), not who made the pick.
-    rookie_only skips startup drafts (their picks aren't the rookie picks a trade named)."""
+    rookie_only skips startup drafts (their picks aren't the rookie picks a trade named).
+    `pickers`, if given, is filled with the owner_key of who made each pick, by the same key."""
     out, done = {}, set()
     info, league_id = league_info, str(league_info.get('league_id'))
     while info and years - done:
@@ -339,6 +340,8 @@ def draft_results(league_info, years, players_data, rookie_only=False):
                     else:   # without the players database (the Fleaflicker sync), the pick's own name
                         name, pos = f"{meta.get('first_name', '')} {meta['last_name']}".strip(), meta.get('position') or 'FLEX'
                     out.setdefault((season, int(p['round']), owner), f"{name} ({pos})")
+                    if pickers is not None and users.get(p.get('picked_by')):
+                        pickers.setdefault((season, int(p['round']), owner), owner_key(users[p['picked_by']]))
                 done.add(season)
         prev = str(info.get('previous_league_id') or '')
         if prev in ('', '0', 'None') or season <= min(years):

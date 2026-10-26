@@ -1675,11 +1675,11 @@
     }
    }
   },
-  "Branden's League||2019||11/6/2019||Smokers Haven (SmokersHaven) received: [2020 Round 2nd Pick -> Resulted in drafting: AJ Dillon (RB)] <---> Jarvis's Team (Jarvis1983) received: [Rashaad Penny (RB)]": {
+  "Branden's League||2019||11/6/2019||Smokers Haven (SmokersHaven) received: [2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)] <---> Jarvis's Team (Jarvis1983) received: [Rashaad Penny (RB)]": {
    "trade_day": {
     "as_of": "2019-10-05",
     "values": {
-     "2020 Round 2nd Pick -> Resulted in drafting: AJ Dillon (RB)": 547,
+     "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 547,
      "Rashaad Penny (RB)": 1994
     }
    },
@@ -1687,17 +1687,17 @@
     "mark": "2022-11-06",
     "as_of": "2022-11-04",
     "values": {
-     "2020 Round 2nd Pick -> Resulted in drafting: AJ Dillon (RB)": 2206,
+     "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 6895,
      "Rashaad Penny (RB)": 300
     }
    }
   },
-  "Branden's League||2019||5/26/2019||Smokers Haven (SmokersHaven) received: [Kerryon Johnson (RB), 2020 Round 1st Pick -> Resulted in drafting: Zack Moss (RB)] <---> Leno'S Team (Leno) received: [Todd Gurley (RB), 2019 Round 2nd Pick -> Resulted in drafting: Jace Sternberger (TE), 2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)]": {
+  "Branden's League||2019||5/26/2019||Smokers Haven (SmokersHaven) received: [Kerryon Johnson (RB), 2020 Round 1st Pick] <---> Leno'S Team (Leno) received: [Todd Gurley (RB), 2019 Round 2nd Pick -> Resulted in drafting: Jace Sternberger (TE), 2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)]": {
    "trade_day": {
     "as_of": "2019-05-09",
     "values": {
      "Kerryon Johnson (RB)": 4768,
-     "2020 Round 1st Pick -> Resulted in drafting: Zack Moss (RB)": 1273,
+     "2020 Round 1st Pick": 1273,
      "Todd Gurley (RB)": 8073,
      "2019 Round 2nd Pick -> Resulted in drafting: Jace Sternberger (TE)": 285,
      "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 261
@@ -1708,7 +1708,7 @@
     "as_of": "2022-05-20",
     "values": {
      "Kerryon Johnson (RB)": 4,
-     "2020 Round 1st Pick -> Resulted in drafting: Zack Moss (RB)": 30,
+     "2020 Round 1st Pick": 0,
      "Todd Gurley (RB)": 0,
      "2019 Round 2nd Pick -> Resulted in drafting: Jace Sternberger (TE)": 8,
      "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 6563
@@ -1753,30 +1753,30 @@
     }
    }
   },
-  "Branden's League||2019||8/4/2019||Donkey punchers 2.0 (SoHigh420) received: [2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)] <---> Fish's Team (DERRICKFISH) received: [2019 Round 1st Pick -> Resulted in drafting: T.J. Hockenson (TE)]": {
+  "Branden's League||2019||8/4/2019||Donkey punchers 2.0 (SoHigh420) received: [2019 Round 1st Pick -> Resulted in drafting: T.J. Hockenson (TE)] <---> Fish's Team (DERRICKFISH) received: [2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)]": {
    "trade_day": {
     "as_of": "2019-07-26",
     "values": {
-     "2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)": 1999,
-     "2019 Round 1st Pick -> Resulted in drafting: T.J. Hockenson (TE)": 1025
+     "2019 Round 1st Pick -> Resulted in drafting: T.J. Hockenson (TE)": 1025,
+     "2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)": 1999
     }
    },
    "grade": {
     "mark": "2022-06-01",
     "as_of": "2022-05-28",
     "values": {
-     "2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)": 1408,
-     "2019 Round 1st Pick -> Resulted in drafting: T.J. Hockenson (TE)": 2144
+     "2019 Round 1st Pick -> Resulted in drafting: T.J. Hockenson (TE)": 2144,
+     "2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)": 1408
     }
    }
   },
-  "Branden's League||2019||8/4/2019||Inside Insight (InsightInside) received: [Antonio Brown (WR)] <---> Buffalo bills received: [2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR), 2019 Round 2nd Pick -> Resulted in drafting: Nick Foles (QB)]": {
+  "Branden's League||2019||8/4/2019||Inside Insight (InsightInside) received: [Antonio Brown (WR)] <---> Buffalo bills received: [2019 Round 1st Pick -> Resulted in drafting: Mecole Hardman (WR), 2019 Round 2nd Pick -> Resulted in drafting: Justice Hill (RB)]": {
    "trade_day": {
     "as_of": "2019-07-26",
     "values": {
      "Antonio Brown (WR)": 6262,
-     "2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR)": 874,
-     "2019 Round 2nd Pick -> Resulted in drafting: Nick Foles (QB)": 47
+     "2019 Round 1st Pick -> Resulted in drafting: Mecole Hardman (WR)": 576,
+     "2019 Round 2nd Pick -> Resulted in drafting: Justice Hill (RB)": 343
     }
    },
    "grade": {
@@ -1784,8 +1784,8 @@
     "as_of": "2022-07-29",
     "values": {
      "Antonio Brown (WR)": 7,
-     "2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR)": 33,
-     "2019 Round 2nd Pick -> Resulted in drafting: Nick Foles (QB)": 2
+     "2019 Round 1st Pick -> Resulted in drafting: Mecole Hardman (WR)": 70,
+     "2019 Round 2nd Pick -> Resulted in drafting: Justice Hill (RB)": 2
     }
    }
   },
@@ -1896,17 +1896,17 @@
     }
    }
   },
-  "Branden's League||2020||5/16/2020||Jarvis's Team (Jarvis1983) received: [2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR), 2020 Round 3rd Pick -> Resulted in drafting: Bryan Edwards (WR), 2020 Round 4th Pick -> Resulted in drafting: Jordan Love (QB), 2020 Round 5th Pick, 2021 Round 2nd Pick -> Resulted in drafting: Rashod Bateman (WR), 2021 Round 3rd Pick -> Resulted in drafting: Dee Eskridge (WR), 2021 Round 4th Pick -> Resulted in drafting: Javian Hawkins (RB), 2021 Round 5th Pick, 2022 Round 3rd Pick -> Resulted in drafting: Wan'Dale Robinson (WR), 2022 Round 4th Pick -> Resulted in drafting: Tyquan Thornton (WR), 2022 Round 5th Pick -> Resulted in drafting: Cincinnati Bengals (D/ST)] <---> Leno'S Team (Leno) received: [2021 Round 1st Pick -> Resulted in drafting: Trevor Lawrence (QB), 2022 Round 1st Pick -> Resulted in drafting: Treylon Burks (WR)]": {
+  "Branden's League||2020||5/16/2020||Jarvis's Team (Jarvis1983) received: [2020 Round 2nd Pick, 2020 Round 3rd Pick -> Resulted in drafting: Antonio Gibson (RB), 2020 Round 4th Pick -> Resulted in drafting: Jordan Love (QB), 2020 Round 5th Pick, 2021 Round 2nd Pick -> Resulted in drafting: Rashod Bateman (WR), 2021 Round 3rd Pick -> Resulted in drafting: Dee Eskridge (WR), 2021 Round 4th Pick -> Resulted in drafting: Nico Collins (WR), 2021 Round 5th Pick, 2022 Round 3rd Pick -> Resulted in drafting: Wan'Dale Robinson (WR), 2022 Round 4th Pick -> Resulted in drafting: Tyquan Thornton (WR), 2022 Round 5th Pick -> Resulted in drafting: Cincinnati Bengals (D/ST)] <---> Leno'S Team (Leno) received: [2021 Round 1st Pick -> Resulted in drafting: Trevor Lawrence (QB), 2022 Round 1st Pick -> Resulted in drafting: Treylon Burks (WR)]": {
    "trade_day": {
     "as_of": "2020-05-15",
     "values": {
-     "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 438,
-     "2020 Round 3rd Pick -> Resulted in drafting: Bryan Edwards (WR)": 82,
+     "2020 Round 2nd Pick": 438,
+     "2020 Round 3rd Pick -> Resulted in drafting: Antonio Gibson (RB)": 82,
      "2020 Round 4th Pick -> Resulted in drafting: Jordan Love (QB)": 31,
      "2020 Round 5th Pick": 13,
      "2021 Round 2nd Pick -> Resulted in drafting: Rashod Bateman (WR)": 317,
      "2021 Round 3rd Pick -> Resulted in drafting: Dee Eskridge (WR)": 62,
-     "2021 Round 4th Pick -> Resulted in drafting: Javian Hawkins (RB)": 24,
+     "2021 Round 4th Pick -> Resulted in drafting: Nico Collins (WR)": 24,
      "2021 Round 5th Pick": 10,
      "2022 Round 3rd Pick -> Resulted in drafting: Wan'Dale Robinson (WR)": 62,
      "2022 Round 4th Pick -> Resulted in drafting: Tyquan Thornton (WR)": 24,
@@ -1919,13 +1919,13 @@
     "mark": "2025-06-01",
     "as_of": "2025-05-30",
     "values": {
-     "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 4422,
-     "2020 Round 3rd Pick -> Resulted in drafting: Bryan Edwards (WR)": 0,
+     "2020 Round 2nd Pick": 0,
+     "2020 Round 3rd Pick -> Resulted in drafting: Antonio Gibson (RB)": 24,
      "2020 Round 4th Pick -> Resulted in drafting: Jordan Love (QB)": 1675,
      "2020 Round 5th Pick": 0,
      "2021 Round 2nd Pick -> Resulted in drafting: Rashod Bateman (WR)": 339,
      "2021 Round 3rd Pick -> Resulted in drafting: Dee Eskridge (WR)": 2,
-     "2021 Round 4th Pick -> Resulted in drafting: Javian Hawkins (RB)": 0,
+     "2021 Round 4th Pick -> Resulted in drafting: Nico Collins (WR)": 6895,
      "2021 Round 5th Pick": 0,
      "2022 Round 3rd Pick -> Resulted in drafting: Wan'Dale Robinson (WR)": 172,
      "2022 Round 4th Pick -> Resulted in drafting: Tyquan Thornton (WR)": 3,
@@ -1952,11 +1952,11 @@
     }
    }
   },
-  "Branden's League||2020||6/14/2020||Donkey punchers 2.0 (SoHigh420) received: [2020 Round 3rd Pick -> Resulted in drafting: Chase Claypool (WR), 2021 Round 3rd Pick -> Resulted in drafting: Kadarius Toney (WR)] <---> Kronik (andylang1031) received: [Josh Allen (QB)]": {
+  "Branden's League||2020||6/14/2020||Donkey punchers 2.0 (SoHigh420) received: [2020 Round 3rd Pick -> Resulted in drafting: Lynn Bowden (WR), 2021 Round 3rd Pick -> Resulted in drafting: Kadarius Toney (WR)] <---> Kronik (andylang1031) received: [Josh Allen (QB)]": {
    "trade_day": {
     "as_of": "2020-06-12",
     "values": {
-     "2020 Round 3rd Pick -> Resulted in drafting: Chase Claypool (WR)": 319,
+     "2020 Round 3rd Pick -> Resulted in drafting: Lynn Bowden (WR)": 102,
      "2021 Round 3rd Pick -> Resulted in drafting: Kadarius Toney (WR)": 59,
      "Josh Allen (QB)": 1172
     }
@@ -1965,7 +1965,7 @@
     "mark": "2023-06-14",
     "as_of": "2023-06-09",
     "values": {
-     "2020 Round 3rd Pick -> Resulted in drafting: Chase Claypool (WR)": 185,
+     "2020 Round 3rd Pick -> Resulted in drafting: Lynn Bowden (WR)": 2,
      "2021 Round 3rd Pick -> Resulted in drafting: Kadarius Toney (WR)": 942,
      "Josh Allen (QB)": 5620
     }
@@ -2199,24 +2199,24 @@
     }
    }
   },
-  "Branden's League||2022||9/4/2022||Burnt cookies (Peopleaters420) received: [2022 Round 1st Pick -> Resulted in drafting: James Cook (RB)] <---> Leno'S Team (Leno) received: [2022 Round 2nd Pick -> Resulted in drafting: Isaiah Spiller (RB), 2023 Round 2nd Pick -> Resulted in drafting: Dalton Kincaid (TE), 2024 Round 2nd Pick -> Resulted in drafting: Brian Thomas (WR)]": {
+  "Branden's League||2022||9/4/2022||Burnt cookies (Peopleaters420) received: [2022 Round 1st Pick -> Resulted in drafting: Drake London (WR)] <---> Leno'S Team (Leno) received: [2022 Round 2nd Pick -> Resulted in drafting: Brian Robinson (RB), 2023 Round 2nd Pick -> Resulted in drafting: Roschon Johnson (RB), 2024 Round 2nd Pick -> Resulted in drafting: Brian Thomas (WR)]": {
    "trade_day": {
     "as_of": "2022-09-02",
     "values": {
-     "2022 Round 1st Pick -> Resulted in drafting: James Cook (RB)": 1175,
-     "2022 Round 2nd Pick -> Resulted in drafting: Isaiah Spiller (RB)": 482,
-     "2023 Round 2nd Pick -> Resulted in drafting: Dalton Kincaid (TE)": 305,
+     "2022 Round 1st Pick -> Resulted in drafting: Drake London (WR)": 4179,
+     "2022 Round 2nd Pick -> Resulted in drafting: Brian Robinson (RB)": 559,
+     "2023 Round 2nd Pick -> Resulted in drafting: Roschon Johnson (RB)": 305,
      "2024 Round 2nd Pick -> Resulted in drafting: Brian Thomas (WR)": 221
     }
    }
   },
-  "Branden's League||2022||9/4/2022||Killer Cardinals (TheCards) received: [2022 Round 1st Pick -> Resulted in drafting: Dameon Pierce (RB)] <---> Jarvis's Team (Jarvis1983) received: [2022 Round 1st Pick -> Resulted in drafting: Garrett Wilson (WR), 2022 Round 3rd Pick -> Resulted in drafting: Romeo Doubs (WR), 2024 Round 3rd Pick -> Resulted in drafting: Adonai Mitchell (WR)]": {
+  "Branden's League||2022||9/4/2022||Killer Cardinals (TheCards) received: [2022 Round 1st Pick -> Resulted in drafting: Garrett Wilson (WR)] <---> Jarvis's Team (Jarvis1983) received: [2022 Round 1st Pick, 2022 Round 3rd Pick -> Resulted in drafting: David Bell (WR), 2024 Round 3rd Pick -> Resulted in drafting: Adonai Mitchell (WR)]": {
    "trade_day": {
     "as_of": "2022-09-02",
     "values": {
-     "2022 Round 1st Pick -> Resulted in drafting: Dameon Pierce (RB)": 994,
      "2022 Round 1st Pick -> Resulted in drafting: Garrett Wilson (WR)": 2777,
-     "2022 Round 3rd Pick -> Resulted in drafting: Romeo Doubs (WR)": 125,
+     "2022 Round 1st Pick": 0,
+     "2022 Round 3rd Pick -> Resulted in drafting: David Bell (WR)": 382,
      "2024 Round 3rd Pick -> Resulted in drafting: Adonai Mitchell (WR)": 39
     }
    }
@@ -2276,11 +2276,11 @@
     }
    }
   },
-  "Branden's League||2023||11/3/2023||rate my league hates me (SoHigh420) received: [2024 Round 3rd Pick -> Resulted in drafting: Ladd McConkey (WR), 2025 Round 3rd Pick -> Resulted in drafting: DeMario Douglas (WR)] <---> Burnt cookies (Peopleaters420) received: [Deshaun Watson (QB)]": {
+  "Branden's League||2023||11/3/2023||rate my league hates me (SoHigh420) received: [2024 Round 3rd Pick -> Resulted in drafting: Will Shipley (RB), 2025 Round 3rd Pick -> Resulted in drafting: DeMario Douglas (WR)] <---> Burnt cookies (Peopleaters420) received: [Deshaun Watson (QB)]": {
    "trade_day": {
     "as_of": "2023-11-03",
     "values": {
-     "2024 Round 3rd Pick -> Resulted in drafting: Ladd McConkey (WR)": 46,
+     "2024 Round 3rd Pick -> Resulted in drafting: Will Shipley (RB)": 46,
      "2025 Round 3rd Pick -> Resulted in drafting: DeMario Douglas (WR)": 35,
      "Deshaun Watson (QB)": 424
     }
@@ -2295,11 +2295,11 @@
     }
    }
   },
-  "Branden's League||2023||3/16/2023||rate my league hates me (SoHigh420) received: [2023 Round 3rd Pick -> Resulted in drafting: Bryce Young (QB), 2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)] <---> Burnt cookies (Peopleaters420) received: [Treylon Burks (WR), Kadarius Toney (WR)]": {
+  "Branden's League||2023||3/16/2023||rate my league hates me (SoHigh420) received: [2023 Round 3rd Pick, 2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)] <---> Burnt cookies (Peopleaters420) received: [Treylon Burks (WR), Kadarius Toney (WR)]": {
    "trade_day": {
     "as_of": "2023-03-12",
     "values": {
-     "2023 Round 3rd Pick -> Resulted in drafting: Bryce Young (QB)": 53,
+     "2023 Round 3rd Pick": 53,
      "2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)": 10,
      "Treylon Burks (WR)": 3227,
      "Kadarius Toney (WR)": 801
@@ -2309,7 +2309,7 @@
     "mark": "2026-03-16",
     "as_of": "2026-02-27",
     "values": {
-     "2023 Round 3rd Pick -> Resulted in drafting: Bryce Young (QB)": 345,
+     "2023 Round 3rd Pick": 0,
      "2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)": 4,
      "Treylon Burks (WR)": 6,
      "Kadarius Toney (WR)": 0
@@ -2327,13 +2327,13 @@
     }
    }
   },
-  "Branden's League||2023||3/24/2023||Killer Cardinals (TheCards) received: [2023 Round 3rd Pick -> Resulted in drafting: Zach Evans (RB)] <---> Fish's Team (DERRICKFISH) received: [Dalton Schultz (TE), 2023 Round 5th Pick -> Resulted in drafting: Josh Downs (WR)]": {
+  "Branden's League||2023||3/24/2023||Killer Cardinals (TheCards) received: [2023 Round 3rd Pick -> Resulted in drafting: Zach Evans (RB)] <---> Fish's Team (DERRICKFISH) received: [Dalton Schultz (TE), 2023 Round 5th Pick -> Resulted in drafting: Derek Carr (QB)]": {
    "trade_day": {
     "as_of": "2023-03-24",
     "values": {
      "2023 Round 3rd Pick -> Resulted in drafting: Zach Evans (RB)": 51,
      "Dalton Schultz (TE)": 847,
-     "2023 Round 5th Pick -> Resulted in drafting: Josh Downs (WR)": 6
+     "2023 Round 5th Pick -> Resulted in drafting: Derek Carr (QB)": 6
     }
    },
    "grade": {
@@ -2342,7 +2342,7 @@
     "values": {
      "2023 Round 3rd Pick -> Resulted in drafting: Zach Evans (RB)": 0,
      "Dalton Schultz (TE)": 193,
-     "2023 Round 5th Pick -> Resulted in drafting: Josh Downs (WR)": 689
+     "2023 Round 5th Pick -> Resulted in drafting: Derek Carr (QB)": 0
     }
    }
   },
@@ -2365,23 +2365,23 @@
     }
    }
   },
-  "Branden's League||2023||5/23/2023||Smokers Haven (SmokersHaven) received: [2024 Round 1st Pick -> Resulted in drafting: Jonathon Brooks (RB)] <---> rate my league hates me (SoHigh420) received: [2023 Round 1st Pick -> Resulted in drafting: De'Von Achane (RB)]": {
+  "Branden's League||2023||5/23/2023||Smokers Haven (SmokersHaven) received: [2024 Round 1st Pick -> Resulted in drafting: Jonathon Brooks (RB)] <---> rate my league hates me (SoHigh420) received: [2023 Round 1st Pick]": {
    "trade_day": {
     "as_of": "2023-04-21",
     "values": {
      "2024 Round 1st Pick -> Resulted in drafting: Jonathon Brooks (RB)": 2277,
-     "2023 Round 1st Pick -> Resulted in drafting: De'Von Achane (RB)": 3030
+     "2023 Round 1st Pick": 3030
     }
    }
   },
-  "Branden's League||2023||5/23/2023||Smokers Haven (SmokersHaven) received: [DK Metcalf (WR), 2023 Round 3rd Pick -> Resulted in drafting: Jalin Hyatt (WR), 2023 Round 4th Pick -> Resulted in drafting: Cedric Tillman (WR), 2023 Round 5th Pick -> Resulted in drafting: Derek Carr (QB), 2024 Round 4th Pick -> Resulted in drafting: Jalen McMillan (WR), 2024 Round 5th Pick -> Resulted in drafting: Javon Baker (WR), 2025 Round 4th Pick -> Resulted in drafting: Jarquez Hunter (RB), 2025 Round 5th Pick -> Resulted in drafting: Tory Horton (WR)] <---> Leno'S Team (Leno) received: [2023 Round 1st Pick -> Resulted in drafting: Anthony Richardson (QB), 2023 Round 2nd Pick -> Resulted in drafting: Roschon Johnson (RB), 2023 Round 3rd Pick, 2024 Round 2nd Pick -> Resulted in drafting: Bo Nix (QB)]": {
+  "Branden's League||2023||5/23/2023||Smokers Haven (SmokersHaven) received: [DK Metcalf (WR), 2023 Round 3rd Pick -> Resulted in drafting: Jalin Hyatt (WR), 2023 Round 4th Pick -> Resulted in drafting: Cedric Tillman (WR), 2023 Round 5th Pick, 2024 Round 4th Pick -> Resulted in drafting: Jalen McMillan (WR), 2024 Round 5th Pick -> Resulted in drafting: Javon Baker (WR), 2025 Round 4th Pick -> Resulted in drafting: Jarquez Hunter (RB), 2025 Round 5th Pick -> Resulted in drafting: Tory Horton (WR)] <---> Leno'S Team (Leno) received: [2023 Round 1st Pick -> Resulted in drafting: Anthony Richardson (QB), 2023 Round 2nd Pick -> Resulted in drafting: Roschon Johnson (RB), 2023 Round 3rd Pick, 2024 Round 2nd Pick -> Resulted in drafting: Bo Nix (QB)]": {
    "trade_day": {
     "as_of": "2023-04-21",
     "values": {
      "DK Metcalf (WR)": 6016,
      "2023 Round 3rd Pick -> Resulted in drafting: Jalin Hyatt (WR)": 50,
      "2023 Round 4th Pick -> Resulted in drafting: Cedric Tillman (WR)": 12,
-     "2023 Round 5th Pick -> Resulted in drafting: Derek Carr (QB)": 5,
+     "2023 Round 5th Pick": 5,
      "2024 Round 4th Pick -> Resulted in drafting: Jalen McMillan (WR)": 10,
      "2024 Round 5th Pick -> Resulted in drafting: Javon Baker (WR)": 4,
      "2025 Round 4th Pick -> Resulted in drafting: Jarquez Hunter (RB)": 7,
@@ -2399,7 +2399,7 @@
      "DK Metcalf (WR)": 2412,
      "2023 Round 3rd Pick -> Resulted in drafting: Jalin Hyatt (WR)": 7,
      "2023 Round 4th Pick -> Resulted in drafting: Cedric Tillman (WR)": 27,
-     "2023 Round 5th Pick -> Resulted in drafting: Derek Carr (QB)": 0,
+     "2023 Round 5th Pick": 0,
      "2024 Round 4th Pick -> Resulted in drafting: Jalen McMillan (WR)": 246,
      "2024 Round 5th Pick -> Resulted in drafting: Javon Baker (WR)": 5,
      "2025 Round 4th Pick -> Resulted in drafting: Jarquez Hunter (RB)": 15,
@@ -2411,13 +2411,13 @@
     }
    }
   },
-  "Branden's League||2023||6/17/2023||Smokers Haven (SmokersHaven) received: [Alvin Kamara (RB), Travis Kelce (TE)] <---> Burnt cookies (Peopleaters420) received: [2023 Round 2nd Pick -> Resulted in drafting: Tyjae Spears (RB), 2023 Round 3rd Pick, 2024 Round 2nd Pick -> Resulted in drafting: Jaylen Wright (RB), 2024 Round 3rd Pick -> Resulted in drafting: Ladd McConkey (WR), 2025 Round 2nd Pick -> Resulted in drafting: Bhayshul Tuten (RB), 2025 Round 3rd Pick -> Resulted in drafting: Kyle Williams (WR)]": {
+  "Branden's League||2023||6/17/2023||Smokers Haven (SmokersHaven) received: [Alvin Kamara (RB), Travis Kelce (TE)] <---> Burnt cookies (Peopleaters420) received: [2023 Round 2nd Pick -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 3rd Pick, 2024 Round 2nd Pick -> Resulted in drafting: Jaylen Wright (RB), 2024 Round 3rd Pick -> Resulted in drafting: Ladd McConkey (WR), 2025 Round 2nd Pick -> Resulted in drafting: Bhayshul Tuten (RB), 2025 Round 3rd Pick -> Resulted in drafting: Kyle Williams (WR)]": {
    "trade_day": {
     "as_of": "2023-06-16",
     "values": {
      "Alvin Kamara (RB)": 967,
      "Travis Kelce (TE)": 5312,
-     "2023 Round 2nd Pick -> Resulted in drafting: Tyjae Spears (RB)": 494,
+     "2023 Round 2nd Pick -> Resulted in drafting: Dalton Kincaid (TE)": 1395,
      "2023 Round 3rd Pick": 0,
      "2024 Round 2nd Pick -> Resulted in drafting: Jaylen Wright (RB)": 230,
      "2024 Round 3rd Pick -> Resulted in drafting: Ladd McConkey (WR)": 35,
@@ -2431,7 +2431,7 @@
     "values": {
      "Alvin Kamara (RB)": 61,
      "Travis Kelce (TE)": 187,
-     "2023 Round 2nd Pick -> Resulted in drafting: Tyjae Spears (RB)": 113,
+     "2023 Round 2nd Pick -> Resulted in drafting: Dalton Kincaid (TE)": 1740,
      "2023 Round 3rd Pick": 0,
      "2024 Round 2nd Pick -> Resulted in drafting: Jaylen Wright (RB)": 33,
      "2024 Round 3rd Pick -> Resulted in drafting: Ladd McConkey (WR)": 4624,
@@ -2487,24 +2487,24 @@
     }
    }
   },
-  "Branden's League||2024||3/20/2024||Smokers Haven (SmokersHaven) received: [Drake London (WR), 2024 Round 1st Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Malik Nabers (WR)] <---> Burnt cookies (Peopleaters420) received: [Justin Jefferson (WR), 2024 Round 3rd Pick -> Resulted in drafting: Will Shipley (RB), 2024 Round 4th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Jalen McMillan (WR)]": {
+  "Branden's League||2024||3/20/2024||Smokers Haven (SmokersHaven) received: [Drake London (WR), 2024 Round 1st Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Malik Nabers (WR)] <---> Burnt cookies (Peopleaters420) received: [Justin Jefferson (WR), 2024 Round 3rd Pick, 2024 Round 4th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Jalen McMillan (WR)]": {
    "trade_day": {
     "as_of": "2024-02-23",
     "values": {
      "Drake London (WR)": 4422,
      "2024 Round 1st Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Malik Nabers (WR)": 2253,
      "Justin Jefferson (WR)": 10184,
-     "2024 Round 3rd Pick -> Resulted in drafting: Will Shipley (RB)": 539,
+     "2024 Round 3rd Pick": 539,
      "2024 Round 4th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Jalen McMillan (WR)": 296
     }
    }
   },
-  "Branden's League||2024||8/18/2024||Burnt cookies (Peopleaters420) received: [Stefon Diggs (WR), 2024 Round 2nd Pick -> Resulted in drafting: Braelon Allen (RB)] <---> Leno'S Team (Leno) received: [Jordan Addison (WR)]": {
+  "Branden's League||2024||8/18/2024||Burnt cookies (Peopleaters420) received: [Stefon Diggs (WR), 2024 Round 2nd Pick] <---> Leno'S Team (Leno) received: [Jordan Addison (WR)]": {
    "trade_day": {
     "as_of": "2024-08-16",
     "values": {
      "Stefon Diggs (WR)": 1836,
-     "2024 Round 2nd Pick -> Resulted in drafting: Braelon Allen (RB)": 98,
+     "2024 Round 2nd Pick": 0,
      "Jordan Addison (WR)": 3521
     }
    }
@@ -5522,14 +5522,14 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2018||12/16/2018||Easy-E_lliott received: [DJ Moore (WR), 2019 Round 2nd Pick -> Resulted in drafting: J.J. Arcega-Whiteside (WR), 2020 Round 1st Pick -> Resulted in drafting: J.K. Dobbins (RB)] <---> EarthWakeSuhNami (EarthWake) received: [Antonio Brown (WR)]": {
+  "Hail Mary Jane Congregation||2018||12/16/2018||Easy-E_lliott received: [DJ Moore (WR), 2019 Round 2nd Pick -> Resulted in drafting: J.J. Arcega-Whiteside (WR), 2020 Round 1st Pick -> Resulted in drafting: Jonathan Taylor (RB)] <---> EarthWakeSuhNami (EarthWake) received: [Antonio Brown (WR)]": {
    "grade": {
     "mark": "2021-12-16",
     "as_of": "2021-12-10",
     "values": {
      "DJ Moore (WR)": 5274,
      "2019 Round 2nd Pick -> Resulted in drafting: J.J. Arcega-Whiteside (WR)": 5,
-     "2020 Round 1st Pick -> Resulted in drafting: J.K. Dobbins (RB)": 4025,
+     "2020 Round 1st Pick -> Resulted in drafting: Jonathan Taylor (RB)": 10256,
      "Antonio Brown (WR)": 505
     }
    }
@@ -5760,11 +5760,11 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2019||7/30/2019||Beats by J (Jarvis1983) received: [2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR)] <---> EarthWakeSuhNami (EarthWake) received: [Tarik Cohen (RB)]": {
+  "Hail Mary Jane Congregation||2019||7/30/2019||Beats by J (Jarvis1983) received: [2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)] <---> EarthWakeSuhNami (EarthWake) received: [Tarik Cohen (RB)]": {
    "trade_day": {
     "as_of": "2019-07-26",
     "values": {
-     "2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR)": 874,
+     "2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)": 1999,
      "Tarik Cohen (RB)": 2120
     }
    },
@@ -5772,7 +5772,7 @@
     "mark": "2022-07-30",
     "as_of": "2022-07-29",
     "values": {
-     "2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR)": 33,
+     "2019 Round 1st Pick -> Resulted in drafting: Miles Sanders (RB)": 1408,
      "Tarik Cohen (RB)": 4
     }
    }
@@ -5954,13 +5954,13 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2020||11/3/2020||Beats by J (Jarvis1983) received: [Raheem Mostert (RB), 2021 Round 4th Pick, 2023 Round 5th Pick -> Resulted in drafting: A.T. Perry (WR)] <---> AJK's People Eaters 420 (Peopleaters420) received: [Matt Breida (RB), 2021 Round 2nd Pick, 2021 Round 3rd Pick, 2022 Round 3rd Pick -> Resulted in drafting: Jelani Woods (TE)]": {
+  "Hail Mary Jane Congregation||2020||11/3/2020||Beats by J (Jarvis1983) received: [Raheem Mostert (RB), 2021 Round 4th Pick, 2023 Round 5th Pick -> Resulted in drafting: Zack Kuntz (TE)] <---> AJK's People Eaters 420 (Peopleaters420) received: [Matt Breida (RB), 2021 Round 2nd Pick, 2021 Round 3rd Pick, 2022 Round 3rd Pick -> Resulted in drafting: Jelani Woods (TE)]": {
    "trade_day": {
     "as_of": "2020-10-18",
     "values": {
      "Raheem Mostert (RB)": 1529,
      "2021 Round 4th Pick": 23,
-     "2023 Round 5th Pick -> Resulted in drafting: A.T. Perry (WR)": 9,
+     "2023 Round 5th Pick -> Resulted in drafting: Zack Kuntz (TE)": 9,
      "Matt Breida (RB)": 299,
      "2021 Round 2nd Pick": 308,
      "2021 Round 3rd Pick": 64,
@@ -5973,7 +5973,7 @@
     "values": {
      "Raheem Mostert (RB)": 688,
      "2021 Round 4th Pick": 0,
-     "2023 Round 5th Pick -> Resulted in drafting: A.T. Perry (WR)": 7,
+     "2023 Round 5th Pick -> Resulted in drafting: Zack Kuntz (TE)": 3,
      "Matt Breida (RB)": 9,
      "2021 Round 2nd Pick": 0,
      "2021 Round 3rd Pick": 0,
@@ -5981,11 +5981,11 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2020||5/12/2020||Smokers Haven (SmokersHaven) received: [2020 Round 1st Pick -> Resulted in drafting: Jonathan Taylor (RB)] <---> Beats by J (Jarvis1983) received: [2020 Round 2nd Pick -> Resulted in drafting: Tua Tagovailoa (QB), 2020 Round 3rd Pick -> Resulted in drafting: Van Jefferson (WR), 2021 Round 3rd Pick]": {
+  "Hail Mary Jane Congregation||2020||5/12/2020||Smokers Haven (SmokersHaven) received: [2020 Round 1st Pick] <---> Beats by J (Jarvis1983) received: [2020 Round 2nd Pick -> Resulted in drafting: Tua Tagovailoa (QB), 2020 Round 3rd Pick -> Resulted in drafting: Van Jefferson (WR), 2021 Round 3rd Pick]": {
    "trade_day": {
     "as_of": "2020-05-08",
     "values": {
-     "2020 Round 1st Pick -> Resulted in drafting: Jonathan Taylor (RB)": 2854,
+     "2020 Round 1st Pick": 2854,
      "2020 Round 2nd Pick -> Resulted in drafting: Tua Tagovailoa (QB)": 436,
      "2020 Round 3rd Pick -> Resulted in drafting: Van Jefferson (WR)": 81,
      "2021 Round 3rd Pick": 61
@@ -5995,14 +5995,14 @@
     "mark": "2024-06-01",
     "as_of": "2024-05-31",
     "values": {
-     "2020 Round 1st Pick -> Resulted in drafting: Jonathan Taylor (RB)": 7159,
+     "2020 Round 1st Pick": 0,
      "2020 Round 2nd Pick -> Resulted in drafting: Tua Tagovailoa (QB)": 838,
      "2020 Round 3rd Pick -> Resulted in drafting: Van Jefferson (WR)": 7,
      "2021 Round 3rd Pick": 0
     }
    }
   },
-  "Hail Mary Jane Congregation||2020||6/11/2020||Leno's Team (Leno) received: [A.J. Brown (WR), 2020 Round 1st Pick -> Resulted in drafting: Clyde Edwards-Helaire (RB)] <---> Little fishtick (Fishy012) received: [Stefon Diggs (WR), Breshad Perriman (WR), 2020 Round 1st Pick -> Resulted in drafting: AJ Dillon (RB), 2021 Round 1st Pick]": {
+  "Hail Mary Jane Congregation||2020||6/11/2020||Leno's Team (Leno) received: [A.J. Brown (WR), 2020 Round 1st Pick -> Resulted in drafting: Clyde Edwards-Helaire (RB)] <---> Little fishtick (Fishy012) received: [Stefon Diggs (WR), Breshad Perriman (WR), 2020 Round 1st Pick, 2021 Round 1st Pick]": {
    "trade_day": {
     "as_of": "2020-06-05",
     "values": {
@@ -6010,7 +6010,7 @@
      "2020 Round 1st Pick -> Resulted in drafting: Clyde Edwards-Helaire (RB)": 6486,
      "Stefon Diggs (WR)": 4219,
      "Breshad Perriman (WR)": 187,
-     "2020 Round 1st Pick -> Resulted in drafting: AJ Dillon (RB)": 406,
+     "2020 Round 1st Pick": 0,
      "2021 Round 1st Pick": 2041
     }
    },
@@ -6022,7 +6022,7 @@
      "2020 Round 1st Pick -> Resulted in drafting: Clyde Edwards-Helaire (RB)": 85,
      "Stefon Diggs (WR)": 5767,
      "Breshad Perriman (WR)": 2,
-     "2020 Round 1st Pick -> Resulted in drafting: AJ Dillon (RB)": 1129,
+     "2020 Round 1st Pick": 0,
      "2021 Round 1st Pick": 0
     }
    }
@@ -6044,11 +6044,11 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2020||6/14/2020||Smokers Haven (SmokersHaven) received: [2020 Round 3rd Pick -> Resulted in drafting: Denzel Mims (WR)] <---> Little fishtick (Fishy012) received: [2021 Round 2nd Pick]": {
+  "Hail Mary Jane Congregation||2020||6/14/2020||Smokers Haven (SmokersHaven) received: [2020 Round 3rd Pick] <---> Little fishtick (Fishy012) received: [2021 Round 2nd Pick]": {
    "trade_day": {
     "as_of": "2020-06-12",
     "values": {
-     "2020 Round 3rd Pick -> Resulted in drafting: Denzel Mims (WR)": 1270,
+     "2020 Round 3rd Pick": 0,
      "2021 Round 2nd Pick": 313
     }
    },
@@ -6056,7 +6056,7 @@
     "mark": "2024-06-01",
     "as_of": "2024-05-31",
     "values": {
-     "2020 Round 3rd Pick -> Resulted in drafting: Denzel Mims (WR)": 2,
+     "2020 Round 3rd Pick": 0,
      "2021 Round 2nd Pick": 0
     }
    }

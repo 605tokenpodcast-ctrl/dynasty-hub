@@ -174,6 +174,16 @@ class FleaflickerDraftLineage(unittest.TestCase):
         self.assertEqual(got[(2019, 3, "9")], "I (RB)")
         self.assertEqual(len(got), 9)
 
+    def test_own_pick_without_original_owner(self):
+        # team 2 sends its own 1st (no originalOwner on it) to team 1
+        trade = {"approvedOn": 1700000000000, "teams": [
+            {"team": {"id": 1, "name": "One"}, "picksObtained": [{"season": 2024, "slot": {"round": 1}}]},
+            {"team": {"id": 2, "name": "Two"}, "playersObtained": [{"proPlayer": {"nameFull": "Vet", "position": "QB"}}]},
+        ]}
+        drafted = sync_fleaflicker.parse_draft_board(self.BOARD, 2024)
+        rows = sync_fleaflicker.build_trade_rows([trade], {}, {}, drafted)
+        self.assertIn("2024 Round 1st Pick -> Resulted in drafting: B Two (WR)", rows[0][4])
+
     def test_empty_board(self):
         self.assertEqual(sync_fleaflicker.parse_draft_board({}, 2017), {})
 

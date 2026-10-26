@@ -648,11 +648,11 @@
     "2020 Round 1st Pick -> Resulted in drafting: J.K. Dobbins (RB)": 4025
    }
   },
-  "Branden's League||2018||3/25/2018||Killer Cardinals (TheCards) received: [Doug Martin (RB), 2019 Round 4th Pick] <---> Smokers Haven (SmokersHaven) received: [2019 Round 2nd Pick -> Resulted in drafting: Darrell Henderson (RB)]": {
+  "Branden's League||2018||3/25/2018||Killer Cardinals (TheCards) received: [Doug Martin (RB), 2019 Round 4th Pick -> Resulted in drafting: Dexter Williams (RB)] <---> Smokers Haven (SmokersHaven) received: [2019 Round 2nd Pick -> Resulted in drafting: Darrell Henderson (RB)]": {
    "as_of": "2021-03-19",
    "values": {
     "Doug Martin (RB)": 0,
-    "2019 Round 4th Pick": 0,
+    "2019 Round 4th Pick -> Resulted in drafting: Dexter Williams (RB)": 1,
     "2019 Round 2nd Pick -> Resulted in drafting: Darrell Henderson (RB)": 430
    }
   },
@@ -672,10 +672,10 @@
     "2020 Round 1st Pick -> Resulted in drafting: Justin Jefferson (WR)": 8498
    }
   },
-  "Branden's League||2018||7/30/2018||Leno'S Team (Leno) received: [2021 Round 1st Pick] <---> Smokers Haven (SmokersHaven) received: [Nothing]": {
+  "Branden's League||2018||7/30/2018||Leno'S Team (Leno) received: [2021 Round 1st Pick -> Resulted in drafting: DeVonta Smith (WR)] <---> Smokers Haven (SmokersHaven) received: [Nothing]": {
    "as_of": "2021-07-30",
    "values": {
-    "2021 Round 1st Pick": 0
+    "2021 Round 1st Pick -> Resulted in drafting: DeVonta Smith (WR)": 2863
    }
   },
   "Branden's League||2018||8/26/2018||Inside Insight (InsightInside) received: [2019 Round 1st Pick -> Resulted in drafting: Kyler Murray (QB)] <---> Andy's Team (andylang1031) received: [Nothing]": {
@@ -739,13 +739,13 @@
     "Rashaad Penny (RB)": 300
    }
   },
-  "Branden's League||2019||5/26/2019||Smokers Haven (SmokersHaven) received: [Kerryon Johnson (RB), 2020 Round 1st Pick -> Resulted in drafting: Zack Moss (RB)] <---> Leno'S Team (Leno) received: [Todd Gurley (RB), 2019 Round 2nd Pick, 2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)]": {
+  "Branden's League||2019||5/26/2019||Smokers Haven (SmokersHaven) received: [Kerryon Johnson (RB), 2020 Round 1st Pick -> Resulted in drafting: Zack Moss (RB)] <---> Leno'S Team (Leno) received: [Todd Gurley (RB), 2019 Round 2nd Pick -> Resulted in drafting: Jace Sternberger (TE), 2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)]": {
    "as_of": "2022-05-20",
    "values": {
     "Kerryon Johnson (RB)": 4,
     "2020 Round 1st Pick -> Resulted in drafting: Zack Moss (RB)": 30,
     "Todd Gurley (RB)": 0,
-    "2019 Round 2nd Pick": 0,
+    "2019 Round 2nd Pick -> Resulted in drafting: Jace Sternberger (TE)": 8,
     "2020 Round 2nd Pick -> Resulted in drafting: Tee Higgins (WR)": 6563
    }
   },
@@ -788,12 +788,12 @@
     "2021 Round 4th Pick": 0
    }
   },
-  "Branden's League||2020||10/16/2020||Smokers Haven (SmokersHaven) received: [2021 Round 2nd Pick -> Resulted in drafting: Mac Jones (QB)] <---> Jarvis's Team (Jarvis1983) received: [Bryan Edwards (WR), 2021 Round 3rd Pick, 2021 Round 5th Pick]": {
+  "Branden's League||2020||10/16/2020||Smokers Haven (SmokersHaven) received: [2021 Round 2nd Pick -> Resulted in drafting: Mac Jones (QB)] <---> Jarvis's Team (Jarvis1983) received: [Bryan Edwards (WR), 2021 Round 3rd Pick -> Resulted in drafting: Khalil Herbert (RB), 2021 Round 5th Pick]": {
    "as_of": "2023-10-13",
    "values": {
     "2021 Round 2nd Pick -> Resulted in drafting: Mac Jones (QB)": 78,
     "Bryan Edwards (WR)": 2,
-    "2021 Round 3rd Pick": 0,
+    "2021 Round 3rd Pick -> Resulted in drafting: Khalil Herbert (RB)": 688,
     "2021 Round 5th Pick": 0
    }
   },
@@ -872,12 +872,12 @@
     "John Brown (WR)": 0
    }
   },
-  "Branden's League||2020||7/7/2020||Smokers Haven (SmokersHaven) received: [2021 Round 2nd Pick -> Resulted in drafting: Mac Jones (QB)] <---> Jarvis's Team (Jarvis1983) received: [Sammy Watkins (WR), 2021 Round 3rd Pick]": {
+  "Branden's League||2020||7/7/2020||Smokers Haven (SmokersHaven) received: [2021 Round 2nd Pick -> Resulted in drafting: Mac Jones (QB)] <---> Jarvis's Team (Jarvis1983) received: [Sammy Watkins (WR), 2021 Round 3rd Pick -> Resulted in drafting: Khalil Herbert (RB)]": {
    "as_of": "2023-07-07",
    "values": {
     "2021 Round 2nd Pick -> Resulted in drafting: Mac Jones (QB)": 107,
     "Sammy Watkins (WR)": 1,
-    "2021 Round 3rd Pick": 0
+    "2021 Round 3rd Pick -> Resulted in drafting: Khalil Herbert (RB)": 944
    }
   },
   "Branden's League||2020||8/7/2020||Inside Insight (InsightInside) received: [2021 Round 2nd Pick -> Resulted in drafting: Rhamondre Stevenson (RB), 2022 Round 2nd Pick -> Resulted in drafting: Zamir White (RB)] <---> Kronik (andylang1031) received: [Le'Veon Bell (RB), 2021 Round 3rd Pick -> Resulted in drafting: Alex Collins (RB)]": {
@@ -904,11 +904,11 @@
     "Baker Mayfield (QB)": 230
    }
   },
-  "Branden's League||2022||10/25/2022||rate my league hates me (SoHigh420) received: [Jimmy Garoppolo (QB)] <---> Burnt cookies (Peopleaters420) received: [2023 Round 4th Pick, 2024 Round 2nd Pick -> Resulted in drafting: Bucky Irving (RB), 2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)]": {
+  "Branden's League||2022||10/25/2022||rate my league hates me (SoHigh420) received: [Jimmy Garoppolo (QB)] <---> Burnt cookies (Peopleaters420) received: [2023 Round 4th Pick -> Resulted in drafting: Deuce Vaughn (RB), 2024 Round 2nd Pick -> Resulted in drafting: Bucky Irving (RB), 2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)]": {
    "as_of": "2025-10-24",
    "values": {
     "Jimmy Garoppolo (QB)": 2,
-    "2023 Round 4th Pick": 0,
+    "2023 Round 4th Pick -> Resulted in drafting: Deuce Vaughn (RB)": 0,
     "2024 Round 2nd Pick -> Resulted in drafting: Bucky Irving (RB)": 6087,
     "2024 Round 4th Pick -> Resulted in drafting: Devontez Walker (WR)": 38
    }
@@ -940,10 +940,10 @@
     "2024 Round 2nd Pick -> Resulted in drafting: Jaylen Wright (RB)": 181
    }
   },
-  "Branden's League||2022||8/18/2022||Smokers Haven (SmokersHaven) received: [2023 Round 3rd Pick] <---> rate my league hates me (SoHigh420) received: [Cordarrelle Patterson (RB)]": {
+  "Branden's League||2022||8/18/2022||Smokers Haven (SmokersHaven) received: [2023 Round 3rd Pick -> Resulted in drafting: Sean Tucker (RB)] <---> rate my league hates me (SoHigh420) received: [Cordarrelle Patterson (RB)]": {
    "as_of": "2025-08-15",
    "values": {
-    "2023 Round 3rd Pick": 0,
+    "2023 Round 3rd Pick -> Resulted in drafting: Sean Tucker (RB)": 8,
     "Cordarrelle Patterson (RB)": 2
    }
   },
@@ -1946,12 +1946,12 @@
     "Doug Martin (RB)": 0
    }
   },
-  "Hail Mary Jane Congregation||2017||11/27/2017||EarthWakeSuhNami (EarthWake) received: [2018 Round 1st Pick] <---> Bud Smoker (andylang1031) received: [Jimmy Graham (TE), 2019 Round 1st Pick]": {
+  "Hail Mary Jane Congregation||2017||11/27/2017||EarthWakeSuhNami (EarthWake) received: [2018 Round 1st Pick] <---> Bud Smoker (andylang1031) received: [Jimmy Graham (TE), 2019 Round 1st Pick -> Resulted in drafting: Darrell Henderson (RB)]": {
    "as_of": "2020-11-07",
    "values": {
     "2018 Round 1st Pick": 0,
     "Jimmy Graham (TE)": 174,
-    "2019 Round 1st Pick": 0
+    "2019 Round 1st Pick -> Resulted in drafting: Darrell Henderson (RB)": 1109
    }
   },
   "Hail Mary Jane Congregation||2017||11/29/2017||DonkeyPuncher (SoHigh420) received: [C.J. Anderson (RB)] <---> Inside Insight (InsightInside) received: [2018 Round 2nd Pick, 2018 Round 3rd Pick]": {
@@ -1962,7 +1962,7 @@
     "2018 Round 3rd Pick": 0
    }
   },
-  "Hail Mary Jane Congregation||2017||12/6/2017||Smokers Haven (SmokersHaven) received: [2018 Round 1st Pick] <---> Little fishtick (Fishy012) received: [2018 Round 1st Pick, 2018 Round 2nd Pick, 2018 Round 3rd Pick, 2018 Round 4th Pick, 2018 Round 5th Pick, 2019 Round 2nd Pick]": {
+  "Hail Mary Jane Congregation||2017||12/6/2017||Smokers Haven (SmokersHaven) received: [2018 Round 1st Pick] <---> Little fishtick (Fishy012) received: [2018 Round 1st Pick, 2018 Round 2nd Pick, 2018 Round 3rd Pick, 2018 Round 4th Pick, 2018 Round 5th Pick, 2019 Round 2nd Pick -> Resulted in drafting: Daniel Jones (QB)]": {
    "as_of": "2020-11-07",
    "values": {
     "2018 Round 1st Pick": 0,
@@ -1970,7 +1970,7 @@
     "2018 Round 3rd Pick": 0,
     "2018 Round 4th Pick": 0,
     "2018 Round 5th Pick": 0,
-    "2019 Round 2nd Pick": 0
+    "2019 Round 2nd Pick -> Resulted in drafting: Daniel Jones (QB)": 382
    }
   },
   "Hail Mary Jane Congregation||2017||2/2/2018||Smokers Haven (SmokersHaven) received: [2019 Round 3rd Pick -> Resulted in drafting: Benny Snell (RB)] <---> Beats by J (Jarvis1983) received: [C.J. Prosise (RB)]": {
@@ -2051,20 +2051,20 @@
     "Ryan Tannehill (QB)": 309
    }
   },
-  "Hail Mary Jane Congregation||2017||9/16/2017||Beats by J (Jarvis1983) received: [Jarvis Landry (WR), 2019 Round 3rd Pick] <---> EarthWakeSuhNami (EarthWake) received: [2018 Round 1st Pick]": {
+  "Hail Mary Jane Congregation||2017||9/16/2017||Beats by J (Jarvis1983) received: [Jarvis Landry (WR), 2019 Round 3rd Pick -> Resulted in drafting: Benny Snell (RB)] <---> EarthWakeSuhNami (EarthWake) received: [2018 Round 1st Pick]": {
    "as_of": "2020-09-11",
    "values": {
     "Jarvis Landry (WR)": 2383,
-    "2019 Round 3rd Pick": 0,
+    "2019 Round 3rd Pick -> Resulted in drafting: Benny Snell (RB)": 102,
     "2018 Round 1st Pick": 0
    }
   },
-  "Hail Mary Jane Congregation||2017||9/22/2017||Smokers Haven (SmokersHaven) received: [Ty Montgomery (RB)] <---> Little fishtick (Fishy012) received: [Laquon Treadwell (WR), 2019 Round 1st Pick]": {
+  "Hail Mary Jane Congregation||2017||9/22/2017||Smokers Haven (SmokersHaven) received: [Ty Montgomery (RB)] <---> Little fishtick (Fishy012) received: [Laquon Treadwell (WR), 2019 Round 1st Pick -> Resulted in drafting: Robert Foster (WR)]": {
    "as_of": "2020-09-18",
    "values": {
     "Ty Montgomery (RB)": 11,
     "Laquon Treadwell (WR)": 3,
-    "2019 Round 1st Pick": 0
+    "2019 Round 1st Pick -> Resulted in drafting: Robert Foster (WR)": 3
    }
   },
   "Hail Mary Jane Congregation||2018||10/11/2018||Leno's Team (Leno) received: [2019 Round 1st Pick -> Resulted in drafting: N'Keal Harry (WR), 2020 Round 1st Pick -> Resulted in drafting: Justin Jefferson (WR)] <---> Easy-E_lliott received: [Aaron Rodgers (QB), 2020 Round 2nd Pick -> Resulted in drafting: Laviska Shenault (WR)]": {
@@ -2108,12 +2108,12 @@
     "Baltimore Ravens (D/ST)": 0
    }
   },
-  "Hail Mary Jane Congregation||2018||3/25/2018||Smokers Haven (SmokersHaven) received: [2019 Round 2nd Pick -> Resulted in drafting: Andy Isabella (WR)] <---> Killer Cards (TheCards) received: [Doug Martin (RB), 2019 Round 4th Pick]": {
+  "Hail Mary Jane Congregation||2018||3/25/2018||Smokers Haven (SmokersHaven) received: [2019 Round 2nd Pick -> Resulted in drafting: Andy Isabella (WR)] <---> Killer Cards (TheCards) received: [Doug Martin (RB), 2019 Round 4th Pick -> Resulted in drafting: KeeSean Johnson (WR)]": {
    "as_of": "2021-03-19",
    "values": {
     "2019 Round 2nd Pick -> Resulted in drafting: Andy Isabella (WR)": 37,
     "Doug Martin (RB)": 0,
-    "2019 Round 4th Pick": 0
+    "2019 Round 4th Pick -> Resulted in drafting: KeeSean Johnson (WR)": 2
    }
   },
   "Hail Mary Jane Congregation||2018||4/17/2018||Killer Cards (TheCards) received: [Le'Veon Bell (RB), 2018 Round 2nd Pick] <---> Little fishtick (Fishy012) received: [Carson Wentz (QB), Christian McCaffrey (RB), 2019 Round 1st Pick -> Resulted in drafting: A.J. Brown (WR)]": {
@@ -2141,10 +2141,10 @@
     "Carlos Hyde (RB)": 3
    }
   },
-  "Hail Mary Jane Congregation||2018||7/29/2018||DonkeyPuncher (SoHigh420) received: [2019 Round 3rd Pick] <---> Smokers Haven (SmokersHaven) received: [Nothing]": {
+  "Hail Mary Jane Congregation||2018||7/29/2018||DonkeyPuncher (SoHigh420) received: [2019 Round 3rd Pick -> Resulted in drafting: Hunter Renfrow (WR)] <---> Smokers Haven (SmokersHaven) received: [Nothing]": {
    "as_of": "2021-07-23",
    "values": {
-    "2019 Round 3rd Pick": 0
+    "2019 Round 3rd Pick -> Resulted in drafting: Hunter Renfrow (WR)": 19
    }
   },
   "Hail Mary Jane Congregation||2018||7/30/2018||EarthWakeSuhNami (EarthWake) received: [2019 Round 1st Pick -> Resulted in drafting: Parris Campbell (WR)] <---> Bud Smoker (andylang1031) received: [Nothing]": {
@@ -2216,18 +2216,18 @@
     "2020 Round 1st Pick -> Resulted in drafting: Ke'Shawn Vaughn (RB)": 33
    }
   },
-  "Hail Mary Jane Congregation||2019||7/30/2019||Beats by J (Jarvis1983) received: [2019 Round 1st Pick] <---> EarthWakeSuhNami (EarthWake) received: [Tarik Cohen (RB)]": {
+  "Hail Mary Jane Congregation||2019||7/30/2019||Beats by J (Jarvis1983) received: [2019 Round 1st Pick -> Resulted in drafting: Darrell Henderson (RB)] <---> EarthWakeSuhNami (EarthWake) received: [Tarik Cohen (RB)]": {
    "as_of": "2022-07-29",
    "values": {
-    "2019 Round 1st Pick": 0,
+    "2019 Round 1st Pick -> Resulted in drafting: Darrell Henderson (RB)": 359,
     "Tarik Cohen (RB)": 4
    }
   },
-  "Hail Mary Jane Congregation||2019||7/30/2019||Beats by J (Jarvis1983) received: [2019 Round 4th Pick, 2019 Round 5th Pick, 2020 Round 3rd Pick -> Resulted in drafting: Justin Herbert (QB)] <---> EarthWakeSuhNami (EarthWake) received: [Josh Rosen (QB)]": {
+  "Hail Mary Jane Congregation||2019||7/30/2019||Beats by J (Jarvis1983) received: [2019 Round 4th Pick -> Resulted in drafting: Darrius Shepherd (WR), 2019 Round 5th Pick -> Resulted in drafting: Karan Higdon (RB), 2020 Round 3rd Pick -> Resulted in drafting: Justin Herbert (QB)] <---> EarthWakeSuhNami (EarthWake) received: [Josh Rosen (QB)]": {
    "as_of": "2022-07-29",
    "values": {
-    "2019 Round 4th Pick": 0,
-    "2019 Round 5th Pick": 0,
+    "2019 Round 4th Pick -> Resulted in drafting: Darrius Shepherd (WR)": 0,
+    "2019 Round 5th Pick -> Resulted in drafting: Karan Higdon (RB)": 0,
     "2020 Round 3rd Pick -> Resulted in drafting: Justin Herbert (QB)": 4054,
     "Josh Rosen (QB)": 0
    }
@@ -2310,12 +2310,12 @@
     "2022 Round 3rd Pick": 0
    }
   },
-  "Hail Mary Jane Congregation||2020||5/12/2020||Smokers Haven (SmokersHaven) received: [2020 Round 1st Pick -> Resulted in drafting: Anthony McFarland (RB)] <---> Beats by J (Jarvis1983) received: [2020 Round 2nd Pick, 2020 Round 3rd Pick, 2021 Round 3rd Pick]": {
+  "Hail Mary Jane Congregation||2020||5/12/2020||Smokers Haven (SmokersHaven) received: [2020 Round 1st Pick -> Resulted in drafting: Anthony McFarland (RB)] <---> Beats by J (Jarvis1983) received: [2020 Round 2nd Pick -> Resulted in drafting: Tua Tagovailoa (QB), 2020 Round 3rd Pick -> Resulted in drafting: Van Jefferson (WR), 2021 Round 3rd Pick]": {
    "as_of": "2023-04-21",
    "values": {
     "2020 Round 1st Pick -> Resulted in drafting: Anthony McFarland (RB)": 3,
-    "2020 Round 2nd Pick": 0,
-    "2020 Round 3rd Pick": 0,
+    "2020 Round 2nd Pick -> Resulted in drafting: Tua Tagovailoa (QB)": 890,
+    "2020 Round 3rd Pick -> Resulted in drafting: Van Jefferson (WR)": 27,
     "2021 Round 3rd Pick": 0
    }
   },

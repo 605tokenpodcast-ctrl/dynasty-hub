@@ -7,6 +7,7 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts'))
 import sync_fleaflicker  # noqa: E402
 import sync_leagues  # noqa: E402
+import sync_trade_values  # noqa: E402
 
 SEC = lambda title: [f"--- {title} ---", "", "", "", "", "", ""]  # noqa: E731
 
@@ -216,3 +217,37 @@ class FleaflickerFinishedSeasons(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TradeValuesAtGrade(unittest.TestCase):
+    PLAYERS = '"player","pos","ecr_1qb","ecr_2qb","value_1qb","value_2qb"\n"Star Guy Jr.","WR",1,2,10000,9000\n"Mid Guy","RB",50,40,4000,4500\n"Deep Guy","TE",150,150,500,400\n'
+    PICKS = '"player","pos","ecr_1qb","ecr_2qb"\n"2027 Early 1st","PICK",50,40\n"2027 Late 1st","PICK",150,150\n"2026 Pick 1.01","PICK",1,2\n'
+
+    def setUp(self):
+        self.snap = sync_trade_values.Snapshot(self.PLAYERS, self.PICKS)
+
+    def test_players_and_drafted_picks(self):
+        d = sync_trade_values.dt.date(2026, 10, 1)
+        self.assertEqual(sync_trade_values.item_value("Star Guy (WR)", self.snap, d), 10000)
+        self.assertEqual(sync_trade_values.item_value("2024 Round 1st Pick (originally from A (a)) -> Resulted in drafting: Mid Guy (RB)", self.snap, d), 4000)
+        self.assertEqual(sync_trade_values.item_value("Unknown Guy (K)", self.snap, d), 0)
+
+    def test_picks_by_draft_state(self):
+        d = sync_trade_values.dt.date(2026, 10, 1)
+        # 2027 1st: average of Early (ECR 50 -> 4000) and Late (ECR 150 -> 500)
+        self.assertEqual(sync_trade_values.item_value("2027 Round 1st Pick (originally from A (a))", self.snap, d), 2250)
+        # 2026 draft is done by October and no player was recorded
+        self.assertEqual(sync_trade_values.item_value("2026 Round 1st Pick", self.snap, d), 0)
+
+    def test_superflex_columns(self):
+        snap = sync_trade_values.Snapshot(self.PLAYERS, self.PICKS, superflex=True)
+        self.assertEqual(snap.player("Mid Guy"), 4500)
+
+    def test_items_and_marks(self):
+        bd = "A received: [X (WR), 2027 Round 1st Pick (originally from B (b))] <---> B received: [Y (RB)]"
+        self.assertEqual(sync_trade_values.trade_items(bd), ["X (WR)", "2027 Round 1st Pick (originally from B (b))", "Y (RB)"])
+        master = {"L": [SEC("TRADE HISTORY"), ["Season"], ["2023", "10/1/2023", "Week 5", "A & B", bd, "", ""],
+                        ["2024", "10/1/2024", "Week 5", "A & B", bd, "", ""]]}
+        with mock.patch.object(sync_trade_values.league_config, 'leagues', return_value=[]):
+            due = list(sync_trade_values.due_trades(master, sync_trade_values.dt.date(2026, 10, 26)))
+        self.assertEqual([(k.split('||')[2], m.isoformat()) for k, _, _, m in due], [("10/1/2023", "2026-10-01")])

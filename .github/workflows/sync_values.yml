@@ -53,6 +53,12 @@ jobs:
           FLEA_FULL_REFRESH: ${{ inputs.full_refresh && '1' || '0' }}
         run: python scripts/sync_fleaflicker.py
 
+      # After the league syncs, so trades recorded today are seen; freezes values for trades reaching 3 years
+      - name: Freeze dynasty values for trades reaching their 3-year grade
+        id: tradevalues
+        continue-on-error: true
+        run: python scripts/sync_trade_values.py
+
       - name: Upload Fleaflicker raw API samples (for debugging)
         if: always()
         uses: actions/upload-artifact@v4
@@ -68,7 +74,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ktc_values.json sleeper_leagues_master.json player_meta.json leagues.json
+          git add ktc_values.json sleeper_leagues_master.json player_meta.json leagues.json trade_values.json
           # leagues.json only changes when a Sleeper league renewed for a new season
           leagues_changed=$(git diff --staged --quiet -- leagues.json || echo yes)
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-sync live sleeper league data and KTC valuations [skip ci]" && git pull --rebase origin "${GITHUB_REF_NAME}" && git push)
@@ -78,7 +84,7 @@ jobs:
           fi
 
       - name: Fail run if a sync step failed
-        if: steps.values.outcome == 'failure' || steps.leagues.outcome == 'failure' || steps.flea.outcome == 'failure'
+        if: steps.values.outcome == 'failure' || steps.leagues.outcome == 'failure' || steps.flea.outcome == 'failure' || steps.tradevalues.outcome == 'failure'
         run: |
-          echo "values sync: ${{ steps.values.outcome }}, leagues sync: ${{ steps.leagues.outcome }}, fleaflicker sync: ${{ steps.flea.outcome }}"
+          echo "values sync: ${{ steps.values.outcome }}, leagues sync: ${{ steps.leagues.outcome }}, fleaflicker sync: ${{ steps.flea.outcome }}, trade values: ${{ steps.tradevalues.outcome }}"
           exit 1

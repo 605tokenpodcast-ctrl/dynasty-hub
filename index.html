@@ -420,7 +420,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 class="text-2xl font-bold">📜 All-Time Trade & Draft Pick Lineage Log</h2>
-                            <p class="text-slate-400 text-sm">Complete history of trades with highlighted rookie draft selections (`Resulted in drafting:`).</p>
+                            <p class="text-slate-400 text-sm">Complete history of trades with highlighted rookie draft selections. Dynasty trades are graded 3 years after the trade on the starter points each side got from what it received (picks count as the player drafted); redraft trades are graded at the end of that season.</p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                             <button onclick="toggleLineageOnly()" id="lineage-filter-btn" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">
@@ -438,7 +438,7 @@
                                         <th class="p-4">League</th>
                                         <th class="p-4">Teams Involved</th>
                                         <th class="p-4">Trade Breakdown & Draft Pick Lineage</th>
-                                        <th class="p-4">Hindsight (today's values)</th>
+                                        <th class="p-4">Trade Grade</th>
                                     </tr>
                                 </thead>
                                 <tbody id="trades-table-body" class="divide-y divide-slate-800"></tbody>
@@ -3802,14 +3802,14 @@
             });
 
             // Newest first across all leagues, written to the page in one go
-            tbody.innerHTML = trades.sort((a, b) => b.ts - a.ts).map(({ r, leagueName }) => {
+            tbody.innerHTML = trades.sort((a, b) => b.ts - a.ts).map(({ r, leagueName, ts }) => {
                 const hasLineage = String(r[4]).includes('Resulted in drafting:');
                 return `<tr data-has-lineage="${hasLineage ? '1' : '0'}" class="hover:bg-slate-800/50 transition">
                     <td class="p-4 font-medium whitespace-nowrap">${escHtml(r[0])} &bull; ${escHtml(r[2])}<br><span class="text-xs text-slate-400">${escHtml(r[1])}</span></td>
                     <td class="p-4 text-accent font-semibold">${escHtml(leagueName)}</td>
                     <td class="p-4 font-medium text-white">${escHtml(r[3])}</td>
                     <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
-                    <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${hindsightCell(r[4], leagueName)}</td>
+                    <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${tradeGradeCell(r, leagueName, ts)}</td>
                 </tr>`;
             }).join('');
         }
@@ -3823,6 +3823,108 @@
             const share = best.value / total;
             const verdict = share >= 0.65 ? `🦈 ${escHtml(best.owner)} fleeced` : share >= 0.55 ? `✅ ${escHtml(best.owner)} won` : '⚖️ Even';
             return `<p class="font-bold text-emerald-300">${verdict}</p>` + sides.map(s => `<p class="text-slate-400">${escHtml(s.owner)}: <span class="font-mono text-slate-200">${Math.round(s.value).toLocaleString()}</span></p>`).join('');
+        }
+
+        // --- WINDOWED TRADE GRADES ---
+        // Dynasty trades are graded on what each side's players (and the players their picks became) scored as
+        // starters for the new team in the 3 years after the trade. Redraft trades are graded at the end of that season.
+        const TRADE_GRADE_YEARS = 3;
+
+        // Sunday of an NFL week: week 1 is the Sunday after Labor Day (first Monday of September)
+        function nflWeekSunday(season, weekNum) {
+            const laborDay = 1 + (8 - new Date(season, 8, 1).getDay()) % 7;
+            return new Date(season, 8, laborDay + 6 + 7 * (weekNum - 1)).getTime();
+        }
+
+        // Per league: "owner||normalized player" -> [{ ts, pts }] for every week the player started, plus lineup seasons
+        const starterPointsCache = {};
+        function starterPointsIndex(leagueName) {
+            if (starterPointsCache[leagueName]) return starterPointsCache[leagueName];
+            const byKey = {}, seasons = new Set();
+            sectionRows(leagueName, 'lineups').forEach(r => {
+                const season = parseInt(r[0], 10), wk = weekNumber(r[1]);
+                if (!season || !wk) return;
+                seasons.add(season);
+                const owner = getMasterOwner(r[2]), ts = nflWeekSunday(season, wk);
+                parseLineupList(r[5]).forEach(p => {
+                    const k = `${owner}||${normalizePlayerName(p.name)}`;
+                    (byKey[k] = byKey[k] || []).push({ ts, pts: p.pts });
+                });
+            });
+            return (starterPointsCache[leagueName] = { byKey, seasons });
+        }
+
+        // The player a traded item stands for: the player himself, or who a pick was used on (null for an unused pick)
+        function tradeItemPlayerName(item) {
+            const s = String(item || '').trim();
+            const drafted = s.match(/Resulted in drafting:\s*(.+?)\s*(?:\([A-Z/]+\))?\s*$/);
+            if (drafted) return drafted[1];
+            if (/^\d{4}\s+Round/i.test(s)) return null;
+            const m = s.match(/^(.*?)\s*\(([A-Z/]+)(?:\s*-\s*[A-Z]+)?\)$/);
+            return m ? m[1] : s;
+        }
+
+        // Letter grade from a side's share of the trade's points, scaled so an even split is 50% however many teams
+        function tradeLetter(share, sides) {
+            const s = share * sides / 2;
+            return s >= 0.70 ? 'A+' : s >= 0.62 ? 'A' : s >= 0.55 ? 'B' : s >= 0.45 ? 'C' : s >= 0.38 ? 'D' : 'F';
+        }
+
+        // { status: 'graded' | 'pending' | 'nodata', redraft, end, sides: [{ owner, pts, grade, items: [{ label, pts }] }] }
+        function windowedTradeGrade(breakdown, leagueName, season, ts, now = Date.now()) {
+            const redraft = leagueRules(leagueName).type === 'redraft';
+            const endDate = new Date(ts);
+            endDate.setFullYear(endDate.getFullYear() + TRADE_GRADE_YEARS);
+            // A redraft season is over after week 18; a finished bracket (champion saved) grades it sooner
+            const end = redraft ? nflWeekSunday(season, 18) + 2 * 86400000 : endDate.getTime();
+            const out = { status: 'pending', redraft, end, sides: [] };
+            if (now < end && !(redraft && seasonOf(leagueName, season)?.complete)) return out;
+
+            // Every season with games inside the window needs lineup history, or the grade would undercount
+            const idx = starterPointsIndex(leagueName);
+            for (let s = new Date(ts).getFullYear() - 1; s <= new Date(end).getFullYear(); s++) {
+                if (nflWeekSunday(s, 1) <= end && nflWeekSunday(s, 18) > ts && !idx.seasons.has(s)) return { ...out, status: 'nodata' };
+            }
+
+            const sides = String(breakdown || '').split(' <---> ').map(side => {
+                const m = side.match(/^(.*?) received: \[(.*)\]$/);
+                if (!m) return null;
+                const owner = getMasterOwner(m[1].trim());
+                const items = (m[2] === 'Nothing' ? [] : m[2].split(/,\s*(?![^()]*\))/)).map(label => {
+                    const name = tradeItemPlayerName(label);
+                    const weeks = name ? idx.byKey[`${owner}||${normalizePlayerName(name)}`] || [] : [];
+                    return { label, pts: weeks.filter(w => w.ts > ts && w.ts <= end).reduce((a, w) => a + w.pts, 0) };
+                });
+                return { owner, items, pts: items.reduce((a, b) => a + b.pts, 0) };
+            }).filter(Boolean);
+            if (sides.length < 2) return { ...out, status: 'nodata' };
+            const total = sides.reduce((a, b) => a + b.pts, 0);
+            sides.forEach(sd => { sd.grade = total ? tradeLetter(sd.pts / total, sides.length) : 'C'; });
+            return { ...out, status: 'graded', sides, total };
+        }
+
+        function tradeGradeCell(r, leagueName, ts) {
+            const g = windowedTradeGrade(r[4], leagueName, parseInt(r[0], 10) || 0, ts);
+            const when = new Date(g.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            if (g.status === 'pending') {
+                return `<p class="font-bold text-amber-300">⏳ Grade on ${when}</p>
+                    <p class="text-slate-500 mb-1">${g.redraft ? 'Redraft trades are graded at season end' : `${TRADE_GRADE_YEARS} years after the trade`}</p>
+                    <p class="text-slate-500 text-[11px] uppercase tracking-wide">Today's values</p>${hindsightCell(r[4], leagueName)}`;
+            }
+            if (g.status === 'nodata') {
+                return `<p class="text-slate-500 mb-1">No lineup history to grade this window</p>
+                    <p class="text-slate-500 text-[11px] uppercase tracking-wide">Today's values</p>${hindsightCell(r[4], leagueName)}`;
+            }
+            const best = [...g.sides].sort((a, b) => b.pts - a.pts)[0];
+            const share = g.total ? best.pts / g.total : 0;
+            const verdict = !g.total ? '⚖️ Nobody started anyone'
+                : share >= 0.65 ? `🦈 ${escHtml(best.owner)} fleeced` : share >= 0.55 ? `✅ ${escHtml(best.owner)} won` : '⚖️ Even';
+            const gradeColor = gr => gr.startsWith('A') ? 'text-emerald-300 border-emerald-500/30' : gr === 'B' ? 'text-sky-300 border-sky-500/30'
+                : gr === 'C' ? 'text-slate-300 border-slate-600' : 'text-rose-300 border-rose-500/30';
+            const tip = sd => sd.items.map(i => `${i.label.replace(/\s*\(originally from.*?\)\)/, '')}: ${Math.round(i.pts)}`).join('\n');
+            return `<p class="font-bold text-emerald-300">${verdict}</p>
+                <p class="text-slate-500 mb-1">${g.redraft ? 'Starter points rest of season' : `Starter points over ${TRADE_GRADE_YEARS} years`}</p>`
+                + g.sides.map(sd => `<p class="text-slate-400" title="${escHtml(tip(sd))}"><span class="inline-block w-7 text-center border rounded font-bold mr-1 ${gradeColor(sd.grade)}">${sd.grade}</span>${escHtml(sd.owner)}: <span class="font-mono text-slate-200">${Math.round(sd.pts).toLocaleString()}</span></p>`).join('');
         }
 
         function filterTrades() {

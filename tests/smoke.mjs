@@ -52,6 +52,14 @@ try {
     const len = await page.evaluate(t => document.getElementById(`tab-${t}`).innerText.trim().length, tab);
     if (len < 50) failures.push(`tab "${tab}" is empty`);
   }
+  // Trade Partners pair modal shows a grade for every trade, like the Trade Log
+  await page.evaluate(() => { switchTab('synergy'); openTradeModal(0); });
+  const modal = await page.evaluate(() => {
+    const deals = document.querySelectorAll('#modal-body > div');
+    return { deals: deals.length, graded: [...deals].filter(d => /trade grade/i.test(d.innerText)).length };
+  });
+  if (!modal.deals || modal.graded !== modal.deals) failures.push(`trade partner modal graded ${modal.graded} of ${modal.deals} trades`);
+  await page.evaluate(() => closeTradeModal());
   const xss = await page.evaluate(() => window.__xss || 0);
   if (xss) failures.push(`unescaped team name ran script ${xss} time(s)`);
   console.log(`opened ${tabs.length} tabs`);

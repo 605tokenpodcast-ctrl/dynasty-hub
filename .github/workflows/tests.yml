@@ -10,6 +10,7 @@ on:
       - 'sleeper_leagues_master.json'
       - 'ktc_values.json'
       - 'player_meta.json'
+      - 'trade_values.json'
       - 'styles.css'
 
 jobs:

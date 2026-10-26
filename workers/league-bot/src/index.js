@@ -2,12 +2,12 @@
 //
 // Runs on Cron Triggers (see wrangler.toml) and posts to your group chat:
 //   - every 15 minutes: TRADE ALERTS for new trades in any league, with today's value swing
-//   - Tuesday morning:  WEEKLY RECAP per league (high score belt, toilet bowl, blowout, nail-biter,
+//   - Tuesday 10am CT:  WEEKLY RECAP per league (high score belt, toilet bowl, blowout, nail-biter,
 //                       robbed, lucky win)
 //   - 30 minutes later: with an Anthropic API key, a "Dynasty Gazette" article per league, stored
 //                       for the site's Season Review tab (a separate run keeps each one under the
 //                       free plan's 50 outbound requests)
-//   - Thursday evening: MATCHUP PREVIEWS with season averages and win odds
+//   - Thursday 6pm CT:  MATCHUP PREVIEWS with season averages and win odds
 //
 // HTTP routes (CORS-enabled for the site):
 //   GET /gazette?league=<name>&season=<yyyy>  -> [{ week, text }] for the Season Review tab
@@ -23,8 +23,7 @@ const FLEA = 'https://www.fleaflicker.com/api';
 
 export default {
   async scheduled(event, env, ctx) {
-    const job = { '*/15 * * * *': 'alerts', '0 14 * * 2': 'recap', '30 14 * * 2': 'gazette', '0 23 * * 4': 'previews' }[event.cron];
-    if (job) ctx.waitUntil(runJob(job, env, false));
+    ctx.waitUntil(runJob(jobAt(event.scheduledTime), env, false));
   },
 
   async fetch(request, env) {
@@ -48,6 +47,16 @@ export default {
     return new Response('Dynasty Hub league bot', { headers: { 'Content-Type': 'text/plain' } });
   },
 };
+
+// Weekly jobs by Central time (Cron Triggers only know UTC). A weekly job takes the place of that
+// quarter hour's trade alerts, which keeps each run under the free plan's request limit.
+const WEEKLY = { 'Tue 10:00': 'recap', 'Tue 10:30': 'gazette', 'Thu 18:00': 'previews' };
+function jobAt(time) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date(time)).map(p => [p.type, p.value]));
+  return WEEKLY[`${parts.weekday} ${parts.hour}:${parts.minute}`] || 'alerts';
+}
 
 // Per-run caches: Workers on the free plan get 50 outbound requests per run, so nothing is fetched twice
 let memo = new Map();

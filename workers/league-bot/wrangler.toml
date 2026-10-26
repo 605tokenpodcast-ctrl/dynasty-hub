@@ -5,8 +5,10 @@ compatibility_date = "2026-10-01"
 compatibility_flags = ["nodejs_compat"]
 
 [triggers]
-# UTC times: alerts every 15 min, recap Tue 9am CT, Gazette Tue 9:30am CT, previews Thu 6pm CT
-crons = ["*/15 * * * *", "0 14 * * 2", "30 14 * * 2", "0 23 * * 4"]
+# One 15-minute cron; src/index.js picks the job by Central time (so daylight saving is handled):
+# recap Tue 10am CT, Gazette Tue 10:30am CT, previews Thu 6pm CT, trade alerts the rest of the time.
+# (Cloudflare counts weekdays from Sunday = 1, so numbered weekdays here would land a day early.)
+crons = ["*/15 * * * *"]
 
 # The deploy workflow creates this namespace on first run and fills in the id.
 [[kv_namespaces]]

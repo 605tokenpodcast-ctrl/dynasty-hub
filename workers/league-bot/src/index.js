@@ -5,8 +5,11 @@
 //   - Tuesday 10am CT:  WEEKLY RECAP per league (high score belt, toilet bowl, blowout, nail-biter,
 //                       robbed, lucky win)
 //   - 30 minutes later: with an Anthropic API key, a "Dynasty Gazette" article per league, stored
-//                       for the site's Season Review tab (a separate run keeps each one under the
-//                       free plan's 50 outbound requests)
+//                       for the site's Season Review tab and posted to the chat. It runs in its own
+//                       slots (10:30, 10:45, 11:00, 11:15) so each run stays under the free plan's
+//                       50 outbound requests; a run that runs low leaves the rest for the next slot.
+// Each chat message goes out about 30 seconds after the one before, so a busy run doesn't arrive
+// as one wall of text.
 //   - Thursday 6pm CT:  MATCHUP PREVIEWS with season averages and win odds
 //
 // HTTP routes (CORS-enabled for the site):
@@ -22,8 +25,10 @@ const SLEEPER = 'https://api.sleeper.app/v1';
 const FLEA = 'https://www.fleaflicker.com/api';
 
 export default {
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(runJob(jobAt(event.scheduledTime), env, false));
+  async scheduled(event, env) {
+    // Awaited rather than waitUntil: the spacing between chat posts keeps a run going for minutes,
+    // which Cron Triggers allow (15 minutes of wall time; waiting doesn't count as CPU time)
+    await runJob(jobAt(event.scheduledTime), env, false);
   },
 
   async fetch(request, env) {
@@ -50,7 +55,13 @@ export default {
 
 // Weekly jobs by Central time (Cron Triggers only know UTC). A weekly job takes the place of that
 // quarter hour's trade alerts, which keeps each run under the free plan's request limit.
-const WEEKLY = { 'Tue 10:00': 'recap', 'Tue 10:30': 'gazette', 'Thu 18:00': 'previews' };
+// The Gazette gets four slots: each run writes and posts what fits in its request budget, and
+// leagues already posted this week cost nothing in the later slots.
+const WEEKLY = {
+  'Tue 10:00': 'recap',
+  'Tue 10:30': 'gazette', 'Tue 10:45': 'gazette', 'Tue 11:00': 'gazette', 'Tue 11:15': 'gazette',
+  'Thu 18:00': 'previews',
+};
 function jobAt(time) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Chicago', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
@@ -60,6 +71,13 @@ function jobAt(time) {
 
 // Per-run caches: Workers on the free plan get 50 outbound requests per run, so nothing is fetched twice
 let memo = new Map();
+// Outbound requests made by this run (data, Claude and chat posts), checked against the limit
+let used = 0;
+const REQUEST_LIMIT = 50;
+function counted(url, init) {
+  used++;
+  return fetch(url, init);
+}
 function once(key, fn) {
   if (!memo.has(key)) memo.set(key, fn());
   return memo.get(key);
@@ -67,30 +85,36 @@ function once(key, fn) {
 
 async function runJob(job, env, dry) {
   memo = new Map();
+  used = 0;
+  lastPost = 0;
   const leagues = JSON.parse(env.LEAGUES || '[]');
   const state = await getJson(`${SLEEPER}/state/nfl`);
   const season = Number(state.season);
   const messages = [];
+  const notes = [];
   const say = text => messages.push(text);
   for (const lg of leagues) {
     try {
       if (job === 'alerts') await tradeAlerts(lg, state, env, say, dry);
       if (job === 'recap') await weeklyRecap(lg, season, Number(state.week), env, say);
-      if (job === 'gazette') await weeklyGazette(lg, season, Number(state.week), env, say, dry);
+      if (job === 'gazette') notes.push(`${lg.name}: ${await weeklyGazette(lg, season, Number(state.week), env, say, dry)}`);
       if (job === 'previews' && state.season_type === 'regular') await previews(lg, season, Number(state.week), say);
     } catch (e) {
       console.log(`${job} ${lg.name}: ${e.stack || e}`);
+      notes.push(`${lg.name}: error: ${e.message || e}`);
     }
   }
-  // All leagues go out together, split only where the chat's length limit needs it.
-  // Gazette articles live on the site; the chat only gets the recap.
-  if (!dry && messages.length && job !== 'gazette') await post(env, messages.join('\n\n'));
-  return { job, season, week: state.week, messages };
+  // One chat message per league (or per trade), spaced out by post(). The Gazette posts its own
+  // articles as it writes them, so it isn't collected here.
+  if (!dry && job !== 'gazette') {
+    for (const text of messages) await post(env, text);
+  }
+  return { job, season, week: state.week, requests: used, notes, messages };
 }
 
 // ---------- data helpers ----------
 async function getJson(url) {
-  const r = await fetch(url, { headers: { 'User-Agent': 'dynasty-hub league bot' } });
+  const r = await counted(url, { headers: { 'User-Agent': 'dynasty-hub league bot' } });
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
   return r.json();
 }
@@ -264,26 +288,62 @@ async function weeklyRecap(lg, season, stateWeek, env, say) {
   if (r) say(`📰 **${lg.name} • Week ${r.week} Recap**\n${r.facts.join('\n')}\n${env.SITE_URL}?tab=awardcenter`);
 }
 
-// Writes one article per league per week. A dry run returns the article instead of storing it.
+// Writes and posts one article per league per week, and says what it did (shown by /run).
+// A dry run returns the article instead of storing or posting it.
+// Worst case for one league: 4 data requests, 2 Claude attempts and 3 chat posts.
+const GAZETTE_REQUESTS = 9;
 async function weeklyGazette(lg, season, stateWeek, env, say, dry) {
-  if (!env.ANTHROPIC_API_KEY) return;
+  if (!env.ANTHROPIC_API_KEY) return 'skipped, no ANTHROPIC_API_KEY';
+  // Marks a league as posted (or being written) for this week, so later slots and overlapping runs skip it
+  const postedKey = `gazette-posted:${lg.name}:${season}:${stateWeek}`;
+  if (!dry && await env.BOT_KV.get(postedKey)) return 'already posted this week';
+  if (used + GAZETTE_REQUESTS > REQUEST_LIMIT) return 'left for the next run (request limit)';
   const r = await weeklyFacts(lg, season, stateWeek);
-  if (!r) return;
+  if (!r) return 'scores not final yet';
   const key = gazetteKey(lg.name, season);
   const list = (await env.BOT_KV.get(key, 'json')) || [];
-  // Already written from these final scores; an article written before the week finished gets rewritten
+  // Already written from these final scores (e.g. stored but not yet posted); an article written
+  // before the week finished gets rewritten
   const board = r.scoreboard.join('|');
-  if (list.some(a => a.week === r.week && a.board === board)) return;
-  const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard);
-  if (!article) return;
-  if (dry) { say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, not saved):\n${article}`); return; }
-  const kept = list.filter(a => a.week !== r.week);
-  kept.push({ week: r.week, text: article, at: Date.now(), board });
-  await env.BOT_KV.put(key, JSON.stringify(kept));
+  let saved = list.find(a => a.week === r.week && a.board === board);
+  if (!saved) {
+    if (!dry) await env.BOT_KV.put(postedKey, 'writing', { expirationTtl: 1800 });
+    const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard).catch(e => {
+      console.log(`gazette ${lg.name}: ${e.stack || e}`);
+      return null;
+    });
+    if (!article) {
+      if (!dry) await env.BOT_KV.delete(postedKey);
+      return 'Claude returned no article, will retry next run';
+    }
+    if (dry) { say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, not saved):\n${article}`); return 'written (dry run)'; }
+    saved = { week: r.week, text: article, at: Date.now(), board };
+    await env.BOT_KV.put(key, JSON.stringify([...list.filter(a => a.week !== r.week), saved]));
+  } else if (dry) {
+    say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, already saved):\n${saved.text}`);
+    return 'already written (dry run)';
+  }
+  const link = `${env.SITE_URL}?${new URLSearchParams({ tab: 'review', league: lg.name, season })}`;
+  await post(env, `🗞️ **THE DYNASTY GAZETTE** • ${lg.name} Week ${r.week}\n\n${plainText(saved.text)}\n\nEvery issue: ${link}`);
+  await env.BOT_KV.put(postedKey, 'posted', { expirationTtl: 8 * 24 * 3600 });
+  return 'written and posted';
+}
+
+// The chats show plain text, so drop the Markdown the Gazette is written in (same rules as the site)
+function plainText(md) {
+  return String(md || '').replace(/\r/g, '')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(\S[^*]*?)\*/g, '$1')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+    .replace(/^\s*[-*]\s+/gm, '• ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 async function writeGazette(env, league, season, week, facts, scoreboard) {
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  // One retry at most, and through counted() so the request budget stays honest
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1, fetch: counted });
   const response = await client.beta.messages.create({
     model: 'claude-opus-5-5',
     max_tokens: 4000,
@@ -338,24 +398,47 @@ async function previews(lg, season, week, say) {
 }
 
 // ---------- posting ----------
+// Separate messages go out about 30 seconds apart; the parts of one long message follow 3 seconds
+// apart so they stay together and in order.
+const MESSAGE_GAP_MS = 30000;
+const PART_GAP_MS = 3000;
+let lastPost = 0;
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function send(gap, url, body) {
+  const wait = lastPost + gap - Date.now();
+  if (lastPost && wait > 0) await sleep(wait);
+  await counted(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .catch(e => console.log(`post failed: ${e}`));
+  lastPost = Date.now();
+}
+
 async function post(env, text) {
-  for (const chunk of split(text, 1900)) {
-    if (env.DISCORD_WEBHOOK_URL) {
-      await fetch(env.DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: chunk }) });
-    }
+  // Discord and GroupMe each get the message; the first part waits out the gap from the last message
+  if (env.DISCORD_WEBHOOK_URL) {
+    let gap = MESSAGE_GAP_MS;
+    for (const chunk of split(text, 1900)) { await send(gap, env.DISCORD_WEBHOOK_URL, { content: chunk }); gap = PART_GAP_MS; }
   }
   if (env.GROUPME_BOT_ID) {
     // GroupMe has no Markdown and a 1000-character limit
+    let gap = env.DISCORD_WEBHOOK_URL ? 0 : MESSAGE_GAP_MS;
     for (const chunk of split(text.replace(/\*\*|_/g, ''), 950)) {
-      await fetch('https://api.groupme.com/v3/bots/post', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bot_id: env.GROUPME_BOT_ID, text: chunk }) });
+      await send(gap, 'https://api.groupme.com/v3/bots/post', { bot_id: env.GROUPME_BOT_ID, text: chunk });
+      gap = PART_GAP_MS;
     }
   }
 }
 
+// Splits at line breaks, and inside a line too long to fit on its own (at a space where possible)
 function split(text, max) {
   const out = [];
   let cur = '';
   text.split('\n').forEach(line => {
+    while (line.length > max) {
+      const cut = line.lastIndexOf(' ', max) > max / 2 ? line.lastIndexOf(' ', max) : max;
+      if (cur) { out.push(cur); cur = ''; }
+      out.push(line.slice(0, cut));
+      line = line.slice(cut).trimStart();
+    }
     if ((cur + '\n' + line).length > max && cur) { out.push(cur); cur = line; }
     else cur = cur ? `${cur}\n${line}` : line;
   });

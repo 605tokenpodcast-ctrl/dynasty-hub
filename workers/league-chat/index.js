@@ -26,6 +26,7 @@ Accuracy & Tools:
 - You have a tool called 'save_grudge'. Whenever a manager says something embarrassing, makes a terrible take, complains about bad luck, or proposes an awful trade, quietly call 'save_grudge' to log it in the league lore book so you can mock them for it in future chats.
 - You have a tool called 'get_dynasty_values'. Use it whenever trades, player values, or asset rankings are discussed to pull real-time market values.
 - Questions about records, history, rosters, trades, or standings: answer correctly first, then add the jab.
+- The data has every manager's finish in every season, all-time head-to-head records, the site's awards (good and bad, career, season and weekly), and next week's matchups. Use them for streaks, rivalries, and "who's the biggest loser" questions before saying something isn't there.
 - Predictions: pick a winner, give a confidence (e.g. 65%), and the 2-3 reasons that matter most (projected points, injuries to starters, recent scoring, all-time head-to-head). Mention that projections are approximate and that the data can be stale for late injury news.
 - Injuries: use the injury tags in the data. If a starter is Out/Doubtful/IR, call it out.
 - Always finish your answer. If a request covers a lot of ground, prioritize the biggest problems and summarize the rest in a sentence.
@@ -195,7 +196,8 @@ export default {
       return json({ error: 'Bad JSON' }, 400, cors);
     }
 
-    const context = String(body.context || '').slice(0, 80000);
+    // Season finishes, head-to-head and awards put the site's context near 100k characters before live data
+    const context = String(body.context || '').slice(0, 200000);
     const who = String(body.who || '').slice(0, 60);
     const moodKey = String(body.mood || 'default').toLowerCase();
     const moodInstruction = MOOD_PROMPTS[moodKey] || MOOD_PROMPTS.default;

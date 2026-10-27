@@ -3580,6 +3580,8 @@
                 lines.push(`${o}: ${d.t} titles, ${d.ru} runner-ups, ${d.w}-${d.l} all-time, in ${d.lg.size} leagues`);
             });
 
+            lines.push(...chatSeasonFinishLines());
+
             ensureRecordsSnapshot();
             if (recordsSnapshot.length) {
                 lines.push('## Hall of Records (top 3 each)');
@@ -3588,6 +3590,36 @@
                 });
             }
             return lines.join('\n');
+        }
+
+        // Every manager's finish in every season, one line per manager per league, so streaks
+        // ("runner-up five years running") can be read straight off the data
+        function chatSeasonFinishLines() {
+            const byLeague = {};
+            Object.values(buildHubData().seasons).forEach(st => {
+                if (!st.season || !st.ranked || !st.ranked.length) return;
+                (byLeague[st.league] = byLeague[st.league] || []).push(st);
+            });
+            const leagues = Object.keys(byLeague);
+            if (!leagues.length) return [];
+            const lines = ['## Season-by-season finishes',
+                'Each entry is season, regular-season rank out of the league size, then the playoff result (champion, runner-up, 3rd, or last = the Sacko, last in the regular season). "in progress" means the season is not finished. Someone who "finished 2nd" may mean 2nd in the regular season or runner-up in the playoffs, so check both and say which.'];
+            leagues.forEach(league => {
+                const owners = {};
+                byLeague[league].sort((a, b) => a.season - b.season).forEach(st => {
+                    st.ranked.forEach(t => {
+                        let tag = '';
+                        if (st.champ === t.owner) tag = ' champion';
+                        else if (st.runner === t.owner) tag = ' runner-up';
+                        else if (st.third === t.owner) tag = ' 3rd';
+                        if (st.sacko === t.owner) tag += ' last';
+                        (owners[t.owner] = owners[t.owner] || []).push(`${st.season} #${t.seed}/${st.ranked.length}${tag}${st.complete ? '' : ' in progress'}`);
+                    });
+                });
+                lines.push(`${league}:`);
+                Object.keys(owners).forEach(o => lines.push(`  ${o}: ${owners[o].join(', ')}`));
+            });
+            return lines;
         }
 
         // "2027 Round 3rd Pick (originally from Team (user)) -> Resulted in drafting: X (WR)" -> "2027 Rd 3 pick -> drafted X (WR)"

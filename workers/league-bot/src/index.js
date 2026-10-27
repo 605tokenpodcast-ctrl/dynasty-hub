@@ -17,7 +17,7 @@
 //   GET /run?job=alerts|recap|gazette|previews[&dry=1] with header X-Admin-Key: <ADMIN_KEY>  -> run a job by hand
 //       (?key=<ADMIN_KEY> also works, but the key then shows up in Cloudflare's request logs)
 //
-// Settings: LEAGUES and SITE_URL are vars in wrangler.toml. Secrets (wrangler secret put, or the
+// Settings: LEAGUES, SITE_URL and CHAT_POSTING (on/off) are vars in wrangler.toml. Secrets (wrangler secret put, or the
 // dashboard): DISCORD_WEBHOOK_URL and/or GROUPME_BOT_ID, ANTHROPIC_API_KEY (optional), ADMIN_KEY.
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -451,6 +451,8 @@ async function send(gap, url, body) {
 }
 
 async function post(env, text) {
+  // CHAT_POSTING = "off" in wrangler.toml pauses the chat without stopping the Gazette for the site
+  if (String(env.CHAT_POSTING || 'on').toLowerCase() === 'off') return;
   // Discord and GroupMe each get the message; the first part waits out the gap from the last message
   if (env.DISCORD_WEBHOOK_URL) {
     let gap = MESSAGE_GAP_MS;

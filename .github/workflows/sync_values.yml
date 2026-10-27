@@ -2,10 +2,17 @@ name: Auto-Sync Dynasty Hub Data
 
 on:
   schedule:
-    # Every day at 11:00 AM CDT (16:00 UTC) during the season (September-January)...
-    - cron: '0 16 * 9-12,1 *'
-    # ...and every Wednesday the rest of the year
-    - cron: '0 16 * 2-8 3'
+    # Times are US Central. GitHub cron only speaks UTC, so each time is listed twice (CDT and CST)
+    # and the check-time job below keeps only the one that matches Chicago's offset that day.
+    # 8:00 AM every day during the season (September-January)...
+    - cron: '0 13 * 9-12,1 *'   # 8:00 AM CDT
+    - cron: '0 14 * 9-12,1 *'   # 8:00 AM CST
+    # ...and 8:00 AM every Wednesday the rest of the year
+    - cron: '0 13 * 2-8 3'      # 8:00 AM CDT
+    - cron: '0 14 * 2-8 3'      # 8:00 AM CST
+    # Plus a second update every Wednesday at 11:15 AM, all year
+    - cron: '15 16 * * 3'       # 11:15 AM CDT
+    - cron: '15 17 * * 3'       # 11:15 AM CST
   workflow_dispatch: # Allows manual 1-click execution anytime
     inputs:
       full_refresh:
@@ -22,7 +29,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Each Central time has a CDT and a CST cron; only the one matching today's Chicago offset syncs.
+  # Uses the cron that fired, not the clock, because GitHub often starts scheduled runs late.
+  check-time:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.tz.outputs.run }}
+    steps:
+      - id: tz
+        env:
+          CRON: ${{ github.event.schedule }}
+        run: |
+          if [ -z "$CRON" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          hour=$(echo "$CRON" | awk '{print $2}')
+          offset=$(TZ=America/Chicago date +%z)
+          case "$hour" in
+            13|16) want=-0500 ;;
+            *)     want=-0600 ;;
+          esac
+          if [ "$offset" = "$want" ]; then echo "run=true" >> "$GITHUB_OUTPUT"
+          else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Skipping: '$CRON' is for Chicago offset $want, today is $offset"; fi
+
   update-hub-data:
+    needs: check-time
+    if: needs.check-time.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository

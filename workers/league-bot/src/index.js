@@ -17,7 +17,7 @@
 //   GET /run?job=alerts|recap|gazette|previews[&dry=1] with header X-Admin-Key: <ADMIN_KEY>  -> run a job by hand
 //       (?key=<ADMIN_KEY> also works, but the key then shows up in Cloudflare's request logs)
 //
-// Settings: LEAGUES and SITE_URL are vars in wrangler.toml. Secrets (wrangler secret put, or the
+// Settings: LEAGUES, SITE_URL and CHAT_POSTING (on/off) are vars in wrangler.toml. Secrets (wrangler secret put, or the
 // dashboard): DISCORD_WEBHOOK_URL and/or GROUPME_BOT_ID, ANTHROPIC_API_KEY (optional), ADMIN_KEY.
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -97,7 +97,7 @@ async function runJob(job, env, dry) {
     try {
       if (job === 'alerts') await tradeAlerts(lg, state, env, say, dry);
       if (job === 'recap') await weeklyRecap(lg, season, Number(state.week), env, say);
-      if (job === 'gazette') notes.push(`${lg.name}: ${await weeklyGazette(lg, season, Number(state.week), env, say, dry)}`);
+      if (job === 'gazette') notes.push(`${lg.name}: ${await weeklyGazette(lg, leagues, season, Number(state.week), env, say, dry)}`);
       if (job === 'previews' && state.season_type === 'regular') await previews(lg, season, Number(state.week), say);
     } catch (e) {
       console.log(`${job} ${lg.name}: ${e.stack || e}`);
@@ -292,7 +292,7 @@ async function weeklyRecap(lg, season, stateWeek, env, say) {
 // A dry run returns the article instead of storing or posting it.
 // Worst case for one league: 4 data requests, 2 Claude attempts and 3 chat posts.
 const GAZETTE_REQUESTS = 9;
-async function weeklyGazette(lg, season, stateWeek, env, say, dry) {
+async function weeklyGazette(lg, leagues, season, stateWeek, env, say, dry) {
   if (!env.ANTHROPIC_API_KEY) return 'skipped, no ANTHROPIC_API_KEY';
   // Marks a league as posted (or being written) for this week, so later slots and overlapping runs skip it
   const postedKey = `gazette-posted:${lg.name}:${season}:${stateWeek}`;
@@ -308,7 +308,9 @@ async function weeklyGazette(lg, season, stateWeek, env, say, dry) {
   let saved = list.find(a => a.week === r.week && a.board === board);
   if (!saved) {
     if (!dry) await env.BOT_KV.put(postedKey, 'writing', { expirationTtl: 1800 });
-    const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard).catch(e => {
+    const angle = GAZETTE_ANGLES[(leagues.indexOf(lg) + r.week) % GAZETTE_ANGLES.length];
+    const earlier = await recentGazettes(env, leagues, lg, season, r.week, list);
+    const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard, angle, earlier).catch(e => {
       console.log(`gazette ${lg.name}: ${e.stack || e}`);
       return null;
     });
@@ -341,7 +343,42 @@ function plainText(md) {
     .trim();
 }
 
-async function writeGazette(env, league, season, week, facts, scoreboard) {
+// Each league gets a different angle each week (a league's index plus the week number, so no two
+// leagues share one in the same week and a league's angle rotates). The angle changes the framing,
+// not the voice.
+const GAZETTE_ANGLES = [
+  'a war correspondent filing a dispatch from the front lines of a massacre',
+  'a nature documentary narrator watching the weak get eaten',
+  'a police blotter and crime-scene report',
+  'the obituary page, with eulogies for the dead rosters',
+  'a courtroom: charges read, evidence presented, sentences handed down',
+  'a trashy celebrity gossip column full of scandal and leaked texts',
+  'an unhinged sports talk radio host taking calls',
+  'a horror movie, with the losers as the idiots who split up',
+  'a hostage negotiation and ransom note',
+  'a doctor delivering terminal diagnoses at an underfunded hospital',
+];
+
+// This week's articles from the other leagues (written earlier in this run or an earlier slot) and
+// this league's last two weeks, so jokes, insults and headlines aren't repeated
+async function recentGazettes(env, leagues, lg, season, week, ownList) {
+  const out = [];
+  for (const other of leagues) {
+    if (other === lg) continue;
+    const list = (await env.BOT_KV.get(gazetteKey(other.name, season), 'json')) || [];
+    const a = list.find(x => x.week === week);
+    if (a) out.push(`${other.name}, week ${week}:\n${a.text}`);
+  }
+  ownList.filter(a => a.week < week && a.week >= week - 2).forEach(a => out.push(`${lg.name}, week ${a.week}:\n${a.text}`));
+  return out;
+}
+
+async function writeGazette(env, league, season, week, facts, scoreboard, angle, earlier) {
+  // Many managers play in several leagues, so a recycled insult lands on the same people twice
+  const avoid = earlier.length
+    ? `\n\nThe same friends read every league's Gazette. These columns already ran; do not reuse their jokes, insults, ` +
+      `comparisons, metaphors, headline structure or punchlines. Every burn here must be new:\n\n${earlier.join('\n\n---\n\n')}`
+    : '';
   // One retry at most, and through counted() so the request budget stays honest
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1, fetch: counted });
   const response = await client.beta.messages.create({
@@ -358,7 +395,8 @@ async function writeGazette(env, league, season, week, facts, scoreboard) {
       'real race, religion, sexuality, gender, disability, appearance, health or family.',
     messages: [{
       role: 'user',
-      content: `League: ${league}\nSeason ${season}, Week ${week}\n\nFinal scores:\n${scoreboard.join('\n')}\n\nWeekly awards:\n${facts.join('\n')}`,
+      content: `League: ${league}\nSeason ${season}, Week ${week}\n\nFinal scores:\n${scoreboard.join('\n')}\n\nWeekly awards:\n${facts.join('\n')}` +
+        `\n\nThis week's angle: write it as ${angle}. Keep the Gazette's voice; the angle is the framing.${avoid}`,
     }],
   });
   if (response.stop_reason === 'refusal') return null;
@@ -413,6 +451,8 @@ async function send(gap, url, body) {
 }
 
 async function post(env, text) {
+  // CHAT_POSTING = "off" in wrangler.toml pauses the chat without stopping the Gazette for the site
+  if (String(env.CHAT_POSTING || 'on').toLowerCase() === 'off') return;
   // Discord and GroupMe each get the message; the first part waits out the gap from the last message
   if (env.DISCORD_WEBHOOK_URL) {
     let gap = MESSAGE_GAP_MS;

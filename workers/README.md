@@ -2,7 +2,7 @@
 
 | Worker | Folder | What it does |
 |---|---|---|
-| League bot | `league-bot/` | Trade alerts every 15 minutes, a weekly recap every Tuesday, matchup previews every Thursday, all posted to Discord and/or GroupMe with about 30 seconds between messages. With an Anthropic API key it also writes the weekly "Dynasty Gazette" article per league, saves it for the Season Review tab and posts it to the chat (Tuesday from 10:30am CT). |
+| League bot | `league-bot/` | Trade alerts every 15 minutes, a weekly recap every Tuesday, matchup previews every Thursday, all posted to Discord and/or GroupMe with about 30 seconds between messages. With an Anthropic API key it also writes the weekly "Dynasty Gazette" article per league, saves it for the Season Review tab and posts it to the chat (Tuesday from 10:30am CT). Set `CHAT_POSTING = "off"` in `league-bot/wrangler.toml` to stop all chat posts while still writing the Gazette for the site. |
 | Live score cache | `live-scores/` | One cached live-score snapshot for every league, refreshed at most once a minute, so each visitor's browser stops calling Sleeper and Fleaflicker on its own. Cloudflare ignores its cache on `workers.dev` addresses, so the worker also keeps the snapshot in memory; moving it to a custom domain would make the shared cache work too. |
 | Award cards | `award-cards/` | Turns any award into a 1200×630 image with a share link whose preview shows the card in group chats. |
 | Fleaflicker proxy | `fleaflicker-proxy/` | The `dawn-pine-2ee2` worker: a CORS proxy so the browser can read Fleaflicker. Now deployed by the workflow like the others, under the same name, so its URL doesn't change. |

@@ -17,6 +17,9 @@ id = "REPLACED_BY_DEPLOY_WORKFLOW"
 
 [vars]
 SITE_URL = "https://605tokenpodcast-ctrl.github.io/dynasty-hub/"
+# "on" posts to GroupMe/Discord; "off" keeps writing the Gazette and recaps for the site (and its
+# Copy for Sleeper buttons) without posting anything to the chat. Turned off 2026-10-27.
+CHAT_POSTING = "off"
 # Names must match the league names on the site (the Gazette is stored under them).
 LEAGUES = '''[
   {"name": "Dante's league", "id": "1312263393003991040", "platform": "sleeper"},

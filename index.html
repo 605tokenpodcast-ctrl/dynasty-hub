@@ -1784,6 +1784,12 @@
             return leagueRulesByName[String(leagueName || '').trim().toLowerCase()] || DEFAULT_LEAGUE_RULES;
         }
 
+        // Leagues marked no_bench in leagues.json start every player, so every lineup is "perfect":
+        // they sit out Coach of the Year and the other lineup awards
+        function hasNoBench(leagueName) {
+            return !!leagueRules(leagueName).no_bench;
+        }
+
         // "League Profile" key/value rows, e.g. League ID, Current Season, Playoff Start Week (written by the syncs)
         const leagueProfileCache = {};
         function leagueProfile(leagueName) {
@@ -2833,10 +2839,12 @@
                 ['Win now', 'Built to last', 'Rebuilding', 'Stuck in the middle']);
         }
 
-        function lineupIqRows(league, season) {
+        // benchOnly leaves out no-bench leagues (for awards and the all-league view)
+        function lineupIqRows(league, season, benchOnly) {
             const rows = {};
             buildHubData().lineups.forEach(l => {
                 if (league !== 'ALL' && l.league !== league) return;
+                if (benchOnly && hasNoBench(l.league)) return;
                 if (season !== 'ALL' && String(l.season) !== String(season)) return;
                 const k = season === 'ALL' ? l.owner : `${l.owner}||${l.league}`;
                 const r = rows[k] = rows[k] || { owner: l.owner, league: season === 'ALL' ? 'All leagues' : l.league, score: 0, optimal: 0, weeks: 0, perfect: 0, mvp: {} };
@@ -2851,7 +2859,7 @@
         }
 
         function renderLineupIQ(league, season) {
-            const rows = lineupIqRows(league, season);
+            const rows = lineupIqRows(league, season, league === 'ALL');
             document.getElementById('lineup-iq').innerHTML = rows.length ? `
                 <table class="w-full text-left text-sm border-collapse">
                     <thead class="bg-slate-900 text-slate-400 text-xs uppercase"><tr>
@@ -3077,7 +3085,7 @@
                 lineups.forEach(l => {
                     const top = [...l.starters].sort((a, b) => b.pts - a.pts)[0];
                     if (top && l.score > 0) A.army.push({ name: l.owner, value: pct1(top.pts / l.score), detail: `${top.name} scored ${top.pts.toFixed(2)} of ${l.score.toFixed(2)} • ${lg}`, sort: top.pts / l.score });
-                    if (l.optimal - l.score < 0.01) A.perfect.push({ name: l.owner, value: `${l.score.toFixed(2)} pts`, detail: `Started the best possible lineup • ${lg}`, sort: l.score });
+                    if (l.optimal - l.score < 0.01 && !hasNoBench(lg)) A.perfect.push({ name: l.owner, value: `${l.score.toFixed(2)} pts`, detail: `Started the best possible lineup • ${lg}`, sort: l.score });
                     const x = scoreOf[l.owner];
                     if (x && x.score < x.oppScore && l.optimal > x.oppScore) A.blunder.push({ name: l.owner, value: `-${(l.optimal - l.score).toFixed(2)}`, detail: `Lost ${x.score.toFixed(2)}–${x.oppScore.toFixed(2)} to ${x.opp}; best lineup was ${l.optimal.toFixed(2)} • ${lg}`, sort: l.optimal - l.score });
                 });
@@ -3158,7 +3166,7 @@
                 }));
                 Object.entries(tc).forEach(([o, x]) => A.baron.push({ name: o, value: `${x.n} trade${x.n > 1 ? 's' : ''}`, detail: `Net value today ${x.net >= 0 ? '+' : ''}${Math.round(x.net).toLocaleString()} • ${lg}`, sort: x.n + x.net / 1e6 }));
                 lineupIqRows(lg, season).filter(r => r.weeks >= 6).forEach(r => {
-                    A.coach.push({ name: r.owner, value: pct1(r.iq), detail: `${r.perfect} perfect week${r.perfect === 1 ? '' : 's'}, ${r.left.toFixed(1)} pts left on bench • ${lg}`, sort: r.iq });
+                    if (!hasNoBench(lg)) A.coach.push({ name: r.owner, value: pct1(r.iq), detail: `${r.perfect} perfect week${r.perfect === 1 ? '' : 's'}, ${r.left.toFixed(1)} pts left on bench • ${lg}`, sort: r.iq });
                     if (r.mvpName) A.mvp.push({ name: r.mvpName, value: `${r.mvpPts.toFixed(1)} pts`, detail: `Started for ${r.owner} • ${pct1(r.mvpPts / (r.score || 1))} of the team's points • ${lg}`, sort: r.mvpPts });
                 });
                 const pk = {};
@@ -3246,7 +3254,7 @@
                 x.n++; x.net += s.value - other; if (s.value > other) x.won++;
             }));
             Object.entries(tc).filter(([, x]) => x.n >= 3).forEach(([o, x]) => A.shark.push({ name: o, value: `${x.net >= 0 ? '+' : ''}${Math.round(x.net).toLocaleString()}`, detail: `Won ${x.won} of ${x.n} trades in hindsight (today's values)`, sort: x.net }));
-            lineupIqRows(league, 'ALL').filter(r => r.weeks >= 20).forEach(r => A.hof.push({ name: r.owner, value: pct1(r.iq), detail: `${r.weeks} weeks • ${r.perfect} perfect • ${r.left.toFixed(0)} pts left on bench`, sort: r.iq }));
+            lineupIqRows(league, 'ALL', true).filter(r => r.weeks >= 20).forEach(r => A.hof.push({ name: r.owner, value: pct1(r.iq), detail: `${r.weeks} weeks • ${r.perfect} perfect • ${r.left.toFixed(0)} pts left on bench`, sort: r.iq }));
             Object.keys(A).forEach(k => A[k].sort((a, b) => b.sort - a.sort));
             Object.keys(A).forEach(k => { A[k] = A[k].slice(0, 15); });
             return A;

@@ -6,6 +6,7 @@
     "playoff_start_week: first playoff week, keyed by the first season it applies to (the latest key <= season wins).",
     "playoff_teams: teams that make the playoffs. third_place_game: false when the league plays no 3rd-place game.",
     "exclude_from_records: true leaves the league out of Hall of Records, Playoff Odds and award tabs.",
+    "no_bench: true for a league with no bench (every rostered player starts): it is left out of Coach of the Year and the other lineup awards.",
     "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league).",
     "ungraded_drafts: season -> reason, for a draft the Draft History tab shows but doesn't grade (e.g. a roster re-entry)."
   ],
@@ -76,6 +77,7 @@
       "platform": "sleeper",
       "id": "1329118060811927552",
       "type": "redraft",
+      "no_bench": true,
       "playoff_start_week": {
         "2015": 15
       },

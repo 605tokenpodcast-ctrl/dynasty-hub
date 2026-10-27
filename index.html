@@ -3581,6 +3581,8 @@
             });
 
             lines.push(...chatSeasonFinishLines());
+            lines.push(...chatHeadToHeadLines());
+            lines.push(...chatAwardLines());
 
             ensureRecordsSnapshot();
             if (recordsSnapshot.length) {
@@ -3618,6 +3620,101 @@
                 });
                 lines.push(`${league}:`);
                 Object.keys(owners).forEach(o => lines.push(`  ${o}: ${owners[o].join(', ')}`));
+            });
+            return lines;
+        }
+
+        // All-time head-to-head for every pair that has played, across all leagues, each pair listed once
+        function chatHeadToHeadLines() {
+            const pairs = {};
+            buildHubData().games.forEach(g => {
+                const [a, b] = [g.t1, g.t2].sort((x, y) => x.localeCompare(y));
+                const [sa, sb] = a === g.t1 ? [g.s1, g.s2] : [g.s2, g.s1];
+                const p = pairs[`${a}||${b}`] = pairs[`${a}||${b}`] || { a, b, w: 0, l: 0, t: 0, pw: 0, pl: 0, leagues: new Set(), last: null };
+                const po = g.playoffCounts;
+                if (sa > sb) { p.w++; if (po) p.pw++; } else if (sa < sb) { p.l++; if (po) p.pl++; } else p.t++;
+                p.leagues.add(g.league);
+                const key = g.season * 100 + g.weekNum;
+                if (!p.last || key > p.last.key) p.last = { key, season: g.season };
+            });
+            const byOwner = {};
+            Object.values(pairs).forEach(p => (byOwner[p.a] = byOwner[p.a] || []).push(p));
+            const owners = Object.keys(byOwner).sort((x, y) => x.localeCompare(y));
+            if (!owners.length) return [];
+            const lines = ['## All-time head-to-head (every league combined, playoffs included)',
+                'Each line is the first manager\'s record against each opponent, so flip it for the other side. "PO" = playoff games (also counted in the total). "last" = season they last met.'];
+            owners.forEach(o => {
+                lines.push(`${o}: ` + byOwner[o].sort((x, y) => (y.w + y.l + y.t) - (x.w + x.l + x.t)).map(p =>
+                    `vs ${p.b} ${p.w}-${p.l}${p.t ? '-' + p.t : ''}${p.pw + p.pl ? ` (PO ${p.pw}-${p.pl})` : ''} last ${p.last.season}${p.leagues.size > 1 ? ` [${p.leagues.size} leagues]` : ''}`).join('; '));
+            });
+            return lines;
+        }
+
+        // Award winners from the Awards tab, good and bad: career (all leagues and per league),
+        // every season's annual awards, and this season's weekly awards. Labels are short and
+        // explained once, and details drop the league name, to keep the context small.
+        function chatAwardLines() {
+            const detail = x => String(x.detail || '').replace(/\s*•\s*[^•]*$/, '').trim();
+            const fmt = (e, n, withDetail) => e.slice(0, n).map(x => `${x.name} ${x.value}${withDetail && detail(x) ? ` (${detail(x)})` : ''}`).join(' | ');
+            const pick = (A, defs, n) => defs.map(([k, label, withDetail]) => A[k] && A[k].length ? `${label}: ${fmt(A[k], n, withDetail)}` : null).filter(Boolean);
+            const career = [['elo', 'Elo'], ['rings', 'Ring Rate', true], ['ice', 'Ice Veins'], ['allplay', 'All-Play'],
+                ['sackos', 'Sacko Collector', true], ['cursed', 'Cursed Career'], ['iron', 'Iron Man'], ['shark', 'Trade Shark', true], ['hof', 'HOF Coach']];
+            const annual = [['fraud', 'Fraud', true], ['cinderella', 'Cinderella'], ['cursed', 'Cursed'], ['improved', 'Improved', true],
+                ['average', 'Mr. Average'], ['baron', 'Trade Baron', true], ['coach', 'Coach'], ['mvp', 'MVP', true], ['wizard', 'Waiver Wizard', true], ['spender', 'Big Spender']];
+            const weekly = [['belt', 'Belt', true], ['toilet', 'Toilet', true], ['robbed', 'Robbed', true], ['lucky', 'Lucky', true],
+                ['upset', 'Upset'], ['army', 'Army', true], ['blunder', 'Blunder', true], ['hero', 'Waiver Hero', true]];
+
+            const hub = buildHubData();
+            const leagues = [...new Set(Object.values(hub.seasons).map(s => s.league))].sort();
+            const lines = ['## Awards (same as the site\'s Awards tab; the bad ones count too)',
+                'Career: Elo = current all-time Elo rating; Ring Rate = titles per finished season; Ice Veins = playoff win% minus regular-season win%; All-Play = win% vs every team every week; Sacko Collector = most last places; Cursed Career = most points against; Iron Man = most seasons; Trade Shark = best hindsight trade value at today\'s values (negative = got fleeced); HOF Coach = best career Lineup IQ (actual / best possible points).',
+                'Season: Fraud = #1 seed that lost its first playoff game; Cinderella = champion from the lowest seed; Cursed = most points against; Improved = biggest jump in win%; Mr. Average = closest to .500 and median points; Trade Baron = most trades (net value today); Coach = best Lineup IQ; MVP = most starting points by one player for one team; Waiver Wizard = most starting points from pickups; Big Spender = most FAAB. Last place is in the season finishes above.',
+                'Weekly: Belt = top score; Toilet = lowest score; Robbed = 2nd-best score and still lost; Lucky = won with a bottom-3 score; Upset = beat a team averaging more; Army = biggest share of a team score from one player; Blunder = lost, but the best lineup on the bench would have won; Waiver Hero = best game from a pickup.',
+                '### Career, all leagues (top 3)', ...pick(careerAwards('ALL'), career, 3)];
+            leagues.forEach(lg => {
+                lines.push(`### ${lg}`, 'Career (top 2): ' + pick(careerAwards(lg), career, 2).join(' || '));
+                const seasons = Object.values(hub.seasons).filter(s => s.league === lg && s.season).map(s => s.season).sort((a, b) => a - b);
+                seasons.forEach(season => {
+                    const a = pick(annualAwards(lg, season), annual, 1);
+                    if (a.length) lines.push(`${season}${seasonOf(lg, season).complete ? '' : ' (in progress)'}: ${a.join(' || ')}`);
+                });
+                const current = seasons[seasons.length - 1];
+                const weeks = [...new Set(hub.games.filter(g => g.league === lg && g.season === current).map(g => g.weekNum))].sort((a, b) => a - b);
+                weeks.forEach(w => {
+                    const a = pick(weeklyAwards(lg, current, w), weekly, 1);
+                    if (a.length) lines.push(`${current} wk ${w}: ${a.join(' || ')}`);
+                });
+            });
+            return lines;
+        }
+
+        // Next week's pairings with this season's records and the all-time series (in that league and overall)
+        function chatNextWeekLines(liveWeek) {
+            if (!matchupGames) buildMatchupGames();
+            const season = matchupCurrentSeason();
+            if (!season) return [];
+            const upcoming = matchupGames.filter(g => g.season === season && !g.played && g.week > liveWeek);
+            if (!upcoming.length) return [`## Next week: no more scheduled matchups in the ${season} data.`];
+            const nextWeek = Math.min(...upcoming.map(g => g.week));
+            const records = {};
+            matchupGames.filter(g => g.season === season && isFinal(g) && g.week < playoffStartWeek(g.league, season)).forEach(g => {
+                [[g.o1, g.s1, g.s2], [g.o2, g.s2, g.s1]].forEach(([o, s, a]) => {
+                    const r = records[`${g.league}|${o}`] = records[`${g.league}|${o}`] || { w: 0, l: 0, t: 0 };
+                    if (s > a) r.w++; else if (s < a) r.l++; else r.t++;
+                });
+            });
+            const rec = (lg, o) => fmtRecord(records[`${lg}|${o}`] || { w: 0, l: 0, t: 0 });
+            const lines = [`## ${liveWeek ? "Next week's" : 'Upcoming'} matchups (${season} week ${nextWeek}; records are this regular season, H2H is all-time from the first manager's side)`];
+            const byLeague = {};
+            upcoming.filter(g => g.week === nextWeek).forEach(g => (byLeague[g.league] = byLeague[g.league] || []).push(g));
+            Object.keys(byLeague).sort().forEach(lg => {
+                lines.push(`${lg}:`);
+                byLeague[lg].forEach(g => {
+                    const here = headToHead(g.o1, g.o2, lg), all = headToHead(g.o1, g.o2);
+                    const series = here.w + here.l + here.t ? `H2H in this league ${fmtRecord(here)}` : 'first meeting in this league';
+                    const overall = all.w + all.l + all.t > here.w + here.l + here.t ? `, all leagues ${fmtRecord(all)}` : '';
+                    lines.push(`  ${g.o1} (${rec(lg, g.o1)}) vs ${g.o2} (${rec(lg, g.o2)}): ${series}${overall}`);
+                });
             });
             return lines;
         }
@@ -3758,6 +3855,7 @@
         async function buildChatContext() {
             if (Date.now() - chatContextCache.ts < 10 * 60 * 1000 && chatContextCache.text) return chatContextCache.text;
             const parts = [`Today: ${new Date().toDateString()}`, buildStaticSummary()];
+            let liveWeek = 0;
 
             try {
                 const state = await chatFetchJson('https://api.sleeper.app/v1/state/nfl');
@@ -3776,9 +3874,13 @@
                     parts.push(r.status === 'fulfilled' ? r.value : `## ${live[i].name}: live data failed to load`);
                 });
                 if (noFeed.length) parts.push(`No live matchup feed for: ${noFeed.join(', ')} (history and records only).`);
+                liveWeek = week;
             } catch (e) {
                 parts.push(`Live Sleeper data was unavailable (${e.message}). Say so if asked about this week's matchups or injuries.`);
             }
+            try {
+                parts.push(chatNextWeekLines(liveWeek).join('\n'));
+            } catch (e) {}
 
             chatContextCache = { ts: Date.now(), text: parts.join('\n\n') };
             return chatContextCache.text;

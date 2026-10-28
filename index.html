@@ -206,12 +206,18 @@
                 <div id="tab-power" class="hidden space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold">📈 True Dynasty Power Rankings (Roster + Picks)</h2>
-                            <p class="text-slate-400 text-sm">Combining live KeepTradeCut player values with future draft pick capital for every team.</p>
+                            <h2 id="power-title" class="text-2xl font-bold">📈 Weekly Power Rankings</h2>
+                            <p id="power-subtitle" class="text-slate-400 text-sm">Who is actually the best team right now: all-play record, scoring, recent form, record and roster value.</p>
                         </div>
-                        <select id="power-league-selector" onchange="renderPowerRankings()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
-                            <option value="ALL">All Leagues Combined (Empire Ranking)</option>
-                        </select>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <select id="power-mode" onchange="onPowerModeChange()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                                <option value="weekly">This Week's Power Rankings</option>
+                                <option value="value">Dynasty Value (Roster + Picks)</option>
+                            </select>
+                            <select id="power-league-selector" onchange="renderPowerRankings()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                                <option value="ALL">All Leagues</option>
+                            </select>
+                        </div>
                     </div>
                     <div id="power-rankings-container" class="space-y-4"></div>
                 </div>
@@ -523,16 +529,16 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                         <div>
                             <h2 class="text-2xl font-bold">🏈 Weekly Matchup Center</h2>
-                            <p class="text-slate-400 text-sm">Every matchup a manager has this week across all leagues, with records, head-to-head history and win odds.</p>
+                            <p class="text-slate-400 text-sm">Every matchup a manager has this week across all leagues, with records, head-to-head history and win odds. Pick 🔥 Nail-Biters to see every game in every league, closest first.</p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                             <div class="space-y-1 flex-1 sm:flex-none">
                                 <label class="text-xs text-slate-400 font-semibold">Manager</label>
                                 <select id="matchups-owner" onchange="renderMatchups()" class="w-full sm:w-56 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
                             </div>
-                            <div class="space-y-1">
+                            <div class="space-y-1 flex-1 sm:flex-none">
                                 <label class="text-xs text-slate-400 font-semibold">Week</label>
-                                <select id="matchups-week" onchange="renderMatchups()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                                <select id="matchups-week" onchange="renderMatchups()" class="w-full sm:w-auto bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
                             </div>
                         </div>
                     </div>
@@ -1280,10 +1286,31 @@
             });
         }
 
-        // --- TAB 2: TRUE KTC POWER RANKINGS ---
+        // --- TAB 2: POWER RANKINGS ---
+        // Two views: weekly power (on-field form + roster value, per league) and the dynasty value ranking
+        function onPowerModeChange() {
+            chatStore('powerMode', document.getElementById('power-mode').value);
+            renderPowerRankings();
+        }
+
         function renderPowerRankings() {
-            const selectedLeague = document.getElementById('power-league-selector').value;
-            const container = document.getElementById('power-rankings-container');
+            const modeSel = document.getElementById('power-mode');
+            if (!renderPowerRankings.modeLoaded) {
+                renderPowerRankings.modeLoaded = true;
+                const saved = chatStore('powerMode');
+                if (saved === 'weekly' || saved === 'value') modeSel.value = saved;
+            }
+            const weekly = modeSel.value === 'weekly';
+            document.getElementById('power-title').innerText = weekly ? '📈 Weekly Power Rankings' : '📈 True Dynasty Power Rankings (Roster + Picks)';
+            document.getElementById('power-subtitle').innerText = weekly
+                ? 'Who is actually the best team right now: all-play record, scoring, recent form, record and roster value.'
+                : 'Combining live KeepTradeCut player values with future draft pick capital for every team.';
+            if (weekly) renderWeeklyPower();
+            else renderValueRankings();
+        }
+
+        // Roster + pick value for every team in one league, or every league for 'ALL'
+        function collectValueTeams(selectedLeague) {
             const teams = [];
 
             Object.keys(globalMasterData).forEach(leagueName => {
@@ -1328,7 +1355,13 @@
                     });
                 });
             });
+            return teams;
+        }
 
+        function renderValueRankings() {
+            const selectedLeague = document.getElementById('power-league-selector').value;
+            const container = document.getElementById('power-rankings-container');
+            const teams = collectValueTeams(selectedLeague);
             teams.sort((a, b) => b.totalValue - a.totalValue);
             const maxVal = teams.length > 0 ? teams[0].totalValue : 1;
 
@@ -1363,6 +1396,177 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // Weekly power score, 0-100: each part is scaled within the league (best team = 1, worst = 0)
+        const POWER_WEIGHTS = { allPlay: 0.30, ppg: 0.20, recent: 0.15, winPct: 0.15, value: 0.20 };
+        const POWER_RECENT_WEEKS = 3;
+
+        // Standings and power score for one league from its finished regular-season games through `throughWeek`
+        function computeWeeklyPower(league, season, throughWeek, valueByOwner) {
+            const regularEnd = playoffStartWeek(league, season);
+            const all = matchupGames.filter(g => g.league === league && g.season === season && g.week < regularEnd);
+            const played = all.filter(g => isFinal(g) && g.week <= throughWeek);
+            const owners = [...new Set(all.flatMap(g => [g.o1, g.o2]))].filter(Boolean);
+            if (!owners.length || !played.length) return null;
+
+            const t = {};
+            owners.forEach(o => { t[o] = { owner: o, team: '', w: 0, l: 0, t: 0, pf: 0, games: 0, apW: 0, apG: 0, recW: 0, recG: 0, results: [] }; });
+            const byWeek = {};
+            played.sort((a, b) => a.week - b.week).forEach(g => {
+                (byWeek[g.week] = byWeek[g.week] || []).push([g.o1, g.s1], [g.o2, g.s2]);
+                [[g.o1, g.team1, g.s1, g.s2], [g.o2, g.team2, g.s2, g.s1]].forEach(([o, team, pf, pa]) => {
+                    const r = t[o];
+                    if (!r) return;
+                    r.team = team;
+                    r.pf += pf;
+                    r.games++;
+                    const res = pf > pa ? 'W' : pf < pa ? 'L' : 'T';
+                    r[res.toLowerCase()]++;
+                    r.results.push(res);
+                });
+            });
+            const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
+            const recentFrom = weeks[Math.max(0, weeks.length - POWER_RECENT_WEEKS)];
+            weeks.forEach(w => {
+                const scores = byWeek[w];
+                scores.forEach(([o, pts]) => {
+                    const r = t[o];
+                    if (!r) return;
+                    let wins = 0;
+                    scores.forEach(([o2, p2]) => { if (o2 !== o) wins += pts > p2 ? 1 : pts === p2 ? 0.5 : 0; });
+                    r.apW += wins;
+                    r.apG += scores.length - 1;
+                    if (w >= recentFrom) { r.recW += wins; r.recG += scores.length - 1; }
+                });
+            });
+
+            const rows = Object.values(t).filter(r => r.games);
+            rows.forEach(r => {
+                r.allPlay = r.apG ? r.apW / r.apG : 0;
+                r.recent = r.recG ? r.recW / r.recG : 0;
+                r.ppg = r.pf / r.games;
+                r.winPct = (r.w + r.t / 2) / r.games;
+                r.value = valueByOwner[r.owner] || 0;
+                const last = r.results[r.results.length - 1];
+                let n = 0;
+                for (let i = r.results.length - 1; i >= 0 && r.results[i] === last; i--) n++;
+                r.streak = last ? `${last}${n}` : '';
+            });
+            const scale = key => {
+                const vals = rows.map(r => r[key]);
+                const lo = Math.min(...vals), hi = Math.max(...vals);
+                rows.forEach(r => { r[key + 'N'] = hi > lo ? (r[key] - lo) / (hi - lo) : 0.5; });
+            };
+            const hasValue = rows.some(r => r.value > 0);
+            const weights = { ...POWER_WEIGHTS };
+            if (!hasValue) delete weights.value; // no values for this league: share its weight among the rest
+            const totalW = Object.values(weights).reduce((a, b) => a + b, 0);
+            Object.keys(weights).forEach(scale);
+            rows.forEach(r => {
+                r.score = 100 * Object.keys(weights).reduce((sum, k) => sum + weights[k] * r[k + 'N'], 0) / totalW;
+            });
+            rows.sort((a, b) => b.score - a.score || b.allPlay - a.allPlay || b.pf - a.pf);
+            rows.forEach((r, i) => { r.rank = i + 1; });
+            return { rows, week: weeks[weeks.length - 1], weeks, hasValue };
+        }
+
+        function weeklyPowerFor(league) {
+            const season = String(leagueCurrentSeason(league));
+            const valueByOwner = {};
+            collectValueTeams(league).forEach(v => { valueByOwner[v.owner] = (valueByOwner[v.owner] || 0) + v.totalValue; });
+            const now = computeWeeklyPower(league, season, LAST_PLAYOFF_WEEK, valueByOwner);
+            if (!now) return { league, season, now: null };
+            // Same formula through the week before, for the movement arrows (roster value is today's in both)
+            const prevWeek = now.weeks.length > 1 ? now.weeks[now.weeks.length - 2] : 0;
+            const prev = prevWeek ? computeWeeklyPower(league, season, prevWeek, valueByOwner) : null;
+            const prevRank = {};
+            if (prev) prev.rows.forEach(r => { prevRank[r.owner] = r.rank; });
+            now.rows.forEach(r => { r.move = prevRank[r.owner] ? prevRank[r.owner] - r.rank : null; });
+            return { league, season, now, hasPrev: !!prev };
+        }
+
+        function powerMoveHtml(move, hasPrev) {
+            if (!hasPrev || move === null) return '<span class="text-slate-500 text-xs font-bold w-8 text-center">—</span>';
+            if (move > 0) return `<span class="text-emerald-400 text-xs font-bold w-8 text-center">▲${move}</span>`;
+            if (move < 0) return `<span class="text-rose-400 text-xs font-bold w-8 text-center">▼${-move}</span>`;
+            return '<span class="text-slate-500 text-xs font-bold w-8 text-center">•</span>';
+        }
+
+        let weeklyPowerCache = {};
+        function renderWeeklyPower() {
+            const selectedLeague = document.getElementById('power-league-selector').value;
+            const container = document.getElementById('power-rankings-container');
+            if (!matchupGames) buildMatchupGames();
+            // A live week isn't final; the NFL state tells isFinal which week is still being played
+            if (!matchupLiveState && !renderWeeklyPower.stateAsked) {
+                renderWeeklyPower.stateAsked = true;
+                chatFetchJson('https://api.sleeper.app/v1/state/nfl').then(state => {
+                    matchupLiveState = state;
+                    if (currentActiveTab === 'power' && document.getElementById('power-mode').value === 'weekly') renderWeeklyPower();
+                }).catch(() => {});
+            }
+
+            const leagues = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]))
+                .filter(l => selectedLeague === 'ALL' || l === selectedLeague);
+            const results = leagues.map(weeklyPowerFor);
+            weeklyPowerCache = {};
+            results.forEach(r => { weeklyPowerCache[r.league] = r; });
+            const shown = results.filter(r => r.now);
+            const skipped = results.filter(r => !r.now).map(r => r.league);
+
+            const sections = shown.map(({ league, season, now, hasPrev }) => {
+                const max = now.rows.length;
+                const list = now.rows.map(r => {
+                    const ap = `${Math.round(r.apW)}-${Math.round(r.apG - r.apW)}`;
+                    const streakCls = r.streak.startsWith('W') ? 'text-emerald-300' : r.streak.startsWith('L') ? 'text-rose-300' : 'text-slate-300';
+                    const valueTxt = now.hasValue ? ` · Value ${Math.round(r.value / 1000)}k` : '';
+                    return `
+                        <div class="flex items-center gap-2 py-2 border-b border-slate-800 last:border-0">
+                            <span class="w-7 text-center font-extrabold ${r.rank <= 3 ? 'text-accent' : 'text-slate-300'}">${r.rank}</span>
+                            ${powerMoveHtml(r.move, hasPrev)}
+                            <div class="min-w-0 flex-1">
+                                <p class="font-bold text-white truncate">${escHtml(r.owner)}</p>
+                                <p class="text-[11px] text-slate-400 leading-snug">${fmtRecord(r)} · All-play ${ap} · ${r.ppg.toFixed(1)} ppg · <span class="${streakCls}">${escHtml(r.streak)}</span>${valueTxt}</p>
+                            </div>
+                            <div class="w-16 shrink-0 text-right">
+                                <p class="text-lg font-extrabold text-emerald-400 leading-none">${r.score.toFixed(0)}</p>
+                                <div class="mt-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${r.score.toFixed(1)}%"></div></div>
+                            </div>
+                        </div>`;
+                }).join('');
+                return `
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-5 shadow-sm space-y-2">
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="min-w-0">
+                                <h3 class="font-bold text-white truncate">${escHtml(league)}</h3>
+                                <p class="text-xs text-slate-400">${escHtml(season)} · after week ${now.week} · ${max} teams</p>
+                            </div>
+                            <button onclick="copyWeeklyPower(this)" data-league="${escHtml(league)}" class="shrink-0 bg-slate-900 border border-slate-700 hover:border-accent rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-200">📋 Copy</button>
+                        </div>
+                        <div>${list}</div>
+                    </div>`;
+            });
+
+            const pctW = k => Math.round(POWER_WEIGHTS[k] * 100);
+            const note = `<p class="text-xs text-slate-500">Power score (0-100): all-play win % ${pctW('allPlay')}%, points per game ${pctW('ppg')}%, last ${POWER_RECENT_WEEKS} weeks' all-play ${pctW('recent')}%, win % ${pctW('winPct')}%, roster value ${pctW('value')}%. Each part is scaled within the league, so the best team in a category gets full marks. Arrows compare with the same rankings one week earlier. Regular season games only.${skipped.length ? ` No head-to-head games yet this season: ${skipped.map(escHtml).join(', ')}.` : ''}</p>`;
+            container.innerHTML = (sections.length ? `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${sections.join('')}</div>` : '<p class="text-sm text-slate-400">No games have been played yet this season.</p>') + note;
+        }
+
+        // Plain-text rankings for pasting into Sleeper or reading on the podcast
+        function copyWeeklyPower(btn) {
+            const res = weeklyPowerCache[btn.dataset.league];
+            if (!res || !res.now) return;
+            const lines = [`${res.league} Power Rankings, ${res.season} after week ${res.now.week}`];
+            res.now.rows.forEach(r => {
+                const move = !res.hasPrev || r.move === null ? '' : r.move > 0 ? ` (up ${r.move})` : r.move < 0 ? ` (down ${-r.move})` : ' (same)';
+                lines.push(`${r.rank}. ${r.owner}${move}, ${fmtRecord(r)}, all-play ${Math.round(r.apW)}-${Math.round(r.apG - r.apW)}, ${r.ppg.toFixed(1)} ppg, power ${r.score.toFixed(0)}`);
+            });
+            navigator.clipboard.writeText(lines.join('\n')).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = '✅ Copied';
+                setTimeout(() => { btn.innerText = orig; }, 1500);
+            }).catch(() => {});
         }
 
         // --- TAB 3: UNIFIED MANAGERS ---
@@ -4902,9 +5106,10 @@
 
             const ownerSel = document.getElementById('matchups-owner');
             ownerSel.innerHTML = '';
+            ownerSel.appendChild(new Option('🔥 Nail-Biters (all leagues)', NAIL_BITERS));
             sorted.forEach(o => ownerSel.appendChild(new Option(o, o)));
             const saved = chatStore('matchupsOwner');
-            const pick = [ownerParam, saved, 'Smokers Haven'].find(o => o && sorted.includes(o));
+            const pick = [ownerParam, saved, 'Smokers Haven'].find(o => o && (o === NAIL_BITERS || sorted.includes(o)));
             if (pick) ownerSel.value = pick;
 
             populateMatchupWeeks(season);
@@ -5153,6 +5358,113 @@
             switchTab('h2h');
         }
 
+        // --- Nail-Biters: every game in every league this week, closest first ---
+        const NAIL_BITERS = '__nailbiters__';
+        const NAIL_MARGIN = 5;          // a final decided by less than this is a nail-biter
+        const NAIL_ODDS = [0.4, 0.6];   // a live game with odds in this range is a nail-biter
+        const TOSSUP_ODDS = [0.45, 0.55]; // an upcoming game this even is a toss-up (pre-game odds are rarely lopsided)
+
+        function renderNailBiters(season, week, fromLive) {
+            const grid = document.getElementById('matchups-grid');
+            const summary = document.getElementById('matchups-summary');
+            const games = matchupGames.filter(g => g.season === season && g.week === week);
+            if (!games.length) {
+                summary.innerHTML = '';
+                grid.innerHTML = `<p class="text-sm text-slate-400">No games found in week ${week}.</p>`;
+                document.getElementById('matchups-footnote').innerText = '';
+                return;
+            }
+
+            const items = games.map(g => {
+                const final = isFinal(g);
+                const liveWeek = isLiveWeek(g.season, g.week);
+                const sides = liveWeek ? ((matchupLiveCache[`${g.leagueId}|${g.week}`] || {}).sides || {}) : {};
+                const l1 = sides[g.o1], l2 = sides[g.o2];
+                const p1s = l1 ? l1.points : g.s1, p2s = l2 ? l2.points : g.s2;
+                let p1 = null, status, oddsLabel = '', closeness;
+                if (final) {
+                    status = 'Final';
+                    closeness = Math.abs(g.s1 - g.s2);
+                } else {
+                    const { table, allScores } = seasonTable(g.league, season);
+                    const m1 = scoreModel(table[g.o1], allScores), m2 = scoreModel(table[g.o2], allScores);
+                    let mu = m1.mean - m2.mean, sigma = Math.hypot(m1.sd, m2.sd);
+                    oddsLabel = 'Season model';
+                    if (l1 && l2 && l1.hasProj && l2.hasProj) {
+                        mu = l1.projected - l2.projected;
+                        sigma = Math.hypot(l1.sd, l2.sd);
+                        oddsLabel = 'Live projection';
+                    }
+                    p1 = sigma < 0.5 ? (mu > 0 ? 1 : mu < 0 ? 0 : 0.5) : normalCdf(mu / sigma);
+                    status = p1s > 0 || p2s > 0 ? 'Live' : 'Upcoming';
+                    closeness = Math.abs(p1 - 0.5);
+                }
+                const nail = final ? closeness < NAIL_MARGIN : status === 'Live' && p1 >= NAIL_ODDS[0] && p1 <= NAIL_ODDS[1];
+                const tossup = status === 'Upcoming' && p1 >= TOSSUP_ODDS[0] && p1 <= TOSSUP_ODDS[1];
+                return { g, final, status, p1, oddsLabel, closeness, nail, tossup, l1, l2, p1s, p2s };
+            });
+            const group = { Live: 0, Upcoming: 1, Final: 2 };
+            items.sort((a, b) => group[a.status] - group[b.status] || a.closeness - b.closeness);
+
+            const cards = items.map(it => {
+                const { g } = it;
+                const badgeCls = it.status === 'Live' ? 'bg-amber-500 text-slate-900' : it.status === 'Final' ? 'bg-slate-600 text-white' : 'bg-slate-700 text-slate-200';
+                const won1 = it.final && g.s1 > g.s2, won2 = it.final && g.s2 > g.s1;
+                const side = (owner, team, pts, live, won, right) => `
+                    <div class="min-w-0 ${right ? 'text-right' : 'text-left'}">
+                        <p class="font-bold truncate ${won ? 'text-emerald-300' : 'text-white'}">${escHtml(owner)}</p>
+                        <p class="text-[11px] text-slate-400 truncate">${escHtml(team)}</p>
+                        <p class="text-2xl font-extrabold ${it.final || pts > 0 ? 'text-white' : 'text-slate-600'}">${it.final || pts > 0 ? pts.toFixed(2) : '—'}</p>
+                        ${!it.final && live && live.hasProj ? `<p class="text-[11px] text-sky-300">Proj ${live.projected.toFixed(1)}${live.left ? ` · ${live.left} left` : ''}</p>` : ''}
+                    </div>`;
+                const odds = it.p1 === null ? `<p class="text-xs text-slate-300 text-center">Decided by <strong class="text-white">${it.closeness.toFixed(2)}</strong> pts</p>` : `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-accent">${Math.round(it.p1 * 100)}%</span>
+                            <span class="text-slate-500">${it.oddsLabel}</span>
+                            <span class="text-slate-300">${Math.round((1 - it.p1) * 100)}%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-slate-700 overflow-hidden"><div class="h-full bg-accent" style="width:${(it.p1 * 100).toFixed(1)}%"></div></div>
+                    </div>`;
+                return `
+                    <div class="bg-cardbg border ${it.nail ? 'border-amber-500/60' : it.tossup ? 'border-sky-500/40' : 'border-slate-700'} rounded-xl p-4 shadow-sm space-y-3">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-sm font-semibold text-accent truncate">${escHtml(g.league)}</span>
+                            <span class="flex items-center gap-1.5 shrink-0">${it.nail ? '<span class="text-[10px] font-bold text-amber-300">🔥 NAIL-BITER</span>' : it.tossup ? '<span class="text-[10px] font-bold text-sky-300">⚖️ TOSS-UP</span>' : ''}<span class="${badgeCls} text-[10px] font-bold px-2 py-0.5 rounded">${it.status.toUpperCase()}</span></span>
+                        </div>
+                        <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
+                            ${side(g.o1, g.team1, it.p1s, it.l1, won1, false)}
+                            <div class="text-slate-500 font-bold text-sm pt-6">VS</div>
+                            ${side(g.o2, g.team2, it.p2s, it.l2, won2, true)}
+                        </div>
+                        ${odds}
+                        <div class="flex justify-end text-xs"><button onclick="openH2HFrom(this)" data-a="${escHtml(g.o1)}" data-b="${escHtml(g.o2)}" class="text-accent hover:underline font-semibold">Full H2H →</button></div>
+                    </div>`;
+            });
+
+            const leagueCount = new Set(games.map(g => g.league)).size;
+            const nails = items.filter(it => it.nail).length;
+            const tossups = items.filter(it => it.tossup).length;
+            const anyLive = items.some(it => it.status === 'Live');
+            summary.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300">Week ${week}: <strong class="text-white">${games.length}</strong> games across <strong class="text-white">${leagueCount}</strong> leagues · <strong class="text-amber-300">${nails}</strong> nail-biter${nails === 1 ? '' : 's'}${tossups ? ` · <strong class="text-sky-300">${tossups}</strong> toss-up${tossups === 1 ? '' : 's'}` : ''}, closest first${anyLive ? ' <span class="text-amber-400 font-semibold">· live</span>' : ''}</div>`;
+            grid.innerHTML = cards.join('');
+
+            const liveWeek = isLiveWeek(season, week);
+            document.getElementById('matchups-footnote').innerText = `Live games come first, then upcoming, then finals. Open games are sorted by how close the win odds are to 50/50, finals by the final margin. Nail-biter = a live game with odds between ${NAIL_ODDS[0] * 100}% and ${NAIL_ODDS[1] * 100}%, or a final decided by under ${NAIL_MARGIN} points. Toss-up = an upcoming game with odds between ${TOSSUP_ODDS[0] * 100}% and ${TOSSUP_ODDS[1] * 100}%.${liveWeek ? ' Live scores refresh every 60 seconds.' : ''}`;
+            scheduleMatchupRefresh(games, liveWeek, fromLive);
+        }
+
+        function scheduleMatchupRefresh(games, liveWeek, fromLive) {
+            if (fromLive) return;
+            stopMatchupRefresh();
+            if (!liveWeek) return;
+            refreshMatchupLive(games);
+            matchupRefreshTimer = setInterval(() => {
+                if (currentActiveTab !== 'matchups' || document.hidden) return;
+                refreshMatchupLive(games);
+            }, MATCHUP_LIVE_TTL);
+        }
+
         function renderMatchups(fromLive = false) {
             if (!matchupGames) return;
             const owner = document.getElementById('matchups-owner').value;
@@ -5162,6 +5474,7 @@
             const summary = document.getElementById('matchups-summary');
             chatStore('matchupsOwner', owner);
             if (!fromLive) updateUrlParams();
+            if (owner === NAIL_BITERS) return renderNailBiters(season, week, fromLive);
 
             const games = matchupGames.filter(g => g.season === season && g.week === week && (g.o1 === owner || g.o2 === owner));
             if (!games.length) {
@@ -5293,16 +5606,7 @@
                 ? `Live scores and projections refresh every 60 seconds: Sleeper leagues use Sleeper projections (a starter still on 0 points counts as yet to play)${FLEA_PROXY ? ', Fleaflicker leagues use Fleaflicker\'s own projections and players-left counts' : ''}. Records and odds use completed games only.`
                 : 'Win odds come from each team\'s scoring this season, blended toward the league average. Records and head-to-head use completed games only.';
 
-            if (!fromLive) {
-                stopMatchupRefresh();
-                if (liveWeek) {
-                    refreshMatchupLive(games);
-                    matchupRefreshTimer = setInterval(() => {
-                        if (currentActiveTab !== 'matchups' || document.hidden) return;
-                        refreshMatchupLive(games);
-                    }, MATCHUP_LIVE_TTL);
-                }
-            }
+            scheduleMatchupRefresh(games, liveWeek, fromLive);
         }
 
         // --- TAB: PLAYOFF ODDS SIMULATOR ---

@@ -2608,6 +2608,21 @@
     }
    }
   },
+  "Branden's League||2026||11/1/2026||Vanilla Gorilla (andylang1031) received: [Cam Skattebo (RB), Omar Cooper (WR), 2028 Round 3rd Pick (originally from Leno'S Team (Leno)), 2029 Round 3rd Pick (originally from Leno'S Team (Leno))] <---> Leno'S Team (Leno) received: [2028 Round 1st Pick (originally from Vanilla Gorilla (andylang1031)), 2028 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031)), 2029 Round 1st Pick (originally from Vanilla Gorilla (andylang1031)), 2029 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031))]": {
+   "trade_day": {
+    "as_of": "2026-11-01",
+    "values": {
+     "Cam Skattebo (RB)": 1938,
+     "Omar Cooper (WR)": 1183,
+     "2028 Round 3rd Pick (originally from Leno'S Team (Leno))": 32,
+     "2029 Round 3rd Pick (originally from Leno'S Team (Leno))": 32,
+     "2028 Round 1st Pick (originally from Vanilla Gorilla (andylang1031))": 1512,
+     "2028 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031))": 176,
+     "2029 Round 1st Pick (originally from Vanilla Gorilla (andylang1031))": 1512,
+     "2029 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031))": 176
+    }
+   }
+  },
   "Branden's League||2026||4/26/2026||Smokers Haven (SmokersHaven) received: [Kenneth Walker (RB)] <---> Leno'S Team (Leno) received: [2026 Round 1st Pick (originally from Fish's Team (DERRICKFISH)) -> Resulted in drafting: Jonah Coleman (RB), 2028 Round 2nd Pick (originally from Smokers Haven (SmokersHaven))]": {
    "trade_day": {
     "as_of": "2026-02-27",

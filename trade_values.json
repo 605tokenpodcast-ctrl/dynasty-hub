@@ -2284,6 +2284,15 @@
      "2025 Round 3rd Pick -> Resulted in drafting: Kyle Williams (WR)": 35,
      "Deshaun Watson (QB)": 424
     }
+   },
+   "grade": {
+    "mark": "2026-11-03",
+    "as_of": "2026-11-03",
+    "values": {
+     "2024 Round 3rd Pick -> Resulted in drafting: Will Shipley (RB)": 5,
+     "2025 Round 3rd Pick -> Resulted in drafting: Kyle Williams (WR)": 58,
+     "Deshaun Watson (QB)": 64
+    }
    }
   },
   "Branden's League||2023||12/11/2023||Smokers Haven (SmokersHaven) received: [Jordan Love (QB)] <---> Jarvis's Team (Jarvis1983) received: [2024 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Trey Benson (RB)]": {
@@ -2440,14 +2449,14 @@
     }
    }
   },
-  "Branden's League||2024||10/1/2024||Smokers Haven (SmokersHaven) received: [Ezekiel Elliott (RB), T.J. Hockenson (TE), 2025 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Kyle Williams (WR), 2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jaydon Blue (RB), 2026 Round 1st Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Jordyn Tyson (WR), 2026 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Demond Claiborne (RB)] <---> Jeanty or Bust (SoHigh420) received: [Drake London (WR)]": {
+  "Branden's League||2024||10/1/2024||Smokers Haven (SmokersHaven) received: [Ezekiel Elliott (RB), T.J. Hockenson (TE), 2025 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Jaydon Blue (RB), 2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Kyle Williams (WR), 2026 Round 1st Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Jordyn Tyson (WR), 2026 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Demond Claiborne (RB)] <---> Jeanty or Bust (SoHigh420) received: [Drake London (WR)]": {
    "trade_day": {
     "as_of": "2024-09-27",
     "values": {
      "Ezekiel Elliott (RB)": 49,
      "T.J. Hockenson (TE)": 1845,
-     "2025 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Kyle Williams (WR)": 48,
-     "2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jaydon Blue (RB)": 48,
+     "2025 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Jaydon Blue (RB)": 48,
+     "2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Kyle Williams (WR)": 48,
      "2026 Round 1st Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Jordyn Tyson (WR)": 1643,
      "2026 Round 3rd Pick (originally from Jeanty or Bust (SoHigh420)) -> Resulted in drafting: Demond Claiborne (RB)": 36,
      "Drake London (WR)": 5673
@@ -2466,7 +2475,7 @@
     }
    }
   },
-  "Branden's League||2024||2/10/2025||Burnt cookies (Peopleaters420) received: [Lamar Jackson (QB), DeVonta Smith (WR), 2025 Round 3rd Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Tre' Harris (WR), 2026 Round 3rd Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Germie Bernard (WR), 2026 Round 4th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Eli Heidenreich (RB), 2026 Round 5th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Dallas Cowboys (D/ST), 2027 Round 3rd Pick (originally from Leno'S Team (Leno)), 2027 Round 4th Pick (originally from Leno'S Team (Leno)), 2027 Round 5th Pick (originally from Leno'S Team (Leno))] <---> Leno'S Team (Leno) received: [Ladd McConkey (WR), 2025 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Bhayshul Tuten (RB), 2025 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Colston Loveland (TE), 2026 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Kaytron Allen (RB), 2027 Round 2nd Pick (originally from Burnt cookies (Peopleaters420))]": {
+  "Branden's League||2024||2/10/2025||Burnt cookies (Peopleaters420) received: [Lamar Jackson (QB), DeVonta Smith (WR), 2025 Round 3rd Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Tre' Harris (WR), 2026 Round 3rd Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Germie Bernard (WR), 2026 Round 4th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Eli Heidenreich (RB), 2026 Round 5th Pick (originally from Leno'S Team (Leno)) -> Resulted in drafting: Dallas Cowboys (D/ST), 2027 Round 3rd Pick (originally from Leno'S Team (Leno)), 2027 Round 4th Pick (originally from Leno'S Team (Leno)), 2027 Round 5th Pick (originally from Leno'S Team (Leno))] <---> Leno'S Team (Leno) received: [Ladd McConkey (WR), 2025 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Colston Loveland (TE), 2025 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Bhayshul Tuten (RB), 2026 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Kaytron Allen (RB), 2027 Round 2nd Pick (originally from Burnt cookies (Peopleaters420))]": {
    "trade_day": {
     "as_of": "2025-02-07",
     "values": {
@@ -2480,8 +2489,8 @@
      "2027 Round 4th Pick (originally from Leno'S Team (Leno))": 201,
      "2027 Round 5th Pick (originally from Leno'S Team (Leno))": 134,
      "Ladd McConkey (WR)": 6846,
-     "2025 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Bhayshul Tuten (RB)": 1063,
-     "2025 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Colston Loveland (TE)": 1063,
+     "2025 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Colston Loveland (TE)": 1063,
+     "2025 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Bhayshul Tuten (RB)": 1063,
      "2026 Round 2nd Pick (originally from Burnt cookies (Peopleaters420)) -> Resulted in drafting: Kaytron Allen (RB)": 845,
      "2027 Round 2nd Pick (originally from Burnt cookies (Peopleaters420))": 666
     }

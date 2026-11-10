@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-League Dynasty Hub</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <meta name="theme-color" content="#0f172a">
     <!-- Built from styles/tailwind.css by `npm run build:css` (the build-css workflow keeps it current) -->
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <!-- Markdown for the Gazette and chat replies; deferred so they never hold up the page (chatFormat has a fallback) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <style>
         body.broadcast-mode header,
         body.broadcast-mode footer,
@@ -3579,7 +3582,7 @@
                             <p class="text-xs text-slate-400 font-bold uppercase">Week ${escHtml(a.week)}</p>
                             ${sleeperCopyButton(sleeperGazetteText(league, season, a), '📋 Copy for Sleeper')}
                         </div>
-                        <div class="text-sm text-slate-200 leading-relaxed">${DOMPurify.sanitize(marked.parse(String(a.text || '')))}</div>
+                        <div class="text-sm text-slate-200 leading-relaxed">${chatFormat(a.text)}</div>
                     </article>`).join('')}
                 </div>`;
             } catch (e) { /* the Gazette is optional */ }

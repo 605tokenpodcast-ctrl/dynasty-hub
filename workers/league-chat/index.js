@@ -117,18 +117,32 @@ async function fetchLiveSleeperData(leagueIdsStr) {
   }
 }
 
+// FantasyCalc's full value list, kept for 10 minutes per running copy of the worker (one chat can call the tool several times)
+const valueCache = new Map(); // "dynasty/qbs" -> { expires, data: Promise<array> }
+function fantasyCalcValues(isDynasty, numQbs) {
+  const key = `${isDynasty}/${numQbs}`;
+  const hit = valueCache.get(key);
+  if (hit && hit.expires > Date.now()) return hit.data;
+  const data = fetch(`https://api.fantasycalc.com/values/current?isDynasty=${isDynasty}&numQbs=${numQbs}&numTeams=12&ppr=1`)
+    .then((res) => { if (!res.ok) throw new Error(`FantasyCalc HTTP ${res.status}`); return res.json(); });
+  valueCache.set(key, { expires: Date.now() + 10 * 60 * 1000, data });
+  data.catch(() => valueCache.delete(key));
+  return data;
+}
+
 // Helper: Execute custom tool calls requested by Claude
 async function executeTool(name, input, env) {
   if (name === 'get_dynasty_values') {
     try {
       const isDynasty = input.is_dynasty !== false ? 'true' : 'false';
       const numQbs = input.is_superflex !== false ? 2 : 1;
-      const res = await fetch(`https://api.fantasycalc.com/values/current?isDynasty=${isDynasty}&numQbs=${numQbs}&numTeams=12&ppr=1`);
-      const data = await res.json();
+      const data = await fantasyCalcValues(isDynasty, numQbs);
       const results = {};
 
       for (const queryName of input.player_names || []) {
-        const match = data.find((p) => p.player.name.toLowerCase().includes(queryName.toLowerCase()));
+        // An exact name wins; a partial match (e.g. a last name) is the fallback
+        const q = String(queryName).toLowerCase().trim();
+        const match = data.find((p) => p.player.name.toLowerCase() === q) || data.find((p) => p.player.name.toLowerCase().includes(q));
         if (match) {
           results[queryName] = {
             name: match.player.name,

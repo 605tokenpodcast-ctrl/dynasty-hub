@@ -60,6 +60,24 @@ try {
   });
   if (!modal.deals || modal.graded !== modal.deals) failures.push(`trade partner modal graded ${modal.graded} of ${modal.deals} trades`);
   await page.evaluate(() => closeTradeModal());
+  // The Gazette still shows (as plain text) when the Markdown scripts from the CDN don't load
+  const gazette = await page.evaluate(async () => {
+    switchTab('review');
+    window.fetchGazette = async () => [{ week: 3, text: '**Headline**\n\nBody text' }];
+    const sel = document.querySelector('#tab-review select');
+    await loadGazette(sel ? sel.value : '', '2026');
+    return (document.getElementById('review-gazette') || {}).innerText || '';
+  });
+  if (!/Headline/.test(gazette)) failures.push('Gazette did not render without the Markdown scripts');
+  // The home-screen manifest and its icons exist
+  const manifest = await page.evaluate(async () => {
+    const r = await fetch('manifest.json');
+    if (!r.ok) return 'manifest.json missing';
+    const m = await r.json();
+    for (const i of m.icons || []) if (!(await fetch(i.src)).ok) return `icon missing: ${i.src}`;
+    return '';
+  });
+  if (manifest) failures.push(manifest);
   const xss = await page.evaluate(() => window.__xss || 0);
   if (xss) failures.push(`unescaped team name ran script ${xss} time(s)`);
   console.log(`opened ${tabs.length} tabs`);

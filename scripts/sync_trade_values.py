@@ -83,6 +83,32 @@ def trade_key(league, r):
     return f"{league}||{r[0]}||{r[1]}||{r[4]}"
 
 
+def frozen_by_trade(frozen):
+    """(league, season, breakdown) -> [(trade date, entry)] for the frozen entries, to find a trade whose date moved."""
+    out = {}
+    for key, entry in frozen.items():
+        parts = key.split('||', 3)
+        if len(parts) == 4:
+            d = trade_date([parts[1], parts[2]])
+            out.setdefault((parts[0], parts[1], parts[3]), []).append((d, entry))
+    return out
+
+
+def moved_entry(by_trade, league, r, traded, mark):
+    """The frozen entry of this trade from before its date moved by a day (dates went from UTC to Central
+    time), so its values aren't looked up again; its grading date moves with it. {} if there is none."""
+    for d, entry in by_trade.get((league, str(r[0]), str(r[4])), []):
+        if d and traded and abs((d - traded).days) <= 1:
+            entry = dict(entry)
+            grade = entry.get('grade')
+            if grade and grade.get('mark'):
+                old_mark = dt.date.fromisoformat(grade['mark'])
+                if abs((old_mark - mark).days) <= 1:
+                    entry['grade'] = {**grade, 'mark': mark.isoformat()}
+            return entry
+    return {}
+
+
 def trade_items(breakdown):
     """Every received item label, in order, from 'A received: [x, y] <---> B received: [z]'."""
     out = []
@@ -288,8 +314,9 @@ def main(today=None):
                 'values': {lbl: round(item_value(lbl, snapshots[snap_key], raw[0])) for lbl in trade_items(r[4])}}
 
     out, counts = {}, {'trade_day': 0, 'grade': 0}
+    by_trade = frozen_by_trade(frozen)
     for key, league, r, traded, mark in dynasty_trades(master):
-        old, entry = frozen.get(key) or {}, {}
+        old, entry = frozen.get(key) or moved_entry(by_trade, league, r, traded, mark), {}
         # Trade-day values: on the day the trade happened, so the grade can be compared against them
         entry['trade_day'] = old.get('trade_day') or values_on(traded, league, r)
         if entry['trade_day'] and not old.get('trade_day'):

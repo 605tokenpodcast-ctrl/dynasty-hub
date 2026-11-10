@@ -2,6 +2,8 @@
 import json
 import os
 import re
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_FILE = os.path.join(ROOT, 'leagues.json')
@@ -30,6 +32,29 @@ def set_league_id(old_id, new_id):
         if lg['id'] == old_id:
             lg['id'] = new_id
     save(config)
+
+
+def record_str(wins, losses, ties=0):
+    """A standings record: 'W-L', or 'W-L-T' when there are ties (the site reads both)."""
+    return f"{wins}-{losses}-{ties}" if ties else f"{wins}-{losses}"
+
+
+CENTRAL = ZoneInfo('America/Chicago')
+
+
+def central_date(ms):
+    """'M/D/YYYY' in US Central time for an epoch time in milliseconds (seconds also accepted), '' if missing.
+    The leagues are in Central time, so a trade made at 9pm isn't dated the next day (UTC)."""
+    try:
+        v = float(ms)
+    except (TypeError, ValueError):
+        return ''
+    if v <= 0:
+        return ''
+    if v < 1e11:   # seconds, not ms
+        v *= 1000.0
+    d = datetime.fromtimestamp(v / 1000.0, tz=timezone.utc).astimezone(CENTRAL)
+    return f"{d.month}/{d.day}/{d.year}"
 
 
 def manager_aliases():

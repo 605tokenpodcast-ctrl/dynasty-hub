@@ -649,3 +649,33 @@ class TradeValuesAtGrade(unittest.TestCase):
         self.assertEqual(old['grade']['values']["Star Guy (WR)"], 10000)
         self.assertNotIn('grade', new)
         self.assertEqual(new['trade_day']['values']["2027 Round 1st Pick"], 2250)
+
+
+class CentralDatesAndTies(unittest.TestCase):
+    def test_evening_trade_keeps_its_central_date(self):
+        import league_config
+        # 2025-11-10 02:30 UTC is 8:30pm on 11/9 in Chicago
+        self.assertEqual(league_config.central_date(1762741800000), "11/9/2025")
+        self.assertEqual(league_config.central_date(1762741800), "11/9/2025")
+        self.assertEqual(league_config.central_date(None), "")
+        self.assertEqual(sync_leagues.trade_row("2025", 10, {"type": "trade", "status": "complete", "created": 1762741800000,
+                                                             "roster_ids": [1, 2], "adds": {}, "transaction_id": "t"},
+                                                {1: "A", 2: "B"}, {})[1], "11/9/2025")
+
+    def test_record_with_ties(self):
+        import league_config
+        self.assertEqual(league_config.record_str(5, 4), "5-4")
+        self.assertEqual(league_config.record_str(5, 4, 1), "5-4-1")
+
+    def test_frozen_values_follow_a_trade_whose_date_moved(self):
+        import datetime as dt
+        r = ["2024", "11/9/2024", "Week 10", "A & B", "A received: [X (WR)] <---> B received: [Y (RB)]", "t", ""]
+        frozen = {"L||2024||11/10/2024||" + r[4]: {"trade_day": {"as_of": "2024-11-08", "values": {"X (WR)": 5}},
+                                                 "grade": {"mark": "2027-11-10", "as_of": "2027-11-06", "values": {}}}}
+        got = sync_trade_values.moved_entry(sync_trade_values.frozen_by_trade(frozen), "L", r,
+                                            dt.date(2024, 11, 9), dt.date(2027, 11, 9))
+        self.assertEqual(got["trade_day"]["values"], {"X (WR)": 5})
+        self.assertEqual(got["grade"]["mark"], "2027-11-09")
+        far = sync_trade_values.moved_entry(sync_trade_values.frozen_by_trade(frozen), "L", r,
+                                            dt.date(2024, 11, 1), dt.date(2027, 11, 1))
+        self.assertEqual(far, {})

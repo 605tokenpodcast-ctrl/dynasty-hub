@@ -957,7 +957,8 @@ def build_trade_rows(trades, season_labels, latest_label, drafted=None):
                 items.append(desc.strip())
             parts.append(f"{mgr} received: [{', '.join(items) if items else 'Nothing'}]")
 
-        date_str = f"{dt.month}/{dt.day}/{dt.year}"
+        local = dt.astimezone(league_config.CENTRAL)   # dated in the leagues' time zone, not UTC
+        date_str = f"{local.month}/{local.day}/{local.year}"
         rows.append((dt, [str(season), date_str, f"Week {week}", teams_involved, " <---> ".join(parts), "", ""]))
 
     rows.sort(key=lambda x: x[0], reverse=True)   # newest first, like the Sleeper block
@@ -1170,7 +1171,8 @@ def fetch_move_rows(league_id, labels_by_season, seasons, season_param=None):
                 continue
             bid = tx.get("bidAmount") if tx.get("bidAmount") is not None else (tx.get("waiverBid") or "")
             labels = labels_by_season.get(tx_season) or {}
-            rows.append([str(tx_season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}",
+            local = dt.astimezone(league_config.CENTRAL)
+            rows.append([str(tx_season), f"Week {week}", f"{local.month}/{local.day}/{local.year}",
                          labels.get(team.get("id")) or team_label(team),
                          "Waiver" if kind == "TRANSACTION_CLAIM" else "Free Agent",
                          player_label(unwrap_player(tx.get("player"))), "", f"{num(bid, 0):g}" if bid != "" else "",
@@ -1330,7 +1332,7 @@ def collect_league(league, existing_rows=None, cache_rows=None):
 
         for r in rows:
             standings_rows.append([
-                str(season), r["label"], f"{r['wins']}-{r['losses']}", f"{r['pf']:.2f}",
+                str(season), r["label"], league_config.record_str(r['wins'], r['losses'], r['ties']), f"{r['pf']:.2f}",
                 placement_label(r["id"], placements), "", "",
             ])
 
@@ -1420,7 +1422,7 @@ def collect_league(league, existing_rows=None, cache_rows=None):
         pick_strs = resolve_pick_strings(raw_picks, latest_pick_owners(trades))
         for r in current_rows:
             roster_rows.append([
-                r["label"], f"{r['wins']}-{r['losses']}", f"{r['pf']:.2f}",
+                r["label"], league_config.record_str(r['wins'], r['losses'], r['ties']), f"{r['pf']:.2f}",
                 fetch_roster_str(league_id, r["id"], cur),
                 pick_strs.get(str(r["id"]), "None"),
                 "", "",

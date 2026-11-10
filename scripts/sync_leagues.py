@@ -18,6 +18,7 @@ FUTURE_PICK_YEARS = 3  # how many draft classes to list per team
 LAST_PLAYOFF_WEEK = 17  # every league's championship is week 17; week 18 is unused
 LINEUPS_HEADER = "--- WEEKLY LINEUPS & OPTIMAL SCORES (ALL SEASONS) ---"
 MOVES_HEADER = "--- WAIVER & FREE AGENT MOVES (ALL SEASONS) ---"
+TRADE_DATES_KEY = "Trade Dates Central"  # profile row: seasons whose trade dates are in Central time (not UTC)
 PAST_TRADES_KEY = "Past Trades Synced"  # profile row: earlier seasons whose Sleeper trades were read
 PLACEMENT_LABELS = {1: "🏆 League Champion", 2: "🥈 Runner-Up", 3: "🥉 3rd Place"}
 
@@ -180,13 +181,11 @@ def move_row(season, week, tx, roster_to_manager, players_data):
     """A completed waiver claim or free-agent pickup, or None for anything else."""
     if tx.get('type') not in ('waiver', 'free_agent') or tx.get('status') != 'complete':
         return None
-    created_ms = tx.get('created', 0)
-    dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
     rid = (tx.get('roster_ids') or [None])[0]
     def names(d):
         return ", ".join("{} ({})".format(*get_player_label(pid, players_data)[:2]) for pid in (d or {}))
     bid = (tx.get('settings') or {}).get('waiver_bid')
-    return [str(season), f"Week {week}", f"{dt.month}/{dt.day}/{dt.year}" if dt else "",
+    return [str(season), f"Week {week}", league_config.central_date(tx.get('created')),
             roster_to_manager.get(rid, f"Team {rid}"),
             "Waiver" if tx.get('type') == 'waiver' else "Free Agent",
             names(tx.get('adds')), names(tx.get('drops')),
@@ -196,9 +195,7 @@ def trade_row(season, week, tx, roster_to_manager, players_data):
     """A completed trade as a Trade History row (Sleeper transaction_id in column 6), else None."""
     if tx.get('type') != 'trade' or tx.get('status') != 'complete':
         return None
-    created_ms = tx.get('created', 0)
-    dt = datetime.fromtimestamp(created_ms / 1000.0, tz=timezone.utc) if created_ms else None
-    dt_str = f"{dt.month}/{dt.day}/{dt.year}" if dt else ""
+    dt_str = league_config.central_date(tx.get('created'))
     rids = tx.get('roster_ids') or []
     if len(rids) < 2:
         return None
@@ -683,10 +680,11 @@ def build_master_data():
             settings = r.get('settings') or {}
             wins = settings.get('wins', 0)
             losses = settings.get('losses', 0)
+            ties = settings.get('ties', 0) or 0
             fpts = (settings.get('fpts', 0) or 0) + ((settings.get('fpts_decimal', 0) or 0) / 100.0)
 
             live_standings.append([
-                season, mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", "Regular Season", "", ""
+                season, mgr_label, league_config.record_str(wins, losses, ties), f"{fpts:.2f}", "Regular Season", "", ""
             ])
 
             player_strs = []
@@ -696,7 +694,7 @@ def build_master_data():
 
             if is_redraft:
                 new_roster_rows.append([
-                    mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", ", ".join(player_strs), "", "", ""
+                    mgr_label, league_config.record_str(wins, losses, ties), f"{fpts:.2f}", ", ".join(player_strs), "", "", ""
                 ])
             else:
                 owned_picks = []
@@ -706,7 +704,7 @@ def build_master_data():
 
                 picks_str = ", ".join(owned_picks) if owned_picks else "None"
                 new_roster_rows.append([
-                    mgr_label, f"{wins}-{losses}", f"{fpts:.2f}", ", ".join(player_strs), picks_str, "", ""
+                    mgr_label, league_config.record_str(wins, losses, ties), f"{fpts:.2f}", ", ".join(player_strs), picks_str, "", ""
                 ])
 
         # Final placements, once the championship game is decided
@@ -880,9 +878,12 @@ def build_master_data():
             (str(r[0]).strip(), str(r[1]).strip(), str(r[3]).strip()): r
             for r in merged_trades if not str(r[5]).strip()
         }
+        by_tx_id = {str(r[5]).strip(): r for r in merged_trades if str(r[5]).strip()}
         for lt in live_trades:
             tx_id = lt[5]
             if tx_id and tx_id in known_tx_ids:
+                if tx_id in by_tx_id and lt[1]:
+                    by_tx_id[tx_id][1] = lt[1]   # dates are now Central time (older rows were UTC)
                 continue
             legacy = legacy_by_sig.pop((lt[0], lt[1], lt[3]), None)
             if legacy is not None:
@@ -899,6 +900,20 @@ def build_master_data():
             merged_trades.sort(key=lambda r: (str(r[0]), row_date(r) or datetime(int(r[0]), 1, 1)), reverse=True)
         if newly_done:
             set_profile(profile_rows, PAST_TRADES_KEY, ", ".join(sorted(done_trades | newly_done)))
+        # One time per season: re-date trades saved before dates were Central time (they were UTC,
+        # so an evening trade showed the next day). Seasons just read above are already Central.
+        dated = set(re.findall(r'\d{4}', profile_value(profile_rows, TRADE_DATES_KEY))) | newly_done | {season}
+        redated, dated_now = backfill_past_trades(league_info, dated, players_data)
+        by_tx_id = {str(r[5]).strip(): r for r in merged_trades if str(r[5]).strip()}
+        moved = 0
+        for f in (found or []) + redated:   # found: legacy rows that just got their ID keep their old date
+            row = by_tx_id.get(str(f[5]).strip())
+            if row is not None and f[1] and row[1] != f[1]:
+                row[1] = f[1]
+                moved += 1
+        if moved:
+            print(f"  {moved} past trade date(s) moved to Central time")
+        set_profile(profile_rows, TRADE_DATES_KEY, ", ".join(sorted(dated | dated_now)))
         merged_trades, dupes = drop_duplicate_trades(merged_trades)
         if dupes:
             print(f"{league_key}: removed {dupes} duplicate legacy trade row(s)")

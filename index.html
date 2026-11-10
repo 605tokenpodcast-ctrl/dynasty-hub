@@ -151,10 +151,12 @@
                     <button onclick="switchTab('power')" id="nav-power" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
                     <button onclick="switchTab('owners')" id="nav-owners" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
                     <button onclick="switchTab('exposure')" id="nav-exposure" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
+                    <button onclick="switchTab('journey')" id="nav-journey" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔎 Player Journey</button>
                     <button onclick="switchTab('awards')" id="nav-awards" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
                     <button onclick="switchTab('awardcenter')" id="nav-awardcenter" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎖️ Awards Center</button>
                     <button onclick="switchTab('analytics')" id="nav-analytics" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📊 Analytics</button>
                     <button onclick="switchTab('review')" id="nav-review" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📰 Season Review</button>
+                    <button onclick="switchTab('wrapped')" id="nav-wrapped" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎁 Season Wrapped</button>
                     <button onclick="switchTab('records')" id="nav-records" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
                     <button onclick="switchTab('luck')" id="nav-luck" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
                     <button onclick="switchTab('picks')" id="nav-picks" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
@@ -216,6 +218,7 @@
                             <select id="power-mode" onchange="onPowerModeChange()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
                                 <option value="weekly">This Week's Power Rankings</option>
                                 <option value="value">Dynasty Value (Roster + Picks)</option>
+                                <option value="trend">Value Stock Chart (Risers & Fallers)</option>
                             </select>
                             <select id="power-league-selector" onchange="renderPowerRankings()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
                                 <option value="ALL">All Leagues</option>
@@ -249,6 +252,36 @@
                         </div>
                     </div>
                     <div id="exposure-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- TAB: PLAYER JOURNEY -->
+                <div id="tab-journey" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🔎 Player Journey</h2>
+                            <p class="text-slate-400 text-sm">Every team that drafted, traded for, picked up, dropped or started a player, in every league, since 2015.</p>
+                        </div>
+                        <div class="w-full sm:w-72">
+                            <input type="search" id="journey-search" list="journey-names" placeholder="Type a player's name..." oninput="renderPlayerJourney()" autocomplete="off" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-accent">
+                            <datalist id="journey-names"></datalist>
+                        </div>
+                    </div>
+                    <div id="journey-content"></div>
+                </div>
+
+                <!-- TAB: SEASON WRAPPED -->
+                <div id="tab-wrapped" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🎁 Season Wrapped</h2>
+                            <p class="text-slate-400 text-sm">One manager's season across every league: best and worst weeks, luck, lineup calls, pickups, trades and rivals. Copy it or share the card.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <select id="wrapped-manager" onchange="renderWrapped()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                            <select id="wrapped-season" onchange="renderWrapped()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                        </div>
+                    </div>
+                    <div id="wrapped-content"></div>
                 </div>
 
                 <!-- TAB 5: THIS SEASON'S BENCH BLUNDERS & WEEKLY AWARDS -->
@@ -414,6 +447,7 @@
                             <option value="ALL">All Leagues</option>
                         </select>
                     </div>
+                    <div id="records-watch"></div>
                     <div id="records-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
 
@@ -983,7 +1017,7 @@
             currentActiveTab = tabId;
             // Before rendering: some tabs update the URL while they render, which must not replace this entry
             if (!skipUrlUpdate) updateUrlParams(true);
-            ['dashboard', 'power', 'owners', 'exposure', 'awards', 'awardcenter', 'analytics', 'review', 'records', 'luck', 'picks', 'drafts', 'trades', 'h2h', 'matchups', 'playoffs', 'synergy', 'leagues'].forEach(t => {
+            ['dashboard', 'power', 'owners', 'exposure', 'journey', 'wrapped', 'awards', 'awardcenter', 'analytics', 'review', 'records', 'luck', 'picks', 'drafts', 'trades', 'h2h', 'matchups', 'playoffs', 'synergy', 'leagues'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (el) el.classList.add('hidden');
@@ -1169,6 +1203,8 @@
             power: () => renderPowerRankings(),
             owners: () => renderOwners(),
             exposure: () => renderPlayerExposure(),
+            journey: () => initPlayerJourney(),
+            wrapped: () => initWrapped(),
             awards: () => renderWeeklyAwards(),
             records: () => renderRecords(),
             luck: () => renderLuckIndex(),
@@ -1301,15 +1337,124 @@
             if (!renderPowerRankings.modeLoaded) {
                 renderPowerRankings.modeLoaded = true;
                 const saved = chatStore('powerMode');
-                if (saved === 'weekly' || saved === 'value') modeSel.value = saved;
+                if (saved === 'weekly' || saved === 'value' || saved === 'trend') modeSel.value = saved;
             }
-            const weekly = modeSel.value === 'weekly';
-            document.getElementById('power-title').innerText = weekly ? '📈 Weekly Power Rankings' : '📈 True Dynasty Power Rankings (Roster + Picks)';
-            document.getElementById('power-subtitle').innerText = weekly
+            const mode = modeSel.value;
+            document.getElementById('power-title').innerText = mode === 'weekly' ? '📈 Weekly Power Rankings'
+                : mode === 'trend' ? '📈 Team Value Stock Chart' : '📈 True Dynasty Power Rankings (Roster + Picks)';
+            document.getElementById('power-subtitle').innerText = mode === 'weekly'
                 ? 'Who is actually the best team right now: all-play record, scoring, recent form, record and roster value.'
+                : mode === 'trend' ? 'Every team\'s dynasty value (roster + picks), saved each day by the data sync: who is rising and who is sinking.'
                 : 'Combining live KeepTradeCut player values with future draft pick capital for every team.';
-            if (weekly) renderWeeklyPower();
+            if (mode === 'weekly') renderWeeklyPower();
+            else if (mode === 'trend') renderValueTrend();
             else renderValueRankings();
+        }
+
+        // --- Value stock chart: value_history.json (saved daily by scripts/sync_value_history.py) ---
+        let valueHistory = null;
+        const TREND_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#a855f7', '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#eab308', '#14b8a6', '#94a3b8', '#6366f1', '#d946ef'];
+
+        async function renderValueTrend() {
+            const container = document.getElementById('power-rankings-container');
+            if (!valueHistory) {
+                container.innerHTML = '<p class="text-sm text-slate-400">Loading value history…</p>';
+                try {
+                    const r = await fetch('value_history.json');
+                    valueHistory = r.ok ? ((await r.json()).days || {}) : {};
+                } catch (e) { valueHistory = {}; }
+                if (document.getElementById('power-mode').value !== 'trend') return;
+            }
+            const days = Object.keys(valueHistory).sort();
+            if (days.length < 2) {
+                container.innerHTML = '<p class="text-sm text-slate-400">Not enough history yet: the chart fills in as the daily sync saves each day\'s values.</p>';
+                return;
+            }
+            const selected = document.getElementById('power-league-selector').value;
+            const leagues = [...new Set(days.flatMap(d => Object.keys(valueHistory[d])))].filter(l => selected === 'ALL' || l === selected).sort();
+            const total = v => v ? v[0] + v[1] : null;
+            const lastDay = days[days.length - 1];
+            const dayAgo = n => {
+                const t = new Date(lastDay + 'T12:00:00');
+                t.setDate(t.getDate() - n);
+                const iso = t.toISOString().slice(0, 10);
+                return days.filter(d => d <= iso).pop() || days[0];
+            };
+            const d7 = dayAgo(7), d30 = dayAgo(30);
+            const fmtK = v => `${(v / 1000).toFixed(1)}k`;
+            const change = (now, then) => {
+                if (!now || !then) return '<span class="text-slate-500">—</span>';
+                const diff = now - then, pctv = then ? diff / then * 100 : 0;
+                const cls = diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-slate-400';
+                return `<span class="${cls} font-bold">${diff > 0 ? '▲' : diff < 0 ? '▼' : '•'} ${fmtK(Math.abs(diff))}</span> <span class="text-slate-500">(${pctv >= 0 ? '+' : ''}${pctv.toFixed(1)}%)</span>`;
+            };
+
+            const sections = leagues.map(league => {
+                const owners = [...new Set(days.flatMap(d => Object.keys(valueHistory[d][league] || {})))];
+                const series = owners.map(o => ({ owner: o, pts: days.map((d, i) => ({ i, v: total((valueHistory[d][league] || {})[o]) })).filter(p => p.v !== null) }))
+                    .filter(s => s.pts.length);
+                if (!series.length) return '';
+                const now = o => total((valueHistory[lastDay][league] || {})[o]);
+                const at = (d, o) => total((valueHistory[d][league] || {})[o]);
+                series.sort((a, b) => (now(b.owner) || 0) - (now(a.owner) || 0));
+                series.forEach((s, i) => { s.color = TREND_COLORS[i % TREND_COLORS.length]; });
+
+                // SVG line chart: x = day, y = total value
+                const W = 640, H = 260, L = 44, R = 8, T = 10, B = 24;
+                const all = series.flatMap(s => s.pts.map(p => p.v));
+                let lo = Math.min(...all), hi = Math.max(...all);
+                const pad = (hi - lo) * 0.05 || 1000;
+                lo -= pad; hi += pad;
+                const x = i => L + (W - L - R) * (days.length === 1 ? 0 : i / (days.length - 1));
+                const y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+                const grid = [0, 0.25, 0.5, 0.75, 1].map(f => {
+                    const v = lo + (hi - lo) * f;
+                    return `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#1e293b"/><text x="${L - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#64748b">${fmtK(v)}</text>`;
+                }).join('');
+                const label = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const xLabels = [0, Math.floor((days.length - 1) / 2), days.length - 1].filter((v, i, a) => a.indexOf(v) === i)
+                    .map(i => `<text x="${x(i).toFixed(1)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === days.length - 1 ? 'end' : 'middle'}" font-size="11" fill="#64748b">${label(days[i])}</text>`).join('');
+                const lines = series.map(s => `<polyline data-owner="${escHtml(s.owner)}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" points="${s.pts.map(p => `${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')}"><title>${escHtml(s.owner)}</title></polyline>`).join('');
+
+                const rows = series.map(s => {
+                    const n = now(s.owner);
+                    return `<button type="button" onclick="highlightTrend(this)" data-owner="${escHtml(s.owner)}" class="w-full grid grid-cols-[auto_1fr_auto] items-center gap-2 py-1.5 border-b border-slate-800 last:border-0 text-left text-xs">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background:${s.color}"></span>
+                        <span class="min-w-0"><span class="font-bold text-white truncate block">${escHtml(s.owner)}</span><span class="text-slate-400">7 days ${change(n, at(d7, s.owner))}${d30 !== d7 ? ` · 30 days ${change(n, at(d30, s.owner))}` : ''}</span></span>
+                        <span class="font-extrabold text-emerald-400">${n ? fmtK(n) : '—'}</span>
+                    </button>`;
+                }).join('');
+                const moves = series.map(s => ({ owner: s.owner, d: (now(s.owner) || 0) - (at(d7, s.owner) || 0) })).filter(m => m.d);
+                const riser = moves.sort((a, b) => b.d - a.d)[0], faller = moves[moves.length - 1];
+                return `
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-5 space-y-3" data-trend-league="${escHtml(league)}">
+                        <div class="flex flex-wrap justify-between items-baseline gap-2">
+                            <h3 class="font-bold text-white">${escHtml(league)}</h3>
+                            <p class="text-xs text-slate-400">${riser && riser.d > 0 ? `📈 ${escHtml(riser.owner)} ${change(now(riser.owner), at(d7, riser.owner))}` : ''}${faller && faller.d < 0 ? ` · 📉 ${escHtml(faller.owner)} ${change(now(faller.owner), at(d7, faller.owner))}` : ''}</p>
+                        </div>
+                        <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="Team value by day">${grid}${xLabels}${lines}</svg>
+                        <div>${rows}</div>
+                    </div>`;
+            }).join('');
+            container.innerHTML = `<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">${sections}</div>
+                <p class="text-xs text-slate-500">Dynasty value of each roster plus its future picks, from FantasyCalc, saved once a day since ${label0(days[0])}. Values move with the market and with trades and pickups. Tap a manager to highlight their line.</p>`;
+        }
+
+        function label0(d) {
+            return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function highlightTrend(btn) {
+            const card = btn.closest('[data-trend-league]');
+            const owner = btn.dataset.owner;
+            const on = card.dataset.hl !== owner;
+            card.dataset.hl = on ? owner : '';
+            card.querySelectorAll('polyline').forEach(pl => {
+                const me = pl.dataset.owner === owner;
+                pl.setAttribute('stroke-width', on && me ? '4' : '2');
+                pl.setAttribute('opacity', on && !me ? '0.2' : '1');
+            });
+            card.querySelectorAll('button[data-owner]').forEach(b => b.classList.toggle('bg-slate-800', on && b.dataset.owner === owner));
         }
 
         // Roster + pick value for every team in one league, or every league for 'ALL'
@@ -1595,7 +1740,7 @@
                         if (!unifiedOwners[masterOwner]) {
                             unifiedOwners[masterOwner] = { 
                                 leagues: new Set(), champs: 0, runnerUps: 0, thirdPlaces: 0,
-                                totalWins: 0, totalLosses: 0,
+                                totalWins: 0, totalLosses: 0, totalTies: 0,
                                 firstRoundPicks: 0, totalFuturePicks: 0, ktcPickCapital: 0, ktcRosterCapital: 0
                             };
                         }
@@ -1607,10 +1752,12 @@
                         else if (placement.includes('Runner-Up')) unifiedOwners[masterOwner].runnerUps++;
                         else if (placement.includes('3rd Place')) unifiedOwners[masterOwner].thirdPlaces++;
 
+                        // "W-L" or "W-L-T"
                         const rec = String(r[2] || '').split('-');
-                        if (rec.length === 2) {
+                        if (rec.length === 2 || rec.length === 3) {
                             unifiedOwners[masterOwner].totalWins += parseInt(rec[0], 10) || 0;
                             unifiedOwners[masterOwner].totalLosses += parseInt(rec[1], 10) || 0;
+                            unifiedOwners[masterOwner].totalTies += parseInt(rec[2], 10) || 0;
                         }
                     }
 
@@ -1642,8 +1789,8 @@
 
             sortedOwners.forEach(masterName => {
                 const data = unifiedOwners[masterName];
-                const totalGames = data.totalWins + data.totalLosses;
-                const winPct = totalGames > 0 ? ((data.totalWins / totalGames) * 100).toFixed(1) : "0.0";
+                const totalGames = data.totalWins + data.totalLosses + data.totalTies;
+                const winPct = totalGames > 0 ? (((data.totalWins + data.totalTies / 2) / totalGames) * 100).toFixed(1) : "0.0";
                 const totalKtcEmpire = data.ktcRosterCapital + data.ktcPickCapital;
 
                 const card = document.createElement('div');
@@ -1663,7 +1810,7 @@
                     <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800 text-sm">
                         <div>
                             <p class="text-slate-400 text-xs">All-Time Record</p>
-                            <p class="font-bold mt-0.5">${data.totalWins}-${data.totalLosses} (${winPct}%)</p>
+                            <p class="font-bold mt-0.5">${fmtRecord({ w: data.totalWins, l: data.totalLosses, t: data.totalTies })} (${winPct}%)</p>
                         </div>
                         <div>
                             <p class="text-slate-400 text-xs">Future Draft Capital</p>
@@ -1917,14 +2064,15 @@
 
                     const teamWeekScores = [];
                     games.forEach(g => {
-                        if (!stats[g.t1]) stats[g.t1] = { w: 0, l: 0, apW: 0, apL: 0, pf: 0, pa: 0 };
-                        if (!stats[g.t2]) stats[g.t2] = { w: 0, l: 0, apW: 0, apL: 0, pf: 0, pa: 0 };
+                        if (!stats[g.t1]) stats[g.t1] = { w: 0, l: 0, t: 0, apW: 0, apL: 0, pf: 0, pa: 0 };
+                        if (!stats[g.t2]) stats[g.t2] = { w: 0, l: 0, t: 0, apW: 0, apL: 0, pf: 0, pa: 0 };
 
                         stats[g.t1].pf += g.s1; stats[g.t1].pa += g.s2;
                         stats[g.t2].pf += g.s2; stats[g.t2].pa += g.s1;
 
                         if (g.s1 > g.s2) { stats[g.t1].w++; stats[g.t2].l++; }
                         else if (g.s2 > g.s1) { stats[g.t2].w++; stats[g.t1].l++; }
+                        else { stats[g.t1].t++; stats[g.t2].t++; }
 
                         teamWeekScores.push({ mgr: g.t1, score: g.s1 });
                         teamWeekScores.push({ mgr: g.t2, score: g.s2 });
@@ -1943,16 +2091,16 @@
 
             const rowsData = Object.keys(stats).map(mgr => {
                 const d = stats[mgr];
-                const games = d.w + d.l;
+                const games = d.w + d.l + d.t;
                 const apGames = d.apW + d.apL;
                 const apWinPct = apGames > 0 ? (d.apW / apGames) : 0;
                 const expectedWins = games * apWinPct;
-                const luckDiff = d.w - expectedWins;
+                const luckDiff = d.w + d.t / 2 - expectedWins; // a tie is half a win
                 return { mgr, ...d, games, apWinPct, expectedWins, luckDiff };
             }).sort((a, b) => b.apWinPct - a.apWinPct);
 
             tbody.innerHTML = rowsData.map(r => {
-                const actualPct = r.games > 0 ? ((r.w / r.games) * 100).toFixed(1) : '0.0';
+                const actualPct = r.games > 0 ? (((r.w + r.t / 2) / r.games) * 100).toFixed(1) : '0.0';
                 const allPlayPct = (r.apWinPct * 100).toFixed(1);
                 const diffStr = (r.luckDiff >= 0 ? '+' : '') + r.luckDiff.toFixed(1);
                 const badge = r.luckDiff >= 1.5
@@ -1964,7 +2112,7 @@
                 return `
                     <tr class="hover:bg-slate-800/40 transition">
                         <td class="p-4 font-bold text-accent">${escHtml(r.mgr)}</td>
-                        <td class="p-4 font-semibold">${r.w}-${r.l} <span class="text-xs text-slate-400">(${actualPct}%)</span></td>
+                        <td class="p-4 font-semibold">${fmtRecord(r)} <span class="text-xs text-slate-400">(${actualPct}%)</span></td>
                         <td class="p-4 font-semibold text-emerald-400">${r.apW}-${r.apL} <span class="text-xs text-slate-400">(${allPlayPct}%)</span></td>
                         <td class="p-4 text-xs text-slate-300">PF: <strong>${r.pf.toFixed(1)}</strong> &bull; PA: <strong>${r.pa.toFixed(1)}</strong></td>
                         <td class="p-4 font-mono text-xs">${diffStr} Wins <span class="text-slate-400">(Exp: ${r.expectedWins.toFixed(1)})</span></td>
@@ -2345,11 +2493,118 @@
             `;
         }
 
+        // Record Watch: this season's numbers against the all-time records (same league filter as the Hall of Records).
+        // A record counts as broken when this season beats every earlier season; otherwise the closest
+        // chase is shown when it's within reach.
+        function renderRecordWatch(games, filter) {
+            const box = document.getElementById('records-watch');
+            if (!box) return;
+            const cur = Math.max(0, ...games.map(g => g.season));
+            // All Leagues: each league against its own history (one league's records mean little in another)
+            const leagues = filter === 'ALL' ? [...new Set(games.filter(g => g.season === cur).map(g => g.league))].sort() : [filter];
+            const items = leagues.flatMap(lg => recordWatchItems(games.filter(g => g.league === lg), cur)
+                .map(it => ({ ...it, title: filter === 'ALL' ? `${lg}: ${it.title}` : it.title })));
+            const chip = st => st === 'broken'
+                ? '<span class="text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded">BROKEN</span>'
+                : '<span class="text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">WITHIN REACH</span>';
+            items.sort((a, b) => (a.status === 'broken' ? 0 : 1) - (b.status === 'broken' ? 0 : 1));
+            box.innerHTML = !cur ? '' : `
+                <div class="bg-cardbg border border-amber-500/30 rounded-xl p-5 space-y-3">
+                    <div>
+                        <h3 class="font-bold text-white">👀 Record Watch: ${cur}</h3>
+                        <p class="text-[11px] text-slate-500">This season against every earlier season of the same league: records already broken, and the ones within reach.</p>
+                    </div>
+                    ${items.length ? items.map(it => `
+                        <div class="flex items-start gap-3 border-t border-slate-800 pt-3 first:border-0 first:pt-0">
+                            <span class="text-xl leading-none">${it.icon}</span>
+                            <div class="min-w-0 space-y-0.5">
+                                <p class="text-sm font-bold text-white">${escHtml(it.title)} ${chip(it.status)}</p>
+                                <p class="text-xs text-slate-300">${escHtml(it.text)}</p>
+                            </div>
+                        </div>`).join('') : '<p class="text-sm text-slate-400">No records in danger this season yet.</p>'}
+                </div>`;
+        }
+
+        // Record Watch lines for one league's games: [{ icon, title, status: 'broken' | 'close', text }]
+        function recordWatchItems(games, cur) {
+            const now = games.filter(g => g.season === cur), before = games.filter(g => g.season < cur);
+            if (!now.length || !before.length) return [];
+            const where = g => `${g.season} ${g.week}`;
+            const sidesOf = list => list.flatMap(g => [
+                { owner: g.t1, score: g.s1, opp: g.t2, oppScore: g.s2, g }, { owner: g.t2, score: g.s2, opp: g.t1, oppScore: g.s1, g }]);
+            const items = [];
+            // higher: a bigger value is the record. fmt shows a value. near: how close counts as "within reach"
+            const watch = (icon, title, nowBest, oldBest, fmt, near, higher = true) => {
+                if (!nowBest || !oldBest) return;
+                const beat = higher ? nowBest.v > oldBest.v : nowBest.v < oldBest.v;
+                const gap = Math.abs(nowBest.v - oldBest.v);
+                if (beat) items.push({ icon, title, status: 'broken', text: `${nowBest.who} set a new mark: ${fmt(nowBest.v)} (${nowBest.where}). Old record ${fmt(oldBest.v)} by ${oldBest.who}, ${oldBest.where}.` });
+                else if (gap <= near) items.push({ icon, title, status: 'close', text: `${nowBest.who} is ${fmt(gap)} away: ${fmt(nowBest.v)} vs the record ${fmt(oldBest.v)} by ${oldBest.who} (${oldBest.where}).` });
+            };
+            const best = (list, val, higher = true) => list.reduce((b, x) => (b === null || (higher ? val(x) > val(b) : val(x) < val(b)) ? x : b), null);
+            const pts = v => `${v.toFixed(2)} pts`;
+
+            const sNow = sidesOf(now), sOld = sidesOf(before);
+            const hiN = best(sNow, x => x.score), hiO = best(sOld, x => x.score);
+            watch('💥', 'Highest score', hiN && { v: hiN.score, who: hiN.owner, where: where(hiN.g) }, hiO && { v: hiO.score, who: hiO.owner, where: where(hiO.g) }, pts, 15);
+            const real = x => x.score >= 20; // skips abandoned teams
+            const loN = best(sNow.filter(real), x => x.score, false), loO = best(sOld.filter(real), x => x.score, false);
+            watch('🪫', 'Lowest score', loN && { v: loN.score, who: loN.owner, where: where(loN.g) }, loO && { v: loO.score, who: loO.owner, where: where(loO.g) }, pts, 10, false);
+            const lossN = best(sNow.filter(x => x.score < x.oppScore), x => x.score), lossO = best(sOld.filter(x => x.score < x.oppScore), x => x.score);
+            watch('🥷', 'Most points in a loss', lossN && { v: lossN.score, who: lossN.owner, where: where(lossN.g) }, lossO && { v: lossO.score, who: lossO.owner, where: where(lossO.g) }, pts, 12);
+            const margin = x => x.score - x.oppScore;
+            const blN = best(sNow, margin), blO = best(sOld, margin);
+            watch('🚜', 'Biggest blowout', blN && { v: margin(blN), who: blN.owner, where: where(blN.g) }, blO && { v: margin(blO), who: blO.owner, where: where(blO.g) }, pts, 15);
+
+            // Season scoring pace (regular season points per game; earlier seasons need 8+ games to count)
+            const ppg = list => {
+                const t = {};
+                list.filter(g => g.weekNum < playoffStartWeek(g.league, g.season)).forEach(g => {
+                    [[g.t1, g.s1], [g.t2, g.s2]].forEach(([o, sc]) => {
+                        const k = `${g.league}||${g.season}||${o}`;
+                        const r = t[k] = t[k] || { owner: o, league: g.league, season: g.season, pts: 0, n: 0 };
+                        r.pts += sc; r.n++;
+                    });
+                });
+                return Object.values(t).map(r => ({ ...r, v: r.pts / r.n }));
+            };
+            const pN = best(ppg(now).filter(r => r.n >= 3), r => r.v), pO = best(ppg(before).filter(r => r.n >= 8), r => r.v);
+            const seasonWhere = r => `${r.season}`;
+            watch('📈', 'Best scoring season (points per game)', pN && { v: pN.v, who: pN.owner, where: `${seasonWhere(pN)}, ${pN.n} games so far` }, pO && { v: pO.v, who: pO.owner, where: seasonWhere(pO) }, v => `${v.toFixed(1)} ppg`, 6);
+
+            // Active streaks against the longest ever (streaks run across seasons, within one league)
+            ['W', 'L'].forEach(kind => {
+                const record = findStreaks(games, kind)[0];
+                if (!record) return;
+                const byKey = {};
+                games.forEach(g => [[g.t1, g.s1, g.s2], [g.t2, g.s2, g.s1]].forEach(([o, my, op]) => {
+                    (byKey[`${g.league}||${o}`] = byKey[`${g.league}||${o}`] || []).push({ g, res: my > op ? 'W' : my < op ? 'L' : 'T' });
+                }));
+                let top = null;
+                Object.entries(byKey).forEach(([k, arr]) => {
+                    arr.sort((a, b) => (a.g.season - b.g.season) || (a.g.weekNum - b.g.weekNum));
+                    if (arr[arr.length - 1].g.season !== cur) return;
+                    let n = 0;
+                    for (let i = arr.length - 1; i >= 0 && arr[i].res === kind; i--) n++;
+                    if (n && (!top || n > top.n)) top = { n, owner: k.split('||')[1], league: k.split('||')[0] };
+                });
+                if (!top || top.n < 3) return;
+                const label = kind === 'W' ? 'wins' : 'losses';
+                const isRecordHolder = record.owner === top.owner && record.league === top.league && record.end.season === cur;
+                const recWhere = `${record.start.season}`;
+                if (isRecordHolder) items.push({ icon: kind === 'W' ? '🔥' : '🧊', title: kind === 'W' ? 'Longest winning streak' : 'Longest losing streak', status: 'broken', text: `${top.owner} has ${top.n} straight ${label}, the longest ever and still going.` });
+                else if (record.len - top.n <= 3) items.push({ icon: kind === 'W' ? '🔥' : '🧊', title: kind === 'W' ? 'Longest winning streak' : 'Longest losing streak', status: 'close', text: `${top.owner} has ${top.n} straight ${label}. The record is ${record.len} by ${record.owner} (${recWhere}).` });
+            });
+
+            return items;
+        }
+
         function renderRecords() {
             const filterEl = document.getElementById('records-league-filter');
             const grid = document.getElementById('records-grid');
             if (!filterEl || !grid) return;
             const { games, standings } = collectRecordsData(filterEl.value);
+            renderRecordWatch(games, filterEl.value);
             const when = g => `${g.season} ${g.week}`;
             const range = (s, e) => (s.season === e.season && s.week === e.week) ? when(s) : `${when(s)} → ${when(e)}`;
             const cards = [];
@@ -3759,7 +4014,7 @@
 
                     if (section === 'standings' && r[1]) {
                         const o = getMasterOwner(String(r[1]));
-                        const d = owners[o] = owners[o] || { t: 0, ru: 0, w: 0, l: 0, lg: new Set() };
+                        const d = owners[o] = owners[o] || { t: 0, ru: 0, w: 0, l: 0, ties: 0, lg: new Set() };
                         d.lg.add(p.name);
                         const pl = String(r[4] || '');
                         if (pl.includes('League Champion')) d.t++;
@@ -3767,6 +4022,7 @@
                         const rec = String(r[2] || '').split('-');
                         d.w += parseInt(rec[0], 10) || 0;
                         d.l += parseInt(rec[1], 10) || 0;
+                        d.ties += parseInt(rec[2], 10) || 0;
                     }
                     if (section === 'rosters') current.push(`${getMasterOwner(col0)} ${r[1] || ''} (${r[2] || '0'} PF)`);
                     if (section === 'trades' && r[3] && r[4]) trades.push(r);
@@ -3784,7 +4040,7 @@
             lines.push('## All-time manager stats (titles, runner-ups, record)');
             Object.keys(owners).forEach(o => {
                 const d = owners[o];
-                lines.push(`${o}: ${d.t} titles, ${d.ru} runner-ups, ${d.w}-${d.l} all-time, in ${d.lg.size} leagues`);
+                lines.push(`${o}: ${d.t} titles, ${d.ru} runner-ups, ${d.w}-${d.l}${d.ties ? "-" + d.ties : ""} all-time, in ${d.lg.size} leagues`);
             });
 
             lines.push(...chatSeasonFinishLines());
@@ -5195,6 +5451,80 @@
             return `${r.w}-${r.l}${r.t ? '-' + r.t : ''}`;
         }
 
+        // Trades between two managers, all leagues: "a||b" (sorted) -> count
+        let tradePairCounts = null;
+        function tradesBetween(a, b) {
+            if (!tradePairCounts) {
+                tradePairCounts = {};
+                Object.keys(globalMasterData).forEach(league => {
+                    if (!Array.isArray(globalMasterData[league])) return;
+                    sectionRows(league, 'trades').forEach(r => {
+                        const owners = [...new Set(String(r[3] || '').split('&').map(t => getMasterOwner(t.trim())).filter(Boolean))];
+                        for (let i = 0; i < owners.length; i++) for (let j = i + 1; j < owners.length; j++) {
+                            const k = [owners[i], owners[j]].sort().join('||');
+                            tradePairCounts[k] = (tradePairCounts[k] || 0) + 1;
+                        }
+                    });
+                });
+            }
+            return tradePairCounts[[a, b].sort().join('||')] || 0;
+        }
+
+        // Storylines for a matchup between `me` and `opp`, from every finished game they've played (all leagues):
+        // revenge games, streaks, playoff history, lopsided or dead-even series, trade partners
+        // Only games before (season, week), so a finished week's own games don't count as history
+        function rivalryBadges(me, opp, season, week) {
+            const before = g => g.season < season || (g.season === season && g.week < week);
+            const games = matchupGames.filter(g => isFinal(g) && before(g) && ((g.o1 === me && g.o2 === opp) || (g.o1 === opp && g.o2 === me)))
+                .map(g => {
+                    const mine = g.o1 === me ? g.s1 : g.s2, theirs = g.o1 === me ? g.s2 : g.s1;
+                    return { g, mine, theirs, res: mine > theirs ? 'W' : mine < theirs ? 'L' : 'T', playoff: g.week >= playoffStartWeek(g.league, g.season) };
+                })
+                .sort((x, y) => (x.g.season - y.g.season) || (x.g.week - y.g.week));
+            const out = [];
+            const n = games.length;
+            if (n) {
+                const last = games[n - 1];
+                const when = `${last.g.season} Wk ${last.g.week}`;
+                if (last.res === 'L') out.push({ icon: '😤', text: `Revenge game: lost the last one ${last.mine.toFixed(1)}-${last.theirs.toFixed(1)} (${when})`, tone: 'rose' });
+                let streak = 0;
+                for (let i = n - 1; i >= 0 && games[i].res === last.res && last.res !== 'T'; i--) streak++;
+                if (streak >= 3) out.push(last.res === 'W'
+                    ? { icon: '🔥', text: `Has won ${streak} straight against ${opp}`, tone: 'emerald' }
+                    : { icon: '🧊', text: `Has lost ${streak} straight to ${opp}`, tone: 'rose' });
+                const margin = Math.abs(last.mine - last.theirs);
+                if (margin < 3 && last.res !== 'T') out.push({ icon: '😰', text: `Last meeting was decided by ${margin.toFixed(2)}`, tone: 'amber' });
+                else if (margin >= 40) out.push({ icon: '🚜', text: `Last meeting was a ${margin.toFixed(1)}-point ${last.res === 'W' ? 'beatdown by ' + me : 'beatdown by ' + opp}`, tone: 'amber' });
+                const po = games.filter(x => x.playoff);
+                if (po.length) {
+                    const pw = po.filter(x => x.res === 'W').length;
+                    const lastPo = po[po.length - 1];
+                    out.push({ icon: '🏆', text: po.length === 1
+                        ? `Met in the ${lastPo.g.season} playoffs (${lastPo.res === 'W' ? 'won' : lastPo.res === 'L' ? 'lost' : 'tied'})`
+                        : `${po.length} playoff meetings (${pw}-${po.length - pw})`, tone: 'sky' });
+                }
+                const w = games.filter(x => x.res === 'W').length, l = games.filter(x => x.res === 'L').length;
+                if (n >= 6 && w / n >= 0.75) out.push({ icon: '👑', text: `Owns this matchup: ${w}-${l} all time`, tone: 'emerald' });
+                else if (n >= 6 && l / n >= 0.75) out.push({ icon: '🪦', text: `Can't beat ${opp}: ${w}-${l} all time`, tone: 'rose' });
+                else if (n >= 6 && Math.abs(w - l) <= 1) out.push({ icon: '⚖️', text: `Dead-even series: ${w}-${l} in ${n} games`, tone: 'slate' });
+                if (n >= 10) out.push({ icon: '⚔️', text: `Meeting #${n + 1} between these two`, tone: 'slate' });
+            }
+            const deals = tradesBetween(me, opp);
+            if (deals >= 3) out.push({ icon: '🤝', text: `Trade partners: ${deals} deals together`, tone: 'slate' });
+            return out;
+        }
+
+        function rivalryBadgesHtml(me, opp, season, week) {
+            const tones = {
+                rose: 'bg-rose-500/10 text-rose-300 border-rose-500/30', emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+                amber: 'bg-amber-500/10 text-amber-300 border-amber-500/30', sky: 'bg-sky-500/10 text-sky-300 border-sky-500/30',
+                slate: 'bg-slate-800 text-slate-300 border-slate-700'
+            };
+            const badges = rivalryBadges(me, opp, season, week);
+            if (!badges.length) return '';
+            return `<div class="flex flex-wrap gap-1.5">${badges.map(b => `<span class="border ${tones[b.tone]} text-[11px] font-semibold px-2 py-0.5 rounded-full">${b.icon} ${escHtml(b.text)}</span>`).join('')}</div>`;
+        }
+
         // --- Live layer: Sleeper matchups + projections for the live week (Sleeper leagues only) ---
         function projectionField(league) {
             const fmt = leagueValueFormats[String(league).trim().toLowerCase()] || '';
@@ -5440,6 +5770,7 @@
                             <div class="text-slate-500 font-bold text-sm pt-6">VS</div>
                             ${side(g.o2, g.team2, it.p2s, it.l2, won2, true)}
                         </div>
+                        ${rivalryBadgesHtml(g.o1, g.o2, g.season, g.week)}
                         ${odds}
                         <div class="flex justify-end text-xs"><button onclick="openH2HFrom(this)" data-a="${escHtml(g.o1)}" data-b="${escHtml(g.o2)}" class="text-accent hover:underline font-semibold">Full H2H →</button></div>
                     </div>`;
@@ -5567,7 +5898,7 @@
                 const simRow = sim && sim.rows.find(r => r.owner === me.owner);
                 const playoffHtml = !simRow ? '' : `
                     <p class="text-xs text-slate-300">🎲 Playoff odds <strong class="text-white">${pct(simRow.playoff)}</strong>${sim.nextWeek === g.week && simRow.ifW !== null && simRow.ifL !== null
-                        ? ` · with a win <strong class="text-emerald-300">${pct(simRow.ifW)}</strong> · with a loss <strong class="text-rose-300">${pct(simRow.ifL)}</strong>` : ''}</p>`;
+                        ? ` · with a win <strong class="text-emerald-300">${pct(simRow.ifW)}</strong> · with a loss <strong class="text-rose-300">${pct(simRow.ifL)}</strong>` : ''}</p>${sim.nextWeek === g.week && simRow.scenario ? `<p class="text-xs text-amber-200">${escHtml(simRow.scenario)}</p>` : ''}`;
 
                 const last = leagueH2H.last;
                 const lastHtml = last ? `Last met ${last.season} Wk ${last.week}: ${last.mine > last.theirs ? 'won' : last.mine < last.theirs ? 'lost' : 'tied'} ${last.mine.toFixed(2)}-${last.theirs.toFixed(2)}` : 'First meeting in this league';
@@ -5585,6 +5916,7 @@
                             <div class="text-slate-500 font-bold text-sm pt-8">VS</div>
                             ${side(opp, oppLive, false)}
                         </div>
+                        ${rivalryBadgesHtml(me.owner, opp.owner, g.season, g.week)}
                         ${oddsHtml}
                         ${playoffHtml}
                         <div class="border-t border-slate-800 pt-3 flex flex-wrap justify-between items-center gap-2 text-xs">
@@ -5657,8 +5989,15 @@
                 };
             });
 
-            const games = remaining.map(g => [idx[g.o1], idx[g.o2], g.week]);
             const nextWeek = Math.min(...remaining.map(g => g.week));
+            // Next week's games get an index so the scenarios below can ask "and if that game goes this way"
+            const nextGames = remaining.filter(g => g.week === nextWeek).map(g => [idx[g.o1], idx[g.o2]]);
+            let nextJ = 0;
+            const games = remaining.map(g => [idx[g.o1], idx[g.o2], g.week, g.week === nextWeek ? nextJ++ : -1]);
+            const G = nextGames.length;
+            // [team][next-week game][own result L/W][which side of that game won] -> sims, sims in the playoffs
+            const scenN = new Float64Array(n * G * 4), scenIn = new Float64Array(n * G * 4);
+            const nextWin = new Int8Array(G);
             const playoffTeams = Math.min(cfg.teams, n);
             let bracket = 1;
             while (bracket < playoffTeams) bracket *= 2;
@@ -5679,11 +6018,11 @@
                     // Each simulated season draws the team's true average, so a few games of data aren't treated as certain
                     strength[i] = teams[i].model.mean + teams[i].model.se * gaussian();
                 }
-                for (const [a, b, week] of games) {
+                for (const [a, b, week, j] of games) {
                     const sa = strength[a] + teams[a].model.sd * gaussian(), sb = strength[b] + teams[b].model.sd * gaussian();
                     pf[a] += sa; pf[b] += sb;
                     if (sa > sb) wins[a]++; else if (sb > sa) wins[b]++; else { wins[a] += 0.5; wins[b] += 0.5; }
-                    if (week === nextWeek) { nextRes[a] = sa > sb ? 1 : -1; nextRes[b] = sb > sa ? 1 : -1; }
+                    if (week === nextWeek) { nextRes[a] = sa > sb ? 1 : -1; nextRes[b] = sb > sa ? 1 : -1; nextWin[j] = sa > sb ? 0 : sb > sa ? 1 : -1; }
                 }
                 // Sleeper's default tiebreak: record, then points for
                 order.sort((x, y) => wins[y] - wins[x] || pf[y] - pf[x]);
@@ -5701,10 +6040,56 @@
                     const inPlayoffs = seedOf[i] < playoffTeams ? 1 : 0;
                     if (nextRes[i] === 1) { ifWn[i]++; ifW[i] += inPlayoffs; }
                     else if (nextRes[i] === -1) { ifLn[i]++; ifL[i] += inPlayoffs; }
+                    if (!nextRes[i]) continue;
+                    const r = nextRes[i] === 1 ? 1 : 0;
+                    for (let j = 0; j < G; j++) {
+                        if (nextWin[j] < 0 || nextGames[j][0] === i || nextGames[j][1] === i) continue;
+                        const k = ((i * G + j) * 2 + r) * 2 + nextWin[j];
+                        scenN[k]++; scenIn[k] += inPlayoffs;
+                    }
                 }
             }
 
             const N = PLAYOFF_SIMS;
+            const SURE = 0.9995, NONE = 0.0005;
+            // The other next-week result that does the most for (or to) team i given its own result r:
+            // { odds, winner, loser } of that game
+            const bestHelp = (i, r, want) => {
+                let best = null;
+                for (let j = 0; j < G; j++) for (let w = 0; w < 2; w++) {
+                    const k = ((i * G + j) * 2 + r) * 2 + w;
+                    if (scenN[k] < 50) continue;
+                    const odds = scenIn[k] / scenN[k];
+                    if (!best || (want === 'max' ? odds > best.odds : odds < best.odds)) best = { odds, winner: teams[nextGames[j][w]].owner, loser: teams[nextGames[j][1 - w]].owner };
+                }
+                return best;
+            };
+            // Plain-words line for the team's week: clinch / elimination scenarios, else what a win or loss does
+            const playoffScenario = (i, p, pW, pL) => {
+                if (p >= SURE) return 'In the playoffs in every simulation.';
+                if (p <= NONE) return 'Out of the playoffs in every simulation.';
+                if (pW === null || pL === null) return '';
+                const parts = [];
+                if (pW >= SURE) parts.push('Clinches a spot with a win.');
+                else {
+                    const h = bestHelp(i, 1, 'max');
+                    if (h && h.odds >= SURE) parts.push(`Clinches with a win and a ${h.loser} loss.`);
+                }
+                if (pL <= NONE) parts.push('Eliminated with a loss.');
+                else {
+                    const h = bestHelp(i, 0, 'min');
+                    if (h && h.odds <= NONE) parts.push(`Eliminated with a loss and a ${h.winner} win.`);
+                }
+                if (parts.length < 2) {
+                    const swing = pW - pL;
+                    if (swing >= 0.25) parts.push(`Huge week: a win means ${pct(pW)}, a loss ${pct(pL)}.`);
+                    else if (parts.length) { /* the clinch or elimination line says enough */ }
+                    else if (pL >= 0.95) parts.push(`Nearly locked in: still ${pct(pL)} even with a loss.`);
+                    else if (pW <= 0.05) parts.push(`Long shot: only ${pct(pW)} even with a win.`);
+                    else parts.push(`A win means ${pct(pW)}, a loss ${pct(pL)}.`);
+                }
+                return parts.join(' ');
+            };
             const rows = teams.map((t, i) => {
                 const opp = remaining.filter(g => g.o1 === t.owner || g.o2 === t.owner).map(g => teams[idx[g.o1 === t.owner ? g.o2 : g.o1]].model.mean);
                 return {
@@ -5715,7 +6100,8 @@
                     ifL: ifLn[i] ? ifL[i] / ifLn[i] : null,
                     sos: opp.length ? opp.reduce((a, b) => a + b, 0) / opp.length : null,
                     left: opp.length,
-                    seeds: Array.from(seedCounts[i], c => c / N)
+                    seeds: Array.from(seedCounts[i], c => c / N),
+                    scenario: playoffScenario(i, made[i] / N, ifWn[i] ? ifW[i] / ifWn[i] : null, ifLn[i] ? ifL[i] / ifLn[i] : null)
                 };
             }).sort((a, b) => b.playoff - a.playoff || b.projWins - a.projWins);
 
@@ -5766,7 +6152,7 @@
                 return `
                     <tr class="${i === sim.playoffTeams - 1 ? 'border-b-2 border-b-accent' : ''} hover:bg-slate-800/50">
                         <td class="p-3 text-slate-500 font-mono">${i + 1}</td>
-                        <td class="p-3"><p class="font-bold text-white">${escHtml(r.owner)}${chip}</p><p class="text-xs text-slate-400 truncate max-w-[14rem]">${escHtml(r.team)}</p></td>
+                        <td class="p-3"><p class="font-bold text-white">${escHtml(r.owner)}${chip}</p><p class="text-xs text-slate-400 truncate max-w-[14rem]">${escHtml(r.team)}</p>${r.scenario ? `<p class="text-[11px] text-amber-200 mt-0.5 max-w-[16rem] whitespace-normal">Week ${sim.nextWeek}: ${escHtml(r.scenario)}</p>` : ''}</td>
                         <td class="p-3 font-mono">${r.rec}</td>
                         <td class="p-3 font-mono text-slate-300">${r.pf.toFixed(1)}</td>
                         <td class="p-3 font-mono">${r.projWins.toFixed(1)}</td>
@@ -5801,6 +6187,333 @@
             note.innerText = `${PLAYOFF_SIMS.toLocaleString()} simulated seasons. Remaining games (weeks ${sim.nextWeek}-${sim.cfg.start - 1}) use each team's season scoring, blended toward the league average; ties broken by points for. ` +
                 `Top ${sim.playoffTeams} make the playoffs${sim.byes ? `, top ${sim.byes} get a bye` : ''} (playoffs start week ${sim.cfg.start}). ` +
                 `*Clinched / out means it happened in every simulation, not a mathematical guarantee. The line under the cutoff team marks the playoff line.`;
+        }
+
+        // --- TAB: PLAYER JOURNEY ---
+        // normalized name -> { name, pos, events: [{ league, ts, kind, text }], starts: { "league||season||owner": {...} }, rostered: [...] }
+        let journeyIndex = null;
+        function buildJourneyIndex() {
+            if (journeyIndex) return journeyIndex;
+            const idx = {};
+            const entry = (name, pos) => {
+                const clean = String(name || '').trim();
+                if (!clean) return null;
+                const k = normalizePlayerName(clean);
+                const e = idx[k] = idx[k] || { name: clean, pos: '', events: [], starts: {}, rostered: [] };
+                if (pos && !e.pos && !/flex/i.test(pos)) e.pos = pos;
+                return e;
+            };
+            const dateTs = d => {
+                const m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                return m ? new Date(+m[3], +m[1] - 1, +m[2]).getTime() : 0;
+            };
+            Object.keys(globalMasterData).forEach(league => {
+                if (!Array.isArray(globalMasterData[league])) return;
+                sectionRows(league, 'drafts').forEach(r => {
+                    const m = String(r[5] || '').match(/^(.*?)\s*\(([^()]+)\)$/);
+                    const e = m && entry(m[1], m[2]);
+                    if (!e) return;
+                    const who = getMasterOwner(r[4]);
+                    const from = r[6] ? ` (pick originally ${getMasterOwner(r[6])}'s)` : '';
+                    e.events.push({ league, ts: new Date(parseInt(r[0], 10) || 2000, 4, 1).getTime(), season: r[0], kind: 'draft', who,
+                        text: `${r[0]} ${String(r[1] || 'draft').toLowerCase()} draft: round ${r[2]}, pick ${r[3]} by ${who}${from}` });
+                });
+                sectionRows(league, 'trades').forEach(r => {
+                    if (!r[3] || !r[4]) return;
+                    const sides = String(r[4]).split(' <---> ').map(side => {
+                        const m = side.match(/^(.*?) received: \[(.*)\]$/);
+                        return m ? { owner: getMasterOwner(m[1].trim()), items: m[2] === 'Nothing' ? [] : m[2].split(/,\s*(?![^()]*\))/) } : null;
+                    }).filter(Boolean);
+                    sides.forEach(side => {
+                        const others = sides.filter(x => x !== side).map(x => x.owner).join(' & ');
+                        side.items.forEach(item => {
+                            const it = item.trim();
+                            const drafted = it.match(/^(\d{4}) Round (\d+)\w* Pick.*?-> Resulted in drafting:\s*(.*?)\s*\(([^()]+)\)\s*$/);
+                            if (drafted) {
+                                const e = entry(drafted[3], drafted[4]);
+                                if (e) e.events.push({ league, ts: tradeTimestamp(r), kind: 'pick', who: side.owner,
+                                    text: `${r[1] || r[0]}: the ${drafted[1]} round ${drafted[2]} pick that became him went to ${side.owner} in a trade with ${others}` });
+                                return;
+                            }
+                            if (/^\d{4} Round/.test(it)) return;
+                            const m = it.match(/^(.*?)\s*\(([A-Z/]+)(?:\s*-\s*[A-Z]+)?\)$/);
+                            const e = m && entry(m[1], m[2]);
+                            if (e) e.events.push({ league, ts: tradeTimestamp(r), kind: 'trade', who: side.owner,
+                                text: `${r[1] || r[0]}: traded to ${side.owner} by ${others}` });
+                        });
+                    });
+                });
+                sectionRows(league, 'moves').forEach(r => {
+                    const owner = getMasterOwner(r[3]);
+                    const bid = parseFloat(r[7]) || 0;
+                    parseNameList(r[5]).forEach(p => {
+                        const e = entry(p.name, p.pos);
+                        if (e) e.events.push({ league, ts: dateTs(r[2]) || new Date(parseInt(r[0], 10) || 2000, 8, 1).getTime(), kind: 'add', who: owner,
+                            text: `${r[2] || r[0] + ' ' + r[1]}: picked up by ${owner} (${String(r[4] || 'move').toLowerCase()}${bid ? `, $${bid}` : ''})` });
+                    });
+                    parseNameList(r[6]).forEach(p => {
+                        const e = entry(p.name, p.pos);
+                        if (e) e.events.push({ league, ts: dateTs(r[2]) || new Date(parseInt(r[0], 10) || 2000, 8, 1).getTime(), kind: 'drop', who: owner,
+                            text: `${r[2] || r[0] + ' ' + r[1]}: dropped by ${owner}` });
+                    });
+                });
+                sectionRows(league, 'lineups').forEach(r => {
+                    const owner = getMasterOwner(r[2]);
+                    const add = (list, started) => parseLineupList(list).forEach(p => {
+                        const e = entry(p.name, p.pos);
+                        if (!e) return;
+                        const k = `${league}||${r[0]}||${owner}`;
+                        const st = e.starts[k] = e.starts[k] || { league, season: r[0], owner, starts: 0, pts: 0, weeks: 0, best: 0 };
+                        st.weeks++;
+                        if (started) { st.starts++; st.pts += p.pts; st.best = Math.max(st.best, p.pts); }
+                    });
+                    add(r[5], true);
+                    add(r[6], false);
+                });
+                sectionRows(league, 'rosters').forEach(r => {
+                    String(r[3] || '').split(',').map(x => x.trim()).filter(Boolean).forEach(p => {
+                        const m = p.match(/^(.+?)\s*\(([A-Z]+)\s*-\s*([A-Z]+)\)$/);
+                        const e = entry(m ? m[1] : p, m ? m[2] : '');
+                        if (e) e.rostered.push({ league, owner: getMasterOwner(r[0]), nfl: m ? m[3] : '' });
+                    });
+                });
+            });
+            return (journeyIndex = idx);
+        }
+
+        function initPlayerJourney() {
+            const idx = buildJourneyIndex();
+            // Suggestions: players with some history, most-traveled first
+            const names = Object.values(idx).filter(e => e.events.length || Object.keys(e.starts).length)
+                .sort((a, b) => (b.events.length + Object.keys(b.starts).length) - (a.events.length + Object.keys(a.starts).length));
+            document.getElementById('journey-names').innerHTML = names.slice(0, 1500).map(e => `<option value="${escHtml(e.name)}">`).join('');
+            renderPlayerJourney();
+        }
+
+        function renderPlayerJourney() {
+            const box = document.getElementById('journey-content');
+            const q = normalizePlayerName(document.getElementById('journey-search').value);
+            const idx = buildJourneyIndex();
+            if (!q) {
+                // Most-traveled players as a starting point
+                const top = Object.values(idx).filter(e => /^(QB|RB|WR|TE)$/.test(e.pos)).map(e => ({ e, owners: new Set(e.events.map(x => x.who).concat(Object.values(e.starts).filter(s => s.starts).map(s => s.owner))).size }))
+                    .sort((a, b) => b.owners - a.owners).slice(0, 12);
+                box.innerHTML = `<div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-3">
+                    <h3 class="font-bold text-white">🧳 Most-traveled players</h3>
+                    <p class="text-xs text-slate-400">Played for, or passed through, the most managers. Tap one, or search above.</p>
+                    <div class="flex flex-wrap gap-2">${top.map(t => `<button type="button" onclick="openJourney(this.dataset.name)" data-name="${escHtml(t.e.name)}" class="bg-slate-900 border border-slate-700 hover:border-accent rounded-full px-3 py-1 text-xs font-semibold text-slate-200">${escHtml(t.e.name)} <span class="text-slate-500">${t.owners} teams</span></button>`).join('')}</div>
+                </div>`;
+                return;
+            }
+            let e = idx[q];
+            if (!e) {
+                const matches = Object.keys(idx).filter(k => k.includes(q)).slice(0, 12);
+                if (matches.length === 1) e = idx[matches[0]];
+                else {
+                    box.innerHTML = matches.length
+                        ? `<div class="flex flex-wrap gap-2">${matches.map(k => `<button type="button" onclick="openJourney(this.dataset.name)" data-name="${escHtml(idx[k].name)}" class="bg-slate-900 border border-slate-700 hover:border-accent rounded-full px-3 py-1 text-xs font-semibold text-slate-200">${escHtml(idx[k].name)}</button>`).join('')}</div>`
+                        : '<p class="text-sm text-slate-400">No player by that name in any league\'s history.</p>';
+                    return;
+                }
+            }
+
+            const leagues = [...new Set([...e.events.map(x => x.league), ...Object.values(e.starts).map(s => s.league), ...e.rostered.map(r => r.league)])].sort();
+            // Career points scored for each manager (starting lineups only)
+            const byOwner = {};
+            Object.values(e.starts).forEach(s => {
+                const o = byOwner[s.owner] = byOwner[s.owner] || { owner: s.owner, starts: 0, pts: 0, leagues: new Set() };
+                o.starts += s.starts; o.pts += s.pts; o.leagues.add(s.league);
+            });
+            const owners = Object.values(byOwner).filter(o => o.starts).sort((a, b) => b.pts - a.pts);
+            const icons = { draft: '📋', trade: '🔁', pick: '🎟️', add: '➕', drop: '✂️' };
+            const sections = leagues.map(lg => {
+                const items = e.events.filter(x => x.league === lg).map(x => ({ ts: x.ts, html: `${icons[x.kind] || '•'} ${escHtml(x.text)}` }));
+                Object.values(e.starts).filter(s => s.league === lg).forEach(s => {
+                    items.push({ ts: new Date(parseInt(s.season, 10) || 2000, 11, 31).getTime() + 1, html: s.starts
+                        ? `🏈 <strong class="text-white">${escHtml(s.season)} for ${escHtml(s.owner)}</strong>: ${s.starts} start${s.starts === 1 ? '' : 's'}, ${s.pts.toFixed(1)} pts (${(s.pts / s.starts).toFixed(1)} a start, best ${s.best.toFixed(1)})${s.weeks > s.starts ? `, ${s.weeks - s.starts} week${s.weeks - s.starts === 1 ? '' : 's'} on the bench` : ''}`
+                        : `🪑 ${escHtml(s.season)} for ${escHtml(s.owner)}: on the bench all ${s.weeks} week${s.weeks === 1 ? '' : 's'}` });
+                });
+                items.sort((a, b) => a.ts - b.ts);
+                const now = e.rostered.filter(r => r.league === lg);
+                return `<div class="bg-cardbg border border-slate-700 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center gap-2">
+                        <h3 class="font-bold text-white truncate">${escHtml(lg)}</h3>
+                        <span class="text-xs ${now.length ? 'text-emerald-300' : 'text-slate-500'} shrink-0">${now.length ? `Now: ${now.map(r => escHtml(r.owner)).join(', ')}` : 'Not rostered now'}</span>
+                    </div>
+                    <ul class="space-y-1.5 text-xs text-slate-300">${items.map(i => `<li>${i.html}</li>`).join('') || '<li class="text-slate-500">Rostered, nothing else on record.</li>'}</ul>
+                </div>`;
+            });
+            const value = Math.max(0, ...leagues.map(lg => playerValueByName(e.name, lg)));
+            const age = (playerMeta[e.name] || [])[0];
+            box.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <div class="flex flex-wrap justify-between items-baseline gap-2">
+                        <h3 class="text-xl font-extrabold text-white">${escHtml(e.name)} <span class="text-sm text-slate-400 font-semibold">${escHtml(e.pos)}${age ? ` · age ${escHtml(age)}` : ''}</span></h3>
+                        ${value ? `<span class="text-sm text-emerald-300 font-bold">Value today ${value.toLocaleString()}</span>` : ''}
+                    </div>
+                    ${owners.length ? `<div class="flex flex-wrap gap-2 text-xs">${owners.map(o => `<span class="bg-cardbg border border-slate-700 rounded-lg px-2.5 py-1"><strong class="text-accent">${escHtml(o.owner)}</strong> ${o.pts.toFixed(0)} pts in ${o.starts} starts</span>`).join('')}</div>
+                    <p class="text-[11px] text-slate-500">Points he scored in each manager's starting lineup, all leagues${owners.length > 1 ? `. Most for ${escHtml(owners[0].owner)}` : ''}.</p>` : ''}
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${sections.join('')}</div>`;
+        }
+
+        function openJourney(name) {
+            document.getElementById('journey-search').value = name;
+            renderPlayerJourney();
+        }
+
+        // --- TAB: SEASON WRAPPED ---
+        function initWrapped() {
+            const hub = buildHubData();
+            const mSel = document.getElementById('wrapped-manager'), sSel = document.getElementById('wrapped-season');
+            const owners = [...new Set(hub.games.flatMap(g => [g.t1, g.t2]))].sort((a, b) => a.localeCompare(b));
+            const seasons = [...new Set(hub.games.map(g => g.season))].sort((a, b) => b - a);
+            mSel.innerHTML = owners.map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('');
+            sSel.innerHTML = seasons.map(s => `<option value="${s}">${s}</option>`).join('');
+            const saved = chatStore('wrappedManager');
+            if (saved && owners.includes(saved)) mSel.value = saved;
+            else if (owners.includes('Smokers Haven')) mSel.value = 'Smokers Haven';
+            renderWrapped();
+        }
+
+        function wrappedData(owner, season) {
+            const hub = buildHubData();
+            const out = { owner, season, leagues: [], w: 0, l: 0, t: 0, pf: 0, games: 0 };
+            // Records and finishes per league
+            Object.values(hub.seasons).filter(st => st.season === season && st.teams[owner]).forEach(st => {
+                const t = st.teams[owner];
+                out.leagues.push({ league: st.league, rec: fmtRecord(t), seed: t.seed, of: st.ranked.length, placement: t.placement || '', champ: st.champ === owner, sacko: st.sacko === owner, complete: st.complete });
+                out.w += t.w; out.l += t.l; out.t += t.t; out.pf += t.pf; out.games += t.w + t.l + t.t;
+            });
+            if (!out.leagues.length) return null;
+            out.titles = out.leagues.filter(x => x.champ).length;
+
+            // Weeks: best, worst, lineup calls (no-bench leagues have no lineup calls to make)
+            const mine = hub.lineups.filter(l => l.owner === owner && l.season === season);
+            out.best = mine.reduce((b, l) => (!b || l.score > b.score ? l : b), null);
+            out.worst = mine.filter(l => l.score >= 20).reduce((b, l) => (!b || l.score < b.score ? l : b), null);
+            const calls = mine.filter(l => !hasNoBench(l.league));
+            const sc = calls.reduce((a, l) => a + l.score, 0), opt = calls.reduce((a, l) => a + l.optimal, 0);
+            out.iq = opt ? sc / opt : null;
+            out.benchLeft = opt - sc;
+            out.blunder = calls.reduce((b, l) => (!b || l.optimal - l.score > b.optimal - b.score ? l : b), null);
+            // MVP: most starting points for him this season, all leagues
+            const mvp = {};
+            mine.forEach(l => l.starters.forEach(p => {
+                const k = normalizePlayerName(p.name);
+                const m = mvp[k] = mvp[k] || { name: p.name, pos: p.pos, pts: 0, starts: 0 };
+                m.pts += p.pts; m.starts++;
+            }));
+            out.mvp = Object.values(mvp).sort((a, b) => b.pts - a.pts)[0] || null;
+
+            // Luck: wins against all-play expected wins (regular season)
+            let expW = 0, realW = 0;
+            const byWeek = {};
+            hub.games.filter(g => g.season === season && g.weekNum < playoffStartWeek(g.league, g.season)).forEach(g => {
+                const k = `${g.league}||${g.weekNum}`;
+                (byWeek[k] = byWeek[k] || []).push([g.t1, g.s1, g.t2, g.s2], [g.t2, g.s2, g.t1, g.s1]);
+            });
+            Object.values(byWeek).forEach(rows => {
+                const me = rows.find(r => r[0] === owner);
+                if (!me) return;
+                const others = rows.filter(r => r[0] !== owner);
+                expW += others.filter(r => me[1] > r[1]).length / Math.max(1, others.length) + others.filter(r => me[1] === r[1]).length / Math.max(1, others.length) / 2;
+                realW += me[1] > me[3] ? 1 : me[1] === me[3] ? 0.5 : 0;
+            });
+            out.luck = realW - expW;
+
+            // Rivals this season: who beat him most, who he beat most
+            const vs = {};
+            hub.games.filter(g => g.season === season && (g.t1 === owner || g.t2 === owner)).forEach(g => {
+                const opp = g.t1 === owner ? g.t2 : g.t1, my = g.t1 === owner ? g.s1 : g.s2, th = g.t1 === owner ? g.s2 : g.s1;
+                const v = vs[opp] = vs[opp] || { opp, w: 0, l: 0 };
+                if (my > th) v.w++; else if (my < th) v.l++;
+            });
+            const vsList = Object.values(vs);
+            out.nemesis = vsList.filter(v => v.l).sort((a, b) => b.l - a.l || a.w - b.w)[0] || null;
+            out.victim = vsList.filter(v => v.w).sort((a, b) => b.w - a.w || a.l - b.l)[0] || null;
+
+            // Best pickup and trades
+            out.pickup = hub.pickups.filter(p => p.owner === owner && p.season === season).sort((a, b) => b.pts - a.pts)[0] || null;
+            const trades = hub.trades.filter(t => t.season === season && t.sides.some(s => s.owner === owner));
+            out.trades = trades.length;
+            const scored = trades.map(t => {
+                const me = t.sides.find(s => s.owner === owner);
+                const total = t.sides.reduce((a, s) => a + s.value, 0);
+                return { t, me, share: total ? me.value / total : 0.5, others: t.sides.filter(s => s !== me).map(s => s.owner).join(' & ') };
+            }).filter(x => x.t.sides.some(s => s.value));
+            out.bestTrade = scored.sort((a, b) => b.share - a.share)[0] || null;
+            out.worstTrade = scored.length > 1 ? scored[scored.length - 1] : null;
+            return out;
+        }
+
+        function renderWrapped() {
+            const owner = document.getElementById('wrapped-manager').value;
+            const season = parseInt(document.getElementById('wrapped-season').value, 10);
+            chatStore('wrappedManager', owner);
+            const box = document.getElementById('wrapped-content');
+            const d = wrappedData(owner, season);
+            if (!d) { box.innerHTML = `<p class="text-sm text-slate-400">${escHtml(owner)} didn't play in ${season}.</p>`; return; }
+            const tile = (icon, label, big, sub) => `
+                <div class="bg-cardbg border border-slate-700 rounded-xl p-4 space-y-1">
+                    <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">${icon} ${label}</p>
+                    <p class="text-lg font-extrabold text-white leading-tight">${big}</p>
+                    ${sub ? `<p class="text-xs text-slate-400">${sub}</p>` : ''}
+                </div>`;
+            const rec = fmtRecord(d);
+            const winPct = d.games ? Math.round((d.w + d.t / 2) / d.games * 100) : 0;
+            const luckTxt = d.luck >= 1 ? `+${d.luck.toFixed(1)} wins of luck` : d.luck <= -1 ? `${d.luck.toFixed(1)} wins of bad luck` : 'Right where the scores said';
+            const tiles = [
+                tile('🏆', 'Season', `${rec} · ${winPct}%`, `${d.leagues.length} league${d.leagues.length === 1 ? '' : 's'}${d.titles ? ` · ${d.titles} title${d.titles === 1 ? '' : 's'}` : ''} · ${d.pf.toFixed(0)} PF`),
+                d.best && tile('💥', 'Best week', `${d.best.score.toFixed(2)} pts`, `${escHtml(d.best.league)} · ${escHtml(d.best.week)}`),
+                d.worst && tile('🪫', 'Worst week', `${d.worst.score.toFixed(2)} pts`, `${escHtml(d.worst.league)} · ${escHtml(d.worst.week)}`),
+                d.mvp && tile('⭐', 'MVP', escHtml(d.mvp.name), `${d.mvp.pts.toFixed(1)} pts in ${d.mvp.starts} starts`),
+                tile('🍀', 'Luck', luckTxt, 'Real wins against all-play expected wins, regular season'),
+                d.iq !== null && tile('🧠', 'Lineup IQ', `${Math.round(d.iq * 100)}%`, `${d.benchLeft.toFixed(0)} pts left on the bench all season`),
+                d.blunder && d.blunder.optimal - d.blunder.score > 0.5 && tile('🤦', 'Worst lineup call', `${(d.blunder.optimal - d.blunder.score).toFixed(1)} pts on the bench`, `${escHtml(d.blunder.league)} · ${escHtml(d.blunder.week)}`),
+                d.pickup && d.pickup.pts > 0 && tile('🛒', 'Best pickup', escHtml(d.pickup.player.name), `${d.pickup.pts.toFixed(1)} pts in ${d.pickup.starts} starts · ${escHtml(d.pickup.league)}`),
+                d.bestTrade && tile('🤝', `Best trade (${d.trades} total)`, `${Math.round(d.bestTrade.share * 100)}% of the value`, `With ${escHtml(d.bestTrade.others)} · ${escHtml(d.bestTrade.t.league)} · today's values`),
+                d.worstTrade && d.worstTrade.share < 0.45 && tile('🧯', 'Worst trade', `${Math.round(d.worstTrade.share * 100)}% of the value`, `With ${escHtml(d.worstTrade.others)} · ${escHtml(d.worstTrade.t.league)}`),
+                d.nemesis && tile('😈', 'Nemesis', escHtml(d.nemesis.opp), `Beat ${escHtml(owner)} ${d.nemesis.l} time${d.nemesis.l === 1 ? '' : 's'}${d.nemesis.w ? `, lost ${d.nemesis.w}` : ''}`),
+                d.victim && tile('🎯', 'Favorite victim', escHtml(d.victim.opp), `Beat ${d.victim.w} time${d.victim.w === 1 ? '' : 's'}${d.victim.l ? `, lost ${d.victim.l}` : ''}`),
+            ].filter(Boolean);
+            const finishes = d.leagues.map(x => `<li><strong class="text-white">${escHtml(x.league)}</strong>: ${escHtml(x.rec)}, ${x.champ ? '🏆 champion' : x.placement && !/regular season/i.test(x.placement) ? escHtml(x.placement.replace(/^\W+/, '')) : `${ordinalSuffix(x.seed)} of ${x.of}${x.complete ? '' : ' so far'}`}${x.sacko ? ' · 🚽 last place' : ''}</li>`).join('');
+
+            // Copy text and share card
+            const lines = [`🎁 ${owner}'s ${season} Wrapped`, `${rec} (${winPct}%) in ${d.leagues.length} league${d.leagues.length === 1 ? '' : 's'}${d.titles ? `, ${d.titles} title${d.titles === 1 ? '' : 's'}` : ''}`];
+            d.leagues.forEach(x => lines.push(`• ${x.league}: ${x.rec}${x.champ ? ', champion' : ''}${x.sacko ? ', last place' : ''}`));
+            if (d.best) lines.push(`Best week: ${d.best.score.toFixed(2)} (${d.best.league}, ${d.best.week})`);
+            if (d.worst) lines.push(`Worst week: ${d.worst.score.toFixed(2)} (${d.worst.league}, ${d.worst.week})`);
+            if (d.mvp) lines.push(`MVP: ${d.mvp.name}, ${d.mvp.pts.toFixed(1)} pts`);
+            lines.push(`Luck: ${luckTxt}`);
+            if (d.iq !== null) lines.push(`Lineup IQ: ${Math.round(d.iq * 100)}%, ${d.benchLeft.toFixed(0)} pts left on the bench`);
+            if (d.pickup && d.pickup.pts > 0) lines.push(`Best pickup: ${d.pickup.player.name} (${d.pickup.pts.toFixed(1)} pts)`);
+            if (d.nemesis) lines.push(`Nemesis: ${d.nemesis.opp}`);
+            lines.push(`${location.origin}${location.pathname}?tab=wrapped`);
+            const shareUrl = AWARD_CARD_ENDPOINT ? awardShareUrl('🎁', `${season} Wrapped`, {
+                name: owner, value: `${rec}${d.titles ? ` · ${d.titles}🏆` : ''}`,
+                detail: [d.best && `Best week ${d.best.score.toFixed(1)}`, d.mvp && `MVP ${d.mvp.name}`, luckTxt].filter(Boolean).join(' • ')
+            }) : '';
+            box.innerHTML = `
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-accent/40 rounded-2xl p-5 space-y-4">
+                    <div class="flex flex-wrap justify-between items-start gap-3">
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-accent font-bold">${season} Wrapped</p>
+                            <h3 class="text-2xl font-extrabold text-white">${escHtml(owner)}</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${sleeperCopyButton(lines.join('\n'), '📋 Copy')}
+                            ${shareUrl ? `<button type="button" onclick="copyAwardLink(event, this)" data-url="${escHtml(shareUrl)}" class="bg-slate-900 border border-slate-700 hover:border-accent rounded-lg px-3 py-1.5 text-xs font-bold text-slate-200">📤 Share card</button>` : ''}
+                        </div>
+                    </div>
+                    <ul class="text-sm text-slate-300 space-y-0.5">${finishes}</ul>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">${tiles.join('')}</div>
+                </div>`;
+        }
+
+        function ordinalSuffix(n) {
+            const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+            return n + (s[(v - 20) % 10] || s[v] || s[0]);
         }
 
         // --- TAB 10: TRADE PARTNER SYNERGY MATRIX ---

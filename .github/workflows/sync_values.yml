@@ -94,6 +94,12 @@ jobs:
         continue-on-error: true
         run: python scripts/sync_trade_values.py
 
+      # Today's dynasty value of every team, for the Power Rankings value stock chart
+      - name: Save today's team values
+        id: valuehistory
+        continue-on-error: true
+        run: python scripts/sync_value_history.py
+
       - name: Upload Fleaflicker raw API samples (for debugging)
         if: always()
         uses: actions/upload-artifact@v5
@@ -109,7 +115,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ktc_values.json sleeper_leagues_master.json player_meta.json leagues.json trade_values.json
+          git add ktc_values.json sleeper_leagues_master.json player_meta.json leagues.json trade_values.json value_history.json
           # leagues.json only changes when a Sleeper league renewed for a new season
           leagues_changed=$(git diff --staged --quiet -- leagues.json || echo yes)
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-sync live sleeper league data and KTC valuations [skip ci]" && git pull --rebase origin "${GITHUB_REF_NAME}" && git push)
@@ -119,7 +125,7 @@ jobs:
           fi
 
       - name: Fail run if a sync step failed
-        if: steps.values.outcome == 'failure' || steps.leagues.outcome == 'failure' || steps.flea.outcome == 'failure' || steps.tradevalues.outcome == 'failure'
+        if: steps.values.outcome == 'failure' || steps.leagues.outcome == 'failure' || steps.flea.outcome == 'failure' || steps.tradevalues.outcome == 'failure' || steps.valuehistory.outcome == 'failure'
         run: |
-          echo "values sync: ${{ steps.values.outcome }}, leagues sync: ${{ steps.leagues.outcome }}, fleaflicker sync: ${{ steps.flea.outcome }}, trade values: ${{ steps.tradevalues.outcome }}"
+          echo "values sync: ${{ steps.values.outcome }}, leagues sync: ${{ steps.leagues.outcome }}, fleaflicker sync: ${{ steps.flea.outcome }}, trade values: ${{ steps.tradevalues.outcome }}, team values: ${{ steps.valuehistory.outcome }}"
           exit 1

@@ -11,6 +11,7 @@ on:
       - 'ktc_values.json'
       - 'player_meta.json'
       - 'trade_values.json'
+      - 'value_history.json'
       - 'styles.css'
 
 jobs:

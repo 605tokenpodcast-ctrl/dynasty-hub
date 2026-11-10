@@ -2632,6 +2632,19 @@
     }
    }
   },
+  "Branden's League||2026||11/10/2026||KillerCards (TheCards) received: [Malik Nabers (WR), 2028 Round 4th Pick (originally from Smokers Haven (SmokersHaven)), 2029 Round 4th Pick (originally from Smokers Haven (SmokersHaven))] <---> Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from KillerCards (TheCards)), 2028 Round 1st Pick (originally from KillerCards (TheCards)), 2029 Round 1st Pick (originally from KillerCards (TheCards))]": {
+   "trade_day": {
+    "as_of": "2026-11-10",
+    "values": {
+     "Malik Nabers (WR)": 8051,
+     "2028 Round 4th Pick (originally from Smokers Haven (SmokersHaven))": 10,
+     "2029 Round 4th Pick (originally from Smokers Haven (SmokersHaven))": 10,
+     "2027 Round 1st Pick (originally from KillerCards (TheCards))": 2328,
+     "2028 Round 1st Pick (originally from KillerCards (TheCards))": 1605,
+     "2029 Round 1st Pick (originally from KillerCards (TheCards))": 1605
+    }
+   }
+  },
   "Branden's League||2026||4/26/2026||Smokers Haven (SmokersHaven) received: [Kenneth Walker (RB)] <---> Leno'S Team (Leno) received: [2026 Round 1st Pick (originally from Fish's Team (DERRICKFISH)) -> Resulted in drafting: Jonah Coleman (RB), 2028 Round 2nd Pick (originally from Smokers Haven (SmokersHaven))]": {
    "trade_day": {
     "as_of": "2026-02-27",
@@ -3199,6 +3212,16 @@
      "2028 Round 3rd Pick (originally from Purdy ButtHole (Tstruck97))": 32,
      "2029 Round 2nd Pick (originally from Purdy ButtHole (Tstruck97))": 176,
      "Bo Nix (QB)": 1572
+    }
+   }
+  },
+  "Dante's league||2026||11/9/2026||Bend over and goff (Dontiddy) received: [Mike Evans (WR)] <---> Hawk Tua in a Kupp (tokenwhiteguy) received: [2027 Round 3rd Pick (originally from Bend over and goff (Dontiddy)), 2027 Round 2nd Pick (originally from Purdy ButtHole (Tstruck97))]": {
+   "trade_day": {
+    "as_of": "2026-11-10",
+    "values": {
+     "Mike Evans (WR)": 978,
+     "2027 Round 3rd Pick (originally from Bend over and goff (Dontiddy))": 47,
+     "2027 Round 2nd Pick (originally from Purdy ButtHole (Tstruck97))": 266
     }
    }
   },

@@ -49,7 +49,7 @@
     }
    }
   },
-  "Andys league||2020||11/17/2020||tokenwhiteguy received: [Matt Ryan (QB), 2021 Round 4th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Nico Collins (WR), 2021 Round 5th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Kyle Trask (QB), 2022 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jameson Williams (WR)] <---> Honolulu Blues (pboger) received: [Jimmy Garoppolo (QB), 2021 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Terrace Marshall (WR), 2021 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Dyami Brown (WR), 2022 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Isaiah Spiller (RB)]": {
+  "Andys league||2020||11/12/2020||tokenwhiteguy received: [Matt Ryan (QB), 2021 Round 4th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Nico Collins (WR), 2021 Round 5th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Kyle Trask (QB), 2022 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jameson Williams (WR)] <---> Honolulu Blues (pboger) received: [Jimmy Garoppolo (QB), 2021 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Terrace Marshall (WR), 2021 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Dyami Brown (WR), 2022 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Isaiah Spiller (RB)]": {
    "trade_day": {
     "as_of": "2020-11-07",
     "values": {
@@ -64,17 +64,17 @@
     }
    },
    "grade": {
-    "mark": "2023-11-17",
-    "as_of": "2023-11-17",
+    "mark": "2023-11-12",
+    "as_of": "2023-11-10",
     "values": {
      "Matt Ryan (QB)": 0,
-     "2021 Round 4th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Nico Collins (WR)": 2269,
+     "2021 Round 4th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Nico Collins (WR)": 2417,
      "2021 Round 5th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Kyle Trask (QB)": 3,
-     "2022 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jameson Williams (WR)": 953,
-     "Jimmy Garoppolo (QB)": 8,
-     "2021 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Terrace Marshall (WR)": 53,
-     "2021 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Dyami Brown (WR)": 6,
-     "2022 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Isaiah Spiller (RB)": 17
+     "2022 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jameson Williams (WR)": 918,
+     "Jimmy Garoppolo (QB)": 4,
+     "2021 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Terrace Marshall (WR)": 42,
+     "2021 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Dyami Brown (WR)": 3,
+     "2022 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Isaiah Spiller (RB)": 12
     }
    }
   },
@@ -155,7 +155,7 @@
     }
    }
   },
-  "Andys league||2020||9/24/2020||wckdklwn received: [Saquon Barkley (RB)] <---> rprichards1973 received: [Jared Cook (TE), Leonard Fournette (RB), 2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)]": {
+  "Andys league||2020||9/23/2020||wckdklwn received: [Saquon Barkley (RB)] <---> rprichards1973 received: [Jared Cook (TE), Leonard Fournette (RB), 2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)]": {
    "trade_day": {
     "as_of": "2020-09-18",
     "values": {
@@ -166,7 +166,7 @@
     }
    },
    "grade": {
-    "mark": "2023-09-24",
+    "mark": "2023-09-23",
     "as_of": "2023-09-22",
     "values": {
      "Saquon Barkley (RB)": 7075,
@@ -176,7 +176,7 @@
     }
    }
   },
-  "Andys league||2020||9/9/2020||Kronik received: [DeAndre Hopkins (WR)] <---> Honolulu Blues (pboger) received: [Devin Singletary (RB), 2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Rhamondre Stevenson (RB), 2021 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Adam Trautman (TE)]": {
+  "Andys league||2020||9/6/2020||Kronik received: [DeAndre Hopkins (WR)] <---> Honolulu Blues (pboger) received: [Devin Singletary (RB), 2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Rhamondre Stevenson (RB), 2021 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Adam Trautman (TE)]": {
    "trade_day": {
     "as_of": "2020-09-04",
     "values": {
@@ -187,17 +187,17 @@
     }
    },
    "grade": {
-    "mark": "2023-09-09",
-    "as_of": "2023-09-08",
+    "mark": "2023-09-06",
+    "as_of": "2023-09-01",
     "values": {
-     "DeAndre Hopkins (WR)": 1028,
-     "Devin Singletary (RB)": 186,
-     "2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Rhamondre Stevenson (RB)": 4527,
+     "DeAndre Hopkins (WR)": 985,
+     "Devin Singletary (RB)": 184,
+     "2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Rhamondre Stevenson (RB)": 4701,
      "2021 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Adam Trautman (TE)": 5
     }
    }
   },
-  "Andys league||2021||10/12/2021||FloridaBills received: [Taylor Heinicke (QB), Devin Singletary (RB), 2022 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Brian Robinson Jr. (RB), 2022 Round 5th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Laviska Shenault (WR)] <---> Honolulu Blues (pboger) received: [Jameis Winston (QB), Chicago Bears (DEF)]": {
+  "Andys league||2021||10/10/2021||FloridaBills received: [Taylor Heinicke (QB), Devin Singletary (RB), 2022 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Brian Robinson Jr. (RB), 2022 Round 5th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Laviska Shenault (WR)] <---> Honolulu Blues (pboger) received: [Jameis Winston (QB), Chicago Bears (DEF)]": {
    "trade_day": {
     "as_of": "2021-10-08",
     "values": {
@@ -210,29 +210,29 @@
     }
    },
    "grade": {
-    "mark": "2024-10-12",
-    "as_of": "2024-10-11",
+    "mark": "2024-10-10",
+    "as_of": "2024-10-04",
     "values": {
-     "Taylor Heinicke (QB)": 3,
-     "Devin Singletary (RB)": 419,
-     "2022 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Brian Robinson Jr. (RB)": 2031,
+     "Taylor Heinicke (QB)": 2,
+     "Devin Singletary (RB)": 949,
+     "2022 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Brian Robinson Jr. (RB)": 2200,
      "2022 Round 5th Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Laviska Shenault (WR)": 2,
-     "Jameis Winston (QB)": 10,
+     "Jameis Winston (QB)": 3,
      "Chicago Bears (DEF)": 0
     }
    }
   },
-  "Andys league||2021||5/15/2021||FloridaBills received: [J.K. Dobbins (RB)] <---> Dolphin Outlaws (Outlaws1919) received: [Daniel Jones (QB), Myles Gaskin (RB)]": {
+  "Andys league||2021||5/12/2021||FloridaBills received: [J.K. Dobbins (RB)] <---> Dolphin Outlaws (Outlaws1919) received: [Daniel Jones (QB), Myles Gaskin (RB)]": {
    "trade_day": {
-    "as_of": "2021-05-14",
+    "as_of": "2021-05-12",
     "values": {
-     "J.K. Dobbins (RB)": 6159,
-     "Daniel Jones (QB)": 204,
-     "Myles Gaskin (RB)": 1636
+     "J.K. Dobbins (RB)": 6101,
+     "Daniel Jones (QB)": 211,
+     "Myles Gaskin (RB)": 1656
     }
    },
    "grade": {
-    "mark": "2024-05-15",
+    "mark": "2024-05-12",
     "as_of": "2024-05-10",
     "values": {
      "J.K. Dobbins (RB)": 109,
@@ -241,7 +241,7 @@
     }
    }
   },
-  "Andys league||2021||5/25/2021||wckdklwn received: [2021 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dee Eskridge (WR), 2021 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jermar Jefferson (RB), 2021 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Trevor Lawrence (QB), 2021 Round 3rd Pick (originally from wckdklwn) -> Resulted in drafting: Tre' McKitty (TE)] <---> Kickass (rprichards1973) received: [2021 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Chuba Hubbard (RB), 2021 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Pat Freiermuth (TE), 2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)]": {
+  "Andys league||2021||5/22/2021||wckdklwn received: [2021 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dee Eskridge (WR), 2021 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jermar Jefferson (RB), 2021 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Trevor Lawrence (QB), 2021 Round 3rd Pick (originally from wckdklwn) -> Resulted in drafting: Tre' McKitty (TE)] <---> Kickass (rprichards1973) received: [2021 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Chuba Hubbard (RB), 2021 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Pat Freiermuth (TE), 2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)]": {
    "trade_day": {
     "as_of": "2021-05-21",
     "values": {
@@ -268,16 +268,16 @@
     }
    }
   },
-  "Andys league||2021||8/13/2021||FloridaBills received: [Todd Gurley (RB)] <---> Dolphin Outlaws (Outlaws1919) received: [Mike Davis (RB)]": {
+  "Andys league||2021||8/10/2021||FloridaBills received: [Todd Gurley (RB)] <---> Dolphin Outlaws (Outlaws1919) received: [Mike Davis (RB)]": {
    "trade_day": {
-    "as_of": "2021-08-13",
+    "as_of": "2021-08-06",
     "values": {
-     "Todd Gurley (RB)": 36,
-     "Mike Davis (RB)": 754
+     "Todd Gurley (RB)": 38,
+     "Mike Davis (RB)": 741
     }
    },
    "grade": {
-    "mark": "2024-08-13",
+    "mark": "2024-08-10",
     "as_of": "2024-08-09",
     "values": {
      "Todd Gurley (RB)": 0,
@@ -285,16 +285,16 @@
     }
    }
   },
-  "Andys league||2021||9/19/2021||lilfishy received: [Mark Andrews (TE)] <---> tokenwhiteguy received: [2022 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Kenneth Walker III (RB)]": {
+  "Andys league||2021||9/15/2021||lilfishy received: [Mark Andrews (TE)] <---> tokenwhiteguy received: [2022 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Kenneth Walker III (RB)]": {
    "trade_day": {
-    "as_of": "2021-09-17",
+    "as_of": "2021-09-10",
     "values": {
-     "Mark Andrews (TE)": 2099,
-     "2022 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Kenneth Walker III (RB)": 2279
+     "Mark Andrews (TE)": 2345,
+     "2022 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Kenneth Walker III (RB)": 2348
     }
    },
    "grade": {
-    "mark": "2024-09-19",
+    "mark": "2024-09-15",
     "as_of": "2024-09-13",
     "values": {
      "Mark Andrews (TE)": 3630,
@@ -302,28 +302,7 @@
     }
    }
   },
-  "Andys league||2022||10/1/2022||wckdklwn received: [George Kittle (TE), 2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB), 2025 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE)] <---> Kickass (rprichards1973) received: [Darren Waller (TE)]": {
-   "trade_day": {
-    "as_of": "2022-09-30",
-    "values": {
-     "George Kittle (TE)": 2924,
-     "2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB)": 221,
-     "2025 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE)": 40,
-     "Darren Waller (TE)": 2226
-    }
-   },
-   "grade": {
-    "mark": "2025-10-01",
-    "as_of": "2025-09-26",
-    "values": {
-     "George Kittle (TE)": 2870,
-     "2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB)": 194,
-     "2025 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE)": 562,
-     "Darren Waller (TE)": 0
-    }
-   }
-  },
-  "Andys league||2022||10/12/2022||wckdklwn received: [Darren Waller (TE)] <---> Kickass (rprichards1973) received: [George Kittle (TE)]": {
+  "Andys league||2022||10/11/2022||wckdklwn received: [Darren Waller (TE)] <---> Kickass (rprichards1973) received: [George Kittle (TE)]": {
    "trade_day": {
     "as_of": "2022-10-07",
     "values": {
@@ -332,7 +311,7 @@
     }
    },
    "grade": {
-    "mark": "2025-10-12",
+    "mark": "2025-10-11",
     "as_of": "2025-10-10",
     "values": {
      "Darren Waller (TE)": 0,
@@ -340,7 +319,7 @@
     }
    }
   },
-  "Andys league||2022||10/13/2022||FloridaBills received: [Kadarius Toney (WR), 2025 Round 2nd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Tyler Warren (TE)] <---> Dolphin Outlaws (Outlaws1919) received: [Jamaal Williams (RB), Devin Duvernay (WR), Los Angeles Rams (DEF)]": {
+  "Andys league||2022||10/12/2022||FloridaBills received: [Kadarius Toney (WR), 2025 Round 2nd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Tyler Warren (TE)] <---> Dolphin Outlaws (Outlaws1919) received: [Jamaal Williams (RB), Devin Duvernay (WR), Los Angeles Rams (DEF)]": {
    "trade_day": {
     "as_of": "2022-10-07",
     "values": {
@@ -352,7 +331,7 @@
     }
    },
    "grade": {
-    "mark": "2025-10-13",
+    "mark": "2025-10-12",
     "as_of": "2025-10-10",
     "values": {
      "Kadarius Toney (WR)": 0,
@@ -363,7 +342,7 @@
     }
    }
   },
-  "Andys league||2022||10/18/2022||FloridaBills received: [2025 Round 3rd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Jayden Higgins (WR)] <---> Dolphin Outlaws (Outlaws1919) received: [Devin Singletary (RB)]": {
+  "Andys league||2022||10/15/2022||FloridaBills received: [2025 Round 3rd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Jayden Higgins (WR)] <---> Dolphin Outlaws (Outlaws1919) received: [Devin Singletary (RB)]": {
    "trade_day": {
     "as_of": "2022-10-14",
     "values": {
@@ -372,11 +351,11 @@
     }
    },
    "grade": {
-    "mark": "2025-10-18",
-    "as_of": "2025-10-17",
+    "mark": "2025-10-15",
+    "as_of": "2025-10-10",
     "values": {
-     "2025 Round 3rd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Jayden Higgins (WR)": 1032,
-     "Devin Singletary (RB)": 17
+     "2025 Round 3rd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Jayden Higgins (WR)": 810,
+     "Devin Singletary (RB)": 41
     }
    }
   },
@@ -399,7 +378,7 @@
     }
    }
   },
-  "Andys league||2022||10/4/2022||FloridaBills received: [Kyler Murray (QB)] <---> Dolphin Outlaws (Outlaws1919) received: [Patrick Mahomes (QB)]": {
+  "Andys league||2022||10/2/2022||FloridaBills received: [Kyler Murray (QB)] <---> Dolphin Outlaws (Outlaws1919) received: [Patrick Mahomes (QB)]": {
    "trade_day": {
     "as_of": "2022-09-30",
     "values": {
@@ -408,11 +387,45 @@
     }
    },
    "grade": {
-    "mark": "2025-10-04",
-    "as_of": "2025-10-03",
+    "mark": "2025-10-02",
+    "as_of": "2025-09-26",
     "values": {
-     "Kyler Murray (QB)": 704,
-     "Patrick Mahomes (QB)": 4881
+     "Kyler Murray (QB)": 2134,
+     "Patrick Mahomes (QB)": 4767
+    }
+   }
+  },
+  "Andys league||2022||10/2/2022||Smokers Haven (AnthonyZ) received: [2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jacory Croskey-Merritt (RB)] <---> Big Fish (DerrickFish) received: [Rashaad Penny (RB)]": {
+   "trade_day": {
+    "as_of": "2022-09-30",
+    "values": {
+     "2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jacory Croskey-Merritt (RB)": 221,
+     "Rashaad Penny (RB)": 661
+    }
+   },
+   "grade": {
+    "mark": "2025-10-02",
+    "as_of": "2025-09-26",
+    "values": {
+     "2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jacory Croskey-Merritt (RB)": 559,
+     "Rashaad Penny (RB)": 0
+    }
+   }
+  },
+  "Andys league||2022||10/2/2022||Smokers Haven (AnthonyZ) received: [2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)] <---> lilfishy received: [Melvin Gordon (RB)]": {
+   "trade_day": {
+    "as_of": "2022-09-30",
+    "values": {
+     "2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)": 40,
+     "Melvin Gordon (RB)": 385
+    }
+   },
+   "grade": {
+    "mark": "2025-10-02",
+    "as_of": "2025-09-26",
+    "values": {
+     "2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)": 378,
+     "Melvin Gordon (RB)": 0
     }
    }
   },
@@ -434,40 +447,6 @@
      "2025 Round 4th Pick (originally from Kickass (rprichards1973))": 0,
      "2025 Round 5th Pick (originally from Kickass (rprichards1973))": 0,
      "Chris Godwin Jr. (WR)": 1055
-    }
-   }
-  },
-  "Andys league||2022||10/4/2022||Smokers Haven (AnthonyZ) received: [2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jacory Croskey-Merritt (RB)] <---> Big Fish (DerrickFish) received: [Rashaad Penny (RB)]": {
-   "trade_day": {
-    "as_of": "2022-09-30",
-    "values": {
-     "2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jacory Croskey-Merritt (RB)": 221,
-     "Rashaad Penny (RB)": 661
-    }
-   },
-   "grade": {
-    "mark": "2025-10-04",
-    "as_of": "2025-10-03",
-    "values": {
-     "2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jacory Croskey-Merritt (RB)": 834,
-     "Rashaad Penny (RB)": 0
-    }
-   }
-  },
-  "Andys league||2022||10/4/2022||Smokers Haven (AnthonyZ) received: [2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)] <---> lilfishy received: [Melvin Gordon (RB)]": {
-   "trade_day": {
-    "as_of": "2022-09-30",
-    "values": {
-     "2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)": 40,
-     "Melvin Gordon (RB)": 385
-    }
-   },
-   "grade": {
-    "mark": "2025-10-04",
-    "as_of": "2025-10-03",
-    "values": {
-     "2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)": 264,
-     "Melvin Gordon (RB)": 0
     }
    }
   },
@@ -515,17 +494,17 @@
     }
    }
   },
-  "Andys league||2022||7/16/2022||Smokers Haven (AnthonyZ) received: [2022 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Isiah Pacheco (RB), 2022 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Greg Dulcich (TE), 2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB), 2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR), 2023 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dorian Thompson-Robinson (QB), 2022 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Treylon Burks (WR)] <---> Kickass (rprichards1973) received: [2022 Round 1st Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Dameon Pierce (RB)]": {
+  "Andys league||2022||7/14/2022||Smokers Haven (AnthonyZ) received: [2022 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Isiah Pacheco (RB), 2022 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Greg Dulcich (TE), 2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB), 2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR), 2023 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dorian Thompson-Robinson (QB), 2022 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Treylon Burks (WR)] <---> Kickass (rprichards1973) received: [2022 Round 1st Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Dameon Pierce (RB)]": {
    "trade_day": {
-    "as_of": "2022-07-15",
+    "as_of": "2022-07-08",
     "values": {
      "2022 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Isiah Pacheco (RB)": 0,
-     "2022 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Greg Dulcich (TE)": 59,
-     "2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 2366,
+     "2022 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Greg Dulcich (TE)": 62,
+     "2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 2403,
      "2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR)": 13,
      "2023 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dorian Thompson-Robinson (QB)": 5,
-     "2022 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Treylon Burks (WR)": 2594,
-     "2022 Round 1st Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Dameon Pierce (RB)": 572
+     "2022 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Treylon Burks (WR)": 2588,
+     "2022 Round 1st Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Dameon Pierce (RB)": 611
     }
    },
    "grade": {
@@ -542,7 +521,7 @@
     }
    }
   },
-  "Andys league||2022||7/21/2022||FloridaBills received: [Antonio Brown (WR), 2023 Round 3rd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Luke Musgrave (TE)] <---> Dolphin Outlaws (Outlaws1919) received: [Cordarrelle Patterson (RB), 2022 Round 5th Pick (originally from FloridaBills) -> Resulted in drafting: Trey Sermon (RB), 2022 Round 5th Pick (originally from wckdklwn) -> Resulted in drafting: Pierre Strong Jr. (RB)]": {
+  "Andys league||2022||7/18/2022||FloridaBills received: [Antonio Brown (WR), 2023 Round 3rd Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Luke Musgrave (TE)] <---> Dolphin Outlaws (Outlaws1919) received: [Cordarrelle Patterson (RB), 2022 Round 5th Pick (originally from FloridaBills) -> Resulted in drafting: Trey Sermon (RB), 2022 Round 5th Pick (originally from wckdklwn) -> Resulted in drafting: Pierre Strong Jr. (RB)]": {
    "trade_day": {
     "as_of": "2022-07-15",
     "values": {
@@ -554,7 +533,7 @@
     }
    },
    "grade": {
-    "mark": "2025-07-21",
+    "mark": "2025-07-18",
     "as_of": "2025-07-18",
     "values": {
      "Antonio Brown (WR)": 0,
@@ -565,16 +544,64 @@
     }
    }
   },
-  "Andys league||2022||7/22/2022||Smokers Haven (AnthonyZ) received: [2023 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: De'Von Achane (RB), 2023 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Cedric Tillman (WR), 2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE), 2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR), 2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)] <---> Kickass (rprichards1973) received: [2022 Round 2nd Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Trey McBride (TE)]": {
+  "Andys league||2022||7/19/2022||Smokers Haven (AnthonyZ) received: [2023 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: De'Von Achane (RB), 2023 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Cedric Tillman (WR), 2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE), 2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR), 2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)] <---> Kickass (rprichards1973) received: [2022 Round 2nd Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Trey McBride (TE)]": {
    "trade_day": {
-    "as_of": "2022-07-22",
+    "as_of": "2022-07-15",
     "values": {
-     "2023 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: De'Von Achane (RB)": 288,
-     "2023 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Cedric Tillman (WR)": 51,
-     "2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)": 11,
+     "2023 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: De'Von Achane (RB)": 284,
+     "2023 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Cedric Tillman (WR)": 50,
+     "2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)": 10,
      "2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR)": 4,
-     "2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)": 226,
-     "2022 Round 2nd Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Trey McBride (TE)": 375
+     "2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)": 235,
+     "2022 Round 2nd Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Trey McBride (TE)": 362
+    }
+   }
+  },
+  "Andys league||2022||8/11/2022||Smokers Haven (AnthonyZ) received: [2022 Round 4th Pick (originally from wckdklwn) -> Resulted in drafting: John Metchie III (WR), 2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR), 2024 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Malik Nabers (WR), 2024 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Ladd McConkey (WR)] <---> wckdklwn received: [Justin Jefferson (WR), James Robinson (RB), 2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR), 2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)]": {
+   "trade_day": {
+    "as_of": "2022-08-12",
+    "values": {
+     "2022 Round 4th Pick (originally from wckdklwn) -> Resulted in drafting: John Metchie III (WR)": 109,
+     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 2384,
+     "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 284,
+     "2024 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Malik Nabers (WR)": 1666,
+     "2024 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Ladd McConkey (WR)": 205,
+     "Justin Jefferson (WR)": 9808,
+     "James Robinson (RB)": 522,
+     "2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR)": 13,
+     "2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)": 10
+    }
+   },
+   "grade": {
+    "mark": "2025-08-11",
+    "as_of": "2025-08-08",
+    "values": {
+     "2022 Round 4th Pick (originally from wckdklwn) -> Resulted in drafting: John Metchie III (WR)": 7,
+     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 2221,
+     "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 330,
+     "2024 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Malik Nabers (WR)": 8700,
+     "2024 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Ladd McConkey (WR)": 6846,
+     "Justin Jefferson (WR)": 9924,
+     "James Robinson (RB)": 0,
+     "2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR)": 27,
+     "2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)": 85
+    }
+   }
+  },
+  "Andys league||2022||8/11/2022||Smokers Haven (AnthonyZ) received: [2024 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Rome Odunze (WR)] <---> Kickass (rprichards1973) received: [Brandin Cooks (WR)]": {
+   "trade_day": {
+    "as_of": "2022-08-12",
+    "values": {
+     "2024 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Rome Odunze (WR)": 1666,
+     "Brandin Cooks (WR)": 1291
+    }
+   },
+   "grade": {
+    "mark": "2025-08-11",
+    "as_of": "2025-08-08",
+    "values": {
+     "2024 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Rome Odunze (WR)": 4635,
+     "Brandin Cooks (WR)": 20
     }
    }
   },
@@ -622,37 +649,6 @@
     }
    }
   },
-  "Andys league||2022||8/12/2022||Smokers Haven (AnthonyZ) received: [2022 Round 4th Pick (originally from wckdklwn) -> Resulted in drafting: John Metchie III (WR), 2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR), 2024 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Malik Nabers (WR), 2024 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Ladd McConkey (WR)] <---> wckdklwn received: [Justin Jefferson (WR), James Robinson (RB), 2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR), 2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)]": {
-   "trade_day": {
-    "as_of": "2022-08-12",
-    "values": {
-     "2022 Round 4th Pick (originally from wckdklwn) -> Resulted in drafting: John Metchie III (WR)": 109,
-     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 2384,
-     "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 284,
-     "2024 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Malik Nabers (WR)": 1666,
-     "2024 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Ladd McConkey (WR)": 205,
-     "Justin Jefferson (WR)": 9808,
-     "James Robinson (RB)": 522,
-     "2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR)": 13,
-     "2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)": 10
-    }
-   },
-   "grade": {
-    "mark": "2025-08-12",
-    "as_of": "2025-08-08",
-    "values": {
-     "2022 Round 4th Pick (originally from wckdklwn) -> Resulted in drafting: John Metchie III (WR)": 7,
-     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 2221,
-     "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 330,
-     "2024 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Malik Nabers (WR)": 8700,
-     "2024 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Ladd McConkey (WR)": 6846,
-     "Justin Jefferson (WR)": 9924,
-     "James Robinson (RB)": 0,
-     "2023 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Kayshon Boutte (WR)": 27,
-     "2024 Round 4th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Theo Johnson (TE)": 85
-    }
-   }
-  },
   "Andys league||2022||8/12/2022||Smokers Haven (AnthonyZ) received: [2023 Round 2nd Pick (originally from tokenwhiteguy) -> Resulted in drafting: C.J. Stroud (QB), 2023 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Roschon Johnson (RB), 2024 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Caleb Williams (QB)] <---> tokenwhiteguy received: [Mike Evans (WR)]": {
    "trade_day": {
     "as_of": "2022-08-12",
@@ -674,24 +670,7 @@
     }
    }
   },
-  "Andys league||2022||8/12/2022||Smokers Haven (AnthonyZ) received: [2024 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Rome Odunze (WR)] <---> Kickass (rprichards1973) received: [Brandin Cooks (WR)]": {
-   "trade_day": {
-    "as_of": "2022-08-12",
-    "values": {
-     "2024 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Rome Odunze (WR)": 1666,
-     "Brandin Cooks (WR)": 1291
-    }
-   },
-   "grade": {
-    "mark": "2025-08-12",
-    "as_of": "2025-08-08",
-    "values": {
-     "2024 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Rome Odunze (WR)": 4635,
-     "Brandin Cooks (WR)": 20
-    }
-   }
-  },
-  "Andys league||2022||8/18/2022||Smokers Haven (AnthonyZ) received: [2022 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: David Bell (WR), 2024 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Brian Thomas Jr. (WR), 2024 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jermaine Burton (WR)] <---> Kickass (rprichards1973) received: [2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)]": {
+  "Andys league||2022||8/15/2022||Smokers Haven (AnthonyZ) received: [2022 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: David Bell (WR), 2024 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Brian Thomas Jr. (WR), 2024 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jermaine Burton (WR)] <---> Kickass (rprichards1973) received: [2022 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Alec Pierce (WR)]": {
    "trade_day": {
     "as_of": "2022-08-12",
     "values": {
@@ -702,12 +681,12 @@
     }
    }
   },
-  "Andys league||2022||8/24/2022||Smokers Haven (AnthonyZ) received: [2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)] <---> Honolulu Blues (pboger) received: [2022 Round 1st Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Chris Olave (WR)]": {
+  "Andys league||2022||8/18/2022||Smokers Haven (AnthonyZ) received: [2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)] <---> Honolulu Blues (pboger) received: [2022 Round 1st Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Chris Olave (WR)]": {
    "trade_day": {
-    "as_of": "2022-08-19",
+    "as_of": "2022-08-12",
     "values": {
-     "2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)": 2404,
-     "2022 Round 1st Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Chris Olave (WR)": 2534
+     "2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)": 2384,
+     "2022 Round 1st Pick (originally from Dolphin Outlaws (Outlaws1919)) -> Resulted in drafting: Chris Olave (WR)": 2412
     }
    },
    "grade": {
@@ -719,7 +698,7 @@
     }
    }
   },
-  "Andys league||2022||9/29/2022||Smokers Haven (AnthonyZ) received: [2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB), 2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)] <---> FloridaBills received: [DK Metcalf (WR)]": {
+  "Andys league||2022||9/28/2022||Smokers Haven (AnthonyZ) received: [2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB), 2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)] <---> FloridaBills received: [DK Metcalf (WR)]": {
    "trade_day": {
     "as_of": "2022-09-23",
     "values": {
@@ -729,12 +708,33 @@
     }
    },
    "grade": {
-    "mark": "2025-09-29",
+    "mark": "2025-09-28",
     "as_of": "2025-09-26",
     "values": {
      "2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB)": 3463,
      "2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)": 210,
      "DK Metcalf (WR)": 3877
+    }
+   }
+  },
+  "Andys league||2022||9/30/2022||wckdklwn received: [George Kittle (TE), 2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB), 2025 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE)] <---> Kickass (rprichards1973) received: [Darren Waller (TE)]": {
+   "trade_day": {
+    "as_of": "2022-09-30",
+    "values": {
+     "George Kittle (TE)": 2924,
+     "2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB)": 221,
+     "2025 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE)": 40,
+     "Darren Waller (TE)": 2226
+    }
+   },
+   "grade": {
+    "mark": "2025-09-30",
+    "as_of": "2025-09-26",
+    "values": {
+     "George Kittle (TE)": 2870,
+     "2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB)": 194,
+     "2025 Round 3rd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE)": 562,
+     "Darren Waller (TE)": 0
     }
    }
   },
@@ -776,7 +776,7 @@
     }
    }
   },
-  "Andys league||2023||10/23/2023||Smokers Haven (SmokersHaven) received: [2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Drake Maye (QB), 2025 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Omarion Hampton (RB)] <---> Big Fish (DerrickFish) received: [Isiah Pacheco (RB)]": {
+  "Andys league||2023||10/20/2023||Smokers Haven (SmokersHaven) received: [2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Drake Maye (QB), 2025 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Omarion Hampton (RB)] <---> Big Fish (DerrickFish) received: [Isiah Pacheco (RB)]": {
    "trade_day": {
     "as_of": "2023-10-20",
     "values": {
@@ -786,26 +786,26 @@
     }
    },
    "grade": {
-    "mark": "2026-10-23",
-    "as_of": "2026-10-26",
+    "mark": "2026-10-20",
+    "as_of": "2026-10-16",
     "values": {
-     "2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Drake Maye (QB)": 5324,
-     "2025 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Omarion Hampton (RB)": 4063,
-     "Isiah Pacheco (RB)": 37
+     "2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Drake Maye (QB)": 5068,
+     "2025 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Omarion Hampton (RB)": 5164,
+     "Isiah Pacheco (RB)": 17
     }
    }
   },
-  "Andys league||2023||11/25/2023||FloridaBills received: [Evan Engram (TE)] <---> Fins up (Finsup73) received: [Tyler Higbee (TE), Kenny Pickett (QB)]": {
+  "Andys league||2023||11/22/2023||FloridaBills received: [Evan Engram (TE)] <---> Fins up (Finsup73) received: [Tyler Higbee (TE), Kenny Pickett (QB)]": {
    "trade_day": {
-    "as_of": "2023-11-24",
+    "as_of": "2023-11-17",
     "values": {
-     "Evan Engram (TE)": 797,
-     "Tyler Higbee (TE)": 94,
-     "Kenny Pickett (QB)": 186
+     "Evan Engram (TE)": 659,
+     "Tyler Higbee (TE)": 87,
+     "Kenny Pickett (QB)": 215
     }
    }
   },
-  "Andys league||2023||5/13/2024||Smokers Haven (SmokersHaven) received: [2024 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Ray Davis (RB), 2025 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Travis Hunter (DB)] <---> lilfishy received: [2024 Round 5th Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jalin Hyatt (WR), 2024 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Caleb Williams (QB)]": {
+  "Andys league||2023||5/10/2024||Smokers Haven (SmokersHaven) received: [2024 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Ray Davis (RB), 2025 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Travis Hunter (DB)] <---> lilfishy received: [2024 Round 5th Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jalin Hyatt (WR), 2024 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Caleb Williams (QB)]": {
    "trade_day": {
     "as_of": "2024-05-10",
     "values": {
@@ -816,32 +816,32 @@
     }
    }
   },
-  "Andys league||2023||7/16/2023||Smokers Haven (SmokersHaven) received: [2023 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Jahmyr Gibbs (RB)] <---> tokenwhiteguy received: [2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB), 2023 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dorian Thompson-Robinson (QB), 2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR), 2023 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Roschon Johnson (RB)]": {
+  "Andys league||2023||7/13/2023||Smokers Haven (SmokersHaven) received: [2023 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Jahmyr Gibbs (RB)] <---> tokenwhiteguy received: [2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB), 2023 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dorian Thompson-Robinson (QB), 2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR), 2023 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Roschon Johnson (RB)]": {
    "trade_day": {
-    "as_of": "2023-07-14",
+    "as_of": "2023-07-07",
     "values": {
-     "2023 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Jahmyr Gibbs (RB)": 6992,
-     "2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 1148,
+     "2023 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Jahmyr Gibbs (RB)": 7058,
+     "2023 Round 1st Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 1075,
      "2023 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Dorian Thompson-Robinson (QB)": 3,
-     "2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR)": 4,
-     "2023 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Roschon Johnson (RB)": 726
+     "2024 Round 5th Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Malik Washington (WR)": 3,
+     "2023 Round 3rd Pick (originally from tokenwhiteguy) -> Resulted in drafting: Roschon Johnson (RB)": 709
     }
    }
   },
-  "Andys league||2023||7/22/2023||Smokers Haven (SmokersHaven) received: [Dallas Cowboys (DEF), 2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)] <---> Big Fish (DerrickFish) received: [2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB), 2024 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Troy Franklin (WR), 2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)]": {
+  "Andys league||2023||7/19/2023||Smokers Haven (SmokersHaven) received: [Dallas Cowboys (DEF), 2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)] <---> Big Fish (DerrickFish) received: [2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB), 2024 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Troy Franklin (WR), 2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)]": {
    "trade_day": {
-    "as_of": "2023-07-21",
+    "as_of": "2023-07-14",
     "values": {
      "Dallas Cowboys (DEF)": 0,
-     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)": 3471,
+     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)": 3521,
      "2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)": 242,
-     "2024 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Troy Franklin (WR)": 39,
-     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 1398,
-     "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 668
+     "2024 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Troy Franklin (WR)": 38,
+     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 1385,
+     "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 680
     }
    },
    "grade": {
-    "mark": "2026-07-22",
+    "mark": "2026-07-19",
     "as_of": "2026-07-17",
     "values": {
      "Dallas Cowboys (DEF)": 0,
@@ -853,18 +853,18 @@
     }
    }
   },
-  "Andys league||2023||7/28/2023||Smokers Haven (SmokersHaven) received: [Justin Fields (QB)] <---> Kickass (rprichards1973) received: [2024 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Brian Thomas Jr. (WR), 2023 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jonathan Mingo (WR), 2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)]": {
+  "Andys league||2023||7/25/2023||Smokers Haven (SmokersHaven) received: [Justin Fields (QB)] <---> Kickass (rprichards1973) received: [2024 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Brian Thomas Jr. (WR), 2023 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jonathan Mingo (WR), 2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)]": {
    "trade_day": {
-    "as_of": "2023-07-28",
+    "as_of": "2023-07-21",
     "values": {
-     "Justin Fields (QB)": 2966,
+     "Justin Fields (QB)": 3015,
      "2024 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Brian Thomas Jr. (WR)": 242,
-     "2023 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jonathan Mingo (WR)": 581,
-     "2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)": 1819
+     "2023 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Jonathan Mingo (WR)": 593,
+     "2023 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Zach Charbonnet (RB)": 1760
     }
    },
    "grade": {
-    "mark": "2026-07-28",
+    "mark": "2026-07-25",
     "as_of": "2026-07-24",
     "values": {
      "Justin Fields (QB)": 30,
@@ -914,7 +914,7 @@
     }
    }
   },
-  "Andys league||2023||9/1/2023||Smokers Haven (SmokersHaven) received: [2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)] <---> Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)]": {
+  "Andys league||2023||8/31/2023||Smokers Haven (SmokersHaven) received: [2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE), 2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)] <---> Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)]": {
    "trade_day": {
     "as_of": "2023-09-01",
     "values": {
@@ -930,6 +930,15 @@
      "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 1853,
      "2023 Round 2nd Pick (originally from wckdklwn) -> Resulted in drafting: Marvin Mims Jr. (WR)": 39,
      "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)": 1756
+    }
+   }
+  },
+  "Andys league||2023||9/1/2023||Smokers Haven (SmokersHaven) received: [2024 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Brock Bowers (TE)] <---> Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)]": {
+   "trade_day": {
+    "as_of": "2023-09-01",
+    "values": {
+     "2024 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Brock Bowers (TE)": 2401,
+     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 1970
     }
    }
   },
@@ -972,16 +981,7 @@
     }
    }
   },
-  "Andys league||2023||9/3/2023||Smokers Haven (SmokersHaven) received: [2024 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Brock Bowers (TE)] <---> Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)]": {
-   "trade_day": {
-    "as_of": "2023-09-01",
-    "values": {
-     "2024 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Brock Bowers (TE)": 2401,
-     "2023 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: Dalton Kincaid (TE)": 1970
-    }
-   }
-  },
-  "Andys league||2023||9/6/2023||wckdklwn received: [Pat Freiermuth (TE), Breece Hall (RB), Skyy Moore (WR), Jonathan Mingo (WR)] <---> Kickass (rprichards1973) received: [Travis Kelce (TE), 2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB), 2025 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: TreVeyon Henderson (RB)]": {
+  "Andys league||2023||9/3/2023||wckdklwn received: [Pat Freiermuth (TE), Breece Hall (RB), Skyy Moore (WR), Jonathan Mingo (WR)] <---> Kickass (rprichards1973) received: [Travis Kelce (TE), 2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB), 2025 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: TreVeyon Henderson (RB)]": {
    "trade_day": {
     "as_of": "2023-09-01",
     "values": {
@@ -995,20 +995,20 @@
     }
    },
    "grade": {
-    "mark": "2026-09-06",
-    "as_of": "2026-09-04",
+    "mark": "2026-09-03",
+    "as_of": "2026-08-28",
     "values": {
-     "Pat Freiermuth (TE)": 96,
-     "Breece Hall (RB)": 6145,
-     "Skyy Moore (WR)": 1,
+     "Pat Freiermuth (TE)": 74,
+     "Breece Hall (RB)": 5932,
+     "Skyy Moore (WR)": 0,
      "Jonathan Mingo (WR)": 1,
-     "Travis Kelce (TE)": 284,
-     "2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB)": 11,
-     "2025 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: TreVeyon Henderson (RB)": 3312
+     "Travis Kelce (TE)": 279,
+     "2025 Round 2nd Pick (originally from Kickass (rprichards1973)) -> Resulted in drafting: Jaydon Blue (RB)": 12,
+     "2025 Round 1st Pick (originally from wckdklwn) -> Resulted in drafting: TreVeyon Henderson (RB)": 2810
     }
    }
   },
-  "Andys league||2024||1/29/2025||Smokers Haven (SmokersHaven) received: [Trey McBride (TE)] <---> Don’t be mad (rprichards1973) received: [Xavier Worthy (WR), 2025 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Bhayshul Tuten (RB), 2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)]": {
+  "Andys league||2024||1/26/2025||Smokers Haven (SmokersHaven) received: [Trey McBride (TE)] <---> Don’t be mad (rprichards1973) received: [Xavier Worthy (WR), 2025 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Bhayshul Tuten (RB), 2025 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Jack Bech (WR)]": {
    "trade_day": {
     "as_of": "2025-01-24",
     "values": {
@@ -1019,7 +1019,7 @@
     }
    }
   },
-  "Andys league||2024||10/31/2024||Fins up (Finsup73) received: [2025 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Tetairoa McMillan (WR)] <---> Honolulu Blues (pboger) received: [David Njoku (TE), Chicago Bears (DEF), 2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Elic Ayomanor (WR)]": {
+  "Andys league||2024||10/30/2024||Fins up (Finsup73) received: [2025 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Tetairoa McMillan (WR)] <---> Honolulu Blues (pboger) received: [David Njoku (TE), Chicago Bears (DEF), 2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Elic Ayomanor (WR)]": {
    "trade_day": {
     "as_of": "2024-10-25",
     "values": {
@@ -1030,18 +1030,18 @@
     }
    }
   },
-  "Andys league||2024||12/30/2024||Smokers Haven (SmokersHaven) received: [2025 Round 1st Pick (originally from Fins up (Finsup73)) -> Resulted in drafting: Ashton Jeanty (RB)] <---> Fins up (Finsup73) received: [2025 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Matthew Golden (WR), 2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB), 2025 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Travis Hunter (DB)]": {
+  "Andys league||2024||12/26/2024||Smokers Haven (SmokersHaven) received: [2025 Round 1st Pick (originally from Fins up (Finsup73)) -> Resulted in drafting: Ashton Jeanty (RB)] <---> Fins up (Finsup73) received: [2025 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Matthew Golden (WR), 2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB), 2025 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Travis Hunter (DB)]": {
    "trade_day": {
-    "as_of": "2024-12-27",
+    "as_of": "2024-12-20",
     "values": {
-     "2025 Round 1st Pick (originally from Fins up (Finsup73)) -> Resulted in drafting: Ashton Jeanty (RB)": 2705,
-     "2025 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Matthew Golden (WR)": 2705,
-     "2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB)": 2705,
-     "2025 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Travis Hunter (DB)": 2705
+     "2025 Round 1st Pick (originally from Fins up (Finsup73)) -> Resulted in drafting: Ashton Jeanty (RB)": 2717,
+     "2025 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Matthew Golden (WR)": 2717,
+     "2025 Round 1st Pick (originally from FloridaBills) -> Resulted in drafting: Quinshon Judkins (RB)": 2717,
+     "2025 Round 1st Pick (originally from tokenwhiteguy) -> Resulted in drafting: Travis Hunter (DB)": 2717
     }
    }
   },
-  "Andys league||2024||12/30/2024||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Trash (DerrickFish))] <---> Trash (DerrickFish) received: [DeVonta Smith (WR)]": {
+  "Andys league||2024||12/27/2024||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Trash (DerrickFish))] <---> Trash (DerrickFish) received: [DeVonta Smith (WR)]": {
    "trade_day": {
     "as_of": "2024-12-27",
     "values": {
@@ -1050,27 +1050,27 @@
     }
    }
   },
-  "Andys league||2024||7/12/2024||Smokers Haven (SmokersHaven) received: [Cole Kmet (TE), 2024 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jayden Daniels (QB)] <---> tokenwhiteguy received: [2024 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Trey Benson (RB), 2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)]": {
+  "Andys league||2024||7/10/2024||Smokers Haven (SmokersHaven) received: [Rashee Rice (WR)] <---> FloridaBills received: [2026 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: De'Zhaun Stribling (WR)]": {
    "trade_day": {
-    "as_of": "2024-07-12",
+    "as_of": "2024-07-05",
     "values": {
-     "Cole Kmet (TE)": 575,
-     "2024 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jayden Daniels (QB)": 1465,
-     "2024 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Trey Benson (RB)": 2475,
-     "2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)": 613
+     "Rashee Rice (WR)": 2576,
+     "2026 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: De'Zhaun Stribling (WR)": 1576
     }
    }
   },
-  "Andys league||2024||7/13/2024||Smokers Haven (SmokersHaven) received: [Rashee Rice (WR)] <---> FloridaBills received: [2026 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: De'Zhaun Stribling (WR)]": {
+  "Andys league||2024||7/9/2024||Smokers Haven (SmokersHaven) received: [Cole Kmet (TE), 2024 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jayden Daniels (QB)] <---> tokenwhiteguy received: [2024 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Trey Benson (RB), 2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)]": {
    "trade_day": {
-    "as_of": "2024-07-12",
+    "as_of": "2024-07-05",
     "values": {
-     "Rashee Rice (WR)": 2594,
-     "2026 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: De'Zhaun Stribling (WR)": 1578
+     "Cole Kmet (TE)": 540,
+     "2024 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jayden Daniels (QB)": 1350,
+     "2024 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Trey Benson (RB)": 2534,
+     "2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)": 627
     }
    }
   },
-  "Andys league||2024||9/11/2024||WiCkEd KlOwNs (wckdklwn) received: [Travis Kelce (TE), Patrick Mahomes (QB), New Orleans Saints (DEF)] <---> Don’t be mad (rprichards1973) received: [Tyler Lockett (WR), Jaleel McLaughlin (RB), 2025 Round 3rd Pick (originally from Don’t be mad (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE), 2025 Round 2nd Pick (originally from WiCkEd KlOwNs (wckdklwn)) -> Resulted in drafting: Cam Ward (QB), 2025 Round 3rd Pick (originally from WiCkEd KlOwNs (wckdklwn)) -> Resulted in drafting: Dylan Sampson (RB), 2026 Round 1st Pick (originally from WiCkEd KlOwNs (wckdklwn)) -> Resulted in drafting: Jeremiyah Love (RB), 2027 Round 2nd Pick (originally from WiCkEd KlOwNs (wckdklwn))]": {
+  "Andys league||2024||9/10/2024||WiCkEd KlOwNs (wckdklwn) received: [Travis Kelce (TE), Patrick Mahomes (QB), New Orleans Saints (DEF)] <---> Don’t be mad (rprichards1973) received: [Tyler Lockett (WR), Jaleel McLaughlin (RB), 2025 Round 3rd Pick (originally from Don’t be mad (rprichards1973)) -> Resulted in drafting: Mason Taylor (TE), 2025 Round 2nd Pick (originally from WiCkEd KlOwNs (wckdklwn)) -> Resulted in drafting: Cam Ward (QB), 2025 Round 3rd Pick (originally from WiCkEd KlOwNs (wckdklwn)) -> Resulted in drafting: Dylan Sampson (RB), 2026 Round 1st Pick (originally from WiCkEd KlOwNs (wckdklwn)) -> Resulted in drafting: Jeremiyah Love (RB), 2027 Round 2nd Pick (originally from WiCkEd KlOwNs (wckdklwn))]": {
    "trade_day": {
     "as_of": "2024-09-06",
     "values": {
@@ -1087,7 +1087,7 @@
     }
    }
   },
-  "Andys league||2024||9/12/2024||Smokers Haven (SmokersHaven) received: [Brandon Aubrey (K)] <---> Fins up (Finsup73) received: [2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Elic Ayomanor (WR)]": {
+  "Andys league||2024||9/11/2024||Smokers Haven (SmokersHaven) received: [Brandon Aubrey (K)] <---> Fins up (Finsup73) received: [2025 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Elic Ayomanor (WR)]": {
    "trade_day": {
     "as_of": "2024-09-06",
     "values": {
@@ -1096,7 +1096,7 @@
     }
    }
   },
-  "Andys league||2024||9/19/2024||tokenwhiteguy received: [Austin Ekeler (RB), 2025 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Cam Skattebo (RB)] <---> Honolulu Blues (pboger) received: [Calvin Ridley (WR), Chuba Hubbard (RB)]": {
+  "Andys league||2024||9/18/2024||tokenwhiteguy received: [Austin Ekeler (RB), 2025 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Cam Skattebo (RB)] <---> Honolulu Blues (pboger) received: [Calvin Ridley (WR), Chuba Hubbard (RB)]": {
    "trade_day": {
     "as_of": "2024-09-13",
     "values": {
@@ -1107,20 +1107,20 @@
     }
    }
   },
-  "Andys league||2025||11/16/2025||lilfishy received: [Aaron Jones Sr. (RB), Jordan Mason (RB)] <---> IChaseBrownpeople (tokenwhiteguy) received: [Jakobi Meyers (WR), Jahan Dotson (WR), 2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR), 2027 Round 3rd Pick (originally from lilfishy)]": {
+  "Andys league||2025||11/13/2025||lilfishy received: [Aaron Jones Sr. (RB), Jordan Mason (RB)] <---> IChaseBrownpeople (tokenwhiteguy) received: [Jakobi Meyers (WR), Jahan Dotson (WR), 2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR), 2027 Round 3rd Pick (originally from lilfishy)]": {
    "trade_day": {
-    "as_of": "2025-11-14",
+    "as_of": "2025-11-07",
     "values": {
-     "Aaron Jones Sr. (RB)": 319,
-     "Jordan Mason (RB)": 593,
-     "Jakobi Meyers (WR)": 949,
-     "Jahan Dotson (WR)": 2,
-     "2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR)": 303,
-     "2027 Round 3rd Pick (originally from lilfishy)": 43
+     "Aaron Jones Sr. (RB)": 556,
+     "Jordan Mason (RB)": 566,
+     "Jakobi Meyers (WR)": 1082,
+     "Jahan Dotson (WR)": 26,
+     "2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR)": 327,
+     "2027 Round 3rd Pick (originally from lilfishy)": 48
     }
    }
   },
-  "Andys league||2025||11/27/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Fins up (Finsup73))] <---> Fins up (Finsup73) received: [Brian Thomas Jr. (WR)]": {
+  "Andys league||2025||11/26/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Fins up (Finsup73))] <---> Fins up (Finsup73) received: [Brian Thomas Jr. (WR)]": {
    "trade_day": {
     "as_of": "2025-11-21",
     "values": {
@@ -1129,7 +1129,7 @@
     }
    }
   },
-  "Andys league||2025||12/1/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from FloridaBills)] <---> FloridaBills received: [Ladd McConkey (WR)]": {
+  "Andys league||2025||11/28/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from FloridaBills)] <---> FloridaBills received: [Ladd McConkey (WR)]": {
    "trade_day": {
     "as_of": "2025-11-28",
     "values": {
@@ -1138,7 +1138,7 @@
     }
    }
   },
-  "Andys league||2025||12/3/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from WiCkEd KlOwNs (wckdklwn))] <---> WiCkEd KlOwNs (wckdklwn) received: [Marvin Harrison Jr. (WR)]": {
+  "Andys league||2025||11/29/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from WiCkEd KlOwNs (wckdklwn))] <---> WiCkEd KlOwNs (wckdklwn) received: [Marvin Harrison Jr. (WR)]": {
    "trade_day": {
     "as_of": "2025-11-28",
     "values": {
@@ -1147,16 +1147,7 @@
     }
    }
   },
-  "Andys league||2025||12/31/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Honolulu Blues (pboger))] <---> Honolulu Blues (pboger) received: [Jacory Croskey-Merritt (RB)]": {
-   "trade_day": {
-    "as_of": "2025-12-26",
-    "values": {
-     "2027 Round 1st Pick (originally from Honolulu Blues (pboger))": 1913,
-     "Jacory Croskey-Merritt (RB)": 426
-    }
-   }
-  },
-  "Andys league||2025||12/4/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Don’t be mad (rprichards1973))] <---> Don’t be mad (rprichards1973) received: [2027 Round 1st Pick (originally from Smokers Haven (SmokersHaven)), 2027 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)), 2028 Round 1st Pick (originally from Smokers Haven (SmokersHaven)), 2028 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)), 2028 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))]": {
+  "Andys league||2025||12/1/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Don’t be mad (rprichards1973))] <---> Don’t be mad (rprichards1973) received: [2027 Round 1st Pick (originally from Smokers Haven (SmokersHaven)), 2027 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)), 2028 Round 1st Pick (originally from Smokers Haven (SmokersHaven)), 2028 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)), 2028 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))]": {
    "trade_day": {
     "as_of": "2025-11-28",
     "values": {
@@ -1169,52 +1160,61 @@
     }
    }
   },
-  "Andys league||2025||7/25/2025||Smokers Haven (SmokersHaven) received: [2025 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Luther Burden III (WR), 2027 Round 1st Pick (originally from lilfishy)] <---> lilfishy received: [2025 Round 1st Pick (originally from Don’t be mad (rprichards1973)) -> Resulted in drafting: RJ Harvey (RB), 2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR)]": {
+  "Andys league||2025||12/28/2025||Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from Honolulu Blues (pboger))] <---> Honolulu Blues (pboger) received: [Jacory Croskey-Merritt (RB)]": {
    "trade_day": {
-    "as_of": "2025-07-25",
+    "as_of": "2025-12-26",
     "values": {
-     "2025 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Luther Burden III (WR)": 1350,
-     "2027 Round 1st Pick (originally from lilfishy)": 1549,
-     "2025 Round 1st Pick (originally from Don’t be mad (rprichards1973)) -> Resulted in drafting: RJ Harvey (RB)": 1980,
-     "2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR)": 250
+     "2027 Round 1st Pick (originally from Honolulu Blues (pboger))": 1913,
+     "Jacory Croskey-Merritt (RB)": 426
     }
    }
   },
-  "Andys league||2025||7/26/2025||Smokers Haven (SmokersHaven) received: [Nothing] <---> Don’t be mad (rprichards1973) received: [2025 Round 4th Pick (originally from Don’t be mad (rprichards1973)), 2025 Round 5th Pick (originally from Don’t be mad (rprichards1973))]": {
+  "Andys league||2025||7/22/2025||Smokers Haven (SmokersHaven) received: [2025 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Luther Burden III (WR), 2027 Round 1st Pick (originally from lilfishy)] <---> lilfishy received: [2025 Round 1st Pick (originally from Don’t be mad (rprichards1973)) -> Resulted in drafting: RJ Harvey (RB), 2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR)]": {
    "trade_day": {
-    "as_of": "2025-07-25",
+    "as_of": "2025-07-18",
+    "values": {
+     "2025 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Luther Burden III (WR)": 1405,
+     "2027 Round 1st Pick (originally from lilfishy)": 1530,
+     "2025 Round 1st Pick (originally from Don’t be mad (rprichards1973)) -> Resulted in drafting: RJ Harvey (RB)": 1915,
+     "2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zachariah Branch (WR)": 248
+    }
+   }
+  },
+  "Andys league||2025||7/23/2025||Smokers Haven (SmokersHaven) received: [Nothing] <---> Don’t be mad (rprichards1973) received: [2025 Round 4th Pick (originally from Don’t be mad (rprichards1973)), 2025 Round 5th Pick (originally from Don’t be mad (rprichards1973))]": {
+   "trade_day": {
+    "as_of": "2025-07-18",
     "values": {
      "2025 Round 4th Pick (originally from Don’t be mad (rprichards1973))": 0,
      "2025 Round 5th Pick (originally from Don’t be mad (rprichards1973))": 0
     }
    }
   },
-  "Andys league||2025||8/9/2025||Smokers Haven (SmokersHaven) received: [Anthony Richardson Sr. (QB), 2025 Round 2nd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Colston Loveland (TE), 2025 Round 3rd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Woody Marks (RB), 2027 Round 1st Pick (originally from IChaseBrownpeople (tokenwhiteguy))] <---> IChaseBrownpeople (tokenwhiteguy) received: [Jordan Mason (RB), Michael Penix Jr. (QB), 2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)]": {
+  "Andys league||2025||8/6/2025||Smokers Haven (SmokersHaven) received: [Anthony Richardson Sr. (QB), 2025 Round 2nd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Colston Loveland (TE), 2025 Round 3rd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Woody Marks (RB), 2027 Round 1st Pick (originally from IChaseBrownpeople (tokenwhiteguy))] <---> IChaseBrownpeople (tokenwhiteguy) received: [Jordan Mason (RB), Michael Penix Jr. (QB), 2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)]": {
    "trade_day": {
-    "as_of": "2025-08-08",
+    "as_of": "2025-08-01",
     "values": {
-     "Anthony Richardson Sr. (QB)": 707,
-     "2025 Round 2nd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Colston Loveland (TE)": 2339,
-     "2025 Round 3rd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Woody Marks (RB)": 35,
-     "2027 Round 1st Pick (originally from IChaseBrownpeople (tokenwhiteguy))": 1576,
-     "Jordan Mason (RB)": 280,
-     "Michael Penix Jr. (QB)": 546,
-     "2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)": 51
+     "Anthony Richardson Sr. (QB)": 706,
+     "2025 Round 2nd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Colston Loveland (TE)": 2226,
+     "2025 Round 3rd Pick (originally from IChaseBrownpeople (tokenwhiteguy)) -> Resulted in drafting: Woody Marks (RB)": 31,
+     "2027 Round 1st Pick (originally from IChaseBrownpeople (tokenwhiteguy))": 1560,
+     "Jordan Mason (RB)": 264,
+     "Michael Penix Jr. (QB)": 566,
+     "2025 Round 2nd Pick (originally from FloridaBills) -> Resulted in drafting: Isaac TeSlaa (WR)": 47
     }
    }
   },
-  "Andys league||2025||9/7/2025||Smokers Haven (SmokersHaven) received: [Denver Broncos (DEF)] <---> lilfishy received: [Christian Watson (WR), 2026 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Keaton Mitchell (RB), 2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))]": {
+  "Andys league||2025||9/4/2025||Smokers Haven (SmokersHaven) received: [Denver Broncos (DEF)] <---> lilfishy received: [Christian Watson (WR), 2026 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Keaton Mitchell (RB), 2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))]": {
    "trade_day": {
-    "as_of": "2025-09-05",
+    "as_of": "2025-08-29",
     "values": {
      "Denver Broncos (DEF)": 0,
-     "Christian Watson (WR)": 140,
+     "Christian Watson (WR)": 127,
      "2026 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Keaton Mitchell (RB)": 47,
      "2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))": 35
     }
    }
   },
-  "Andys league||2026||8/16/2026||Team Tacos (tokenwhiteguy) received: [2026 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jonah Coleman (RB), 2026 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Ty Simpson (QB), 2027 Round 2nd Pick (originally from Honolulu Blues (pboger))] <---> Honolulu Blues (pboger) received: [2026 Round 1st Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Fernando Mendoza (QB), 2026 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Cyrus Allen (WR), 2027 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy))]": {
+  "Andys league||2026||8/15/2026||Team Tacos (tokenwhiteguy) received: [2026 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jonah Coleman (RB), 2026 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Ty Simpson (QB), 2027 Round 2nd Pick (originally from Honolulu Blues (pboger))] <---> Honolulu Blues (pboger) received: [2026 Round 1st Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Fernando Mendoza (QB), 2026 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Cyrus Allen (WR), 2027 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy))]": {
    "trade_day": {
     "as_of": "2026-08-14",
     "values": {
@@ -2617,7 +2617,7 @@
     }
    }
   },
-  "Branden's League||2026||11/1/2026||Vanilla Gorilla (andylang1031) received: [Cam Skattebo (RB), Omar Cooper (WR), 2028 Round 3rd Pick (originally from Leno'S Team (Leno)), 2029 Round 3rd Pick (originally from Leno'S Team (Leno))] <---> Leno'S Team (Leno) received: [2028 Round 1st Pick (originally from Vanilla Gorilla (andylang1031)), 2028 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031)), 2029 Round 1st Pick (originally from Vanilla Gorilla (andylang1031)), 2029 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031))]": {
+  "Branden's League||2026||10/31/2026||Vanilla Gorilla (andylang1031) received: [Cam Skattebo (RB), Omar Cooper (WR), 2028 Round 3rd Pick (originally from Leno'S Team (Leno)), 2029 Round 3rd Pick (originally from Leno'S Team (Leno))] <---> Leno'S Team (Leno) received: [2028 Round 1st Pick (originally from Vanilla Gorilla (andylang1031)), 2028 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031)), 2029 Round 1st Pick (originally from Vanilla Gorilla (andylang1031)), 2029 Round 2nd Pick (originally from Vanilla Gorilla (andylang1031))]": {
    "trade_day": {
     "as_of": "2026-11-01",
     "values": {
@@ -2632,7 +2632,7 @@
     }
    }
   },
-  "Branden's League||2026||11/10/2026||KillerCards (TheCards) received: [Malik Nabers (WR), 2028 Round 4th Pick (originally from Smokers Haven (SmokersHaven)), 2029 Round 4th Pick (originally from Smokers Haven (SmokersHaven))] <---> Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from KillerCards (TheCards)), 2028 Round 1st Pick (originally from KillerCards (TheCards)), 2029 Round 1st Pick (originally from KillerCards (TheCards))]": {
+  "Branden's League||2026||11/9/2026||KillerCards (TheCards) received: [Malik Nabers (WR), 2028 Round 4th Pick (originally from Smokers Haven (SmokersHaven)), 2029 Round 4th Pick (originally from Smokers Haven (SmokersHaven))] <---> Smokers Haven (SmokersHaven) received: [2027 Round 1st Pick (originally from KillerCards (TheCards)), 2028 Round 1st Pick (originally from KillerCards (TheCards)), 2029 Round 1st Pick (originally from KillerCards (TheCards))]": {
    "trade_day": {
     "as_of": "2026-11-10",
     "values": {
@@ -2875,7 +2875,7 @@
     }
    }
   },
-  "Dante's league||2024||10/4/2024||The man of your dreams (Dontiddy) received: [Chuba Hubbard (RB), 2025 Round 1st Pick (originally from Loading... (DerrickFish)) -> Resulted in drafting: Quinshon Judkins (RB)] <---> Loading... (DerrickFish) received: [T.J. Hockenson (TE), Justin Herbert (QB), 2025 Round 2nd Pick (originally from Loading... (DerrickFish)) -> Resulted in drafting: Emeka Egbuka (WR)]": {
+  "Dante's league||2024||10/3/2024||The man of your dreams (Dontiddy) received: [Chuba Hubbard (RB), 2025 Round 1st Pick (originally from Loading... (DerrickFish)) -> Resulted in drafting: Quinshon Judkins (RB)] <---> Loading... (DerrickFish) received: [T.J. Hockenson (TE), Justin Herbert (QB), 2025 Round 2nd Pick (originally from Loading... (DerrickFish)) -> Resulted in drafting: Emeka Egbuka (WR)]": {
    "trade_day": {
     "as_of": "2024-10-04",
     "values": {
@@ -2884,6 +2884,17 @@
      "T.J. Hockenson (TE)": 1614,
      "Justin Herbert (QB)": 1100,
      "2025 Round 2nd Pick (originally from Loading... (DerrickFish)) -> Resulted in drafting: Emeka Egbuka (WR)": 266
+    }
+   }
+  },
+  "Dante's league||2024||11/14/2024||Wet dog farts  (Kolbilly) received: [DeVonta Smith (WR), Chris Olave (WR), 2025 Round 1st Pick (originally from Big white daddy (Wade55720)) -> Resulted in drafting: Cam Skattebo (RB)] <---> Big white daddy (Wade55720) received: [Christian McCaffrey (RB)]": {
+   "trade_day": {
+    "as_of": "2024-11-15",
+    "values": {
+     "DeVonta Smith (WR)": 5463,
+     "Chris Olave (WR)": 5946,
+     "2025 Round 1st Pick (originally from Big white daddy (Wade55720)) -> Resulted in drafting: Cam Skattebo (RB)": 2484,
+     "Christian McCaffrey (RB)": 6501
     }
    }
   },
@@ -2904,17 +2915,6 @@
      "Brian Thomas Jr. (WR)": 3621,
      "2026 Round 2nd Pick (originally from Big white daddy (Wade55720)) -> Resulted in drafting: AJ Barner (TE)": 213,
      "CeeDee Lamb (WR)": 9971
-    }
-   }
-  },
-  "Dante's league||2024||11/15/2024||Wet dog farts  (Kolbilly) received: [DeVonta Smith (WR), Chris Olave (WR), 2025 Round 1st Pick (originally from Big white daddy (Wade55720)) -> Resulted in drafting: Cam Skattebo (RB)] <---> Big white daddy (Wade55720) received: [Christian McCaffrey (RB)]": {
-   "trade_day": {
-    "as_of": "2024-11-15",
-    "values": {
-     "DeVonta Smith (WR)": 5463,
-     "Chris Olave (WR)": 5946,
-     "2025 Round 1st Pick (originally from Big white daddy (Wade55720)) -> Resulted in drafting: Cam Skattebo (RB)": 2484,
-     "Christian McCaffrey (RB)": 6501
     }
    }
   },
@@ -2987,7 +2987,7 @@
     }
    }
   },
-  "Dante's league||2025||10/31/2025||Bend over and goff (Dontiddy) received: [Jaylen Warren (RB)] <---> Lamb is damned (BigDEddie) received: [2026 Round 1st Pick (originally from JayLeno) -> Resulted in drafting: Jordyn Tyson (WR)]": {
+  "Dante's league||2025||10/30/2025||Bend over and goff (Dontiddy) received: [Jaylen Warren (RB)] <---> Lamb is damned (BigDEddie) received: [2026 Round 1st Pick (originally from JayLeno) -> Resulted in drafting: Jordyn Tyson (WR)]": {
    "trade_day": {
     "as_of": "2025-10-31",
     "values": {
@@ -3005,6 +3005,15 @@
     }
    }
   },
+  "Dante's league||2025||6/12/2025||C.otton picker (lilfishy) received: [Zach Charbonnet (RB)] <---> JayLeno received: [2025 Round 2nd Pick (originally from Maye like em young (Wade55720)) -> Resulted in drafting: Devin Neal (RB)]": {
+   "trade_day": {
+    "as_of": "2025-06-06",
+    "values": {
+     "Zach Charbonnet (RB)": 443,
+     "2025 Round 2nd Pick (originally from Maye like em young (Wade55720)) -> Resulted in drafting: Devin Neal (RB)": 65
+    }
+   }
+  },
   "Dante's league||2025||6/13/2025||Bend over and goff (Dontiddy) received: [Jordan Mason (RB)] <---> Young jeffren (Kolbilly) received: [2025 Round 2nd Pick (originally from Bend over and goff (Dontiddy)) -> Resulted in drafting: Tre' Harris (WR), 2026 Round 3rd Pick (originally from Young jeffren (Kolbilly)) -> Resulted in drafting: Malik Willis (QB)]": {
    "trade_day": {
     "as_of": "2025-06-06",
@@ -3012,15 +3021,6 @@
      "Jordan Mason (RB)": 195,
      "2025 Round 2nd Pick (originally from Bend over and goff (Dontiddy)) -> Resulted in drafting: Tre' Harris (WR)": 809,
      "2026 Round 3rd Pick (originally from Young jeffren (Kolbilly)) -> Resulted in drafting: Malik Willis (QB)": 38
-    }
-   }
-  },
-  "Dante's league||2025||6/13/2025||C.otton picker (lilfishy) received: [Zach Charbonnet (RB)] <---> JayLeno received: [2025 Round 2nd Pick (originally from Maye like em young (Wade55720)) -> Resulted in drafting: Devin Neal (RB)]": {
-   "trade_day": {
-    "as_of": "2025-06-06",
-    "values": {
-     "Zach Charbonnet (RB)": 443,
-     "2025 Round 2nd Pick (originally from Maye like em young (Wade55720)) -> Resulted in drafting: Devin Neal (RB)": 65
     }
    }
   },
@@ -3112,6 +3112,16 @@
     }
    }
   },
+  "Dante's league||2025||8/31/2025||Bend over and goff (Dontiddy) received: [2027 Round 3rd Pick (originally from Maye like em young (Wade55720)), 2026 Round 2nd Pick (originally from Kolbys discord mod  (lilfishy2011)) -> Resulted in drafting: Emmett Johnson (RB)] <---> Kolbys discord mod  (lilfishy2011) received: [Tucker Kraft (TE)]": {
+   "trade_day": {
+    "as_of": "2025-08-29",
+    "values": {
+     "2027 Round 3rd Pick (originally from Maye like em young (Wade55720))": 35,
+     "2026 Round 2nd Pick (originally from Kolbys discord mod  (lilfishy2011)) -> Resulted in drafting: Emmett Johnson (RB)": 263,
+     "Tucker Kraft (TE)": 1752
+    }
+   }
+  },
   "Dante's league||2025||9/19/2025||Ryley (MassiveLegend62) received: [Jared Goff (QB)] <---> Lamb is damned (BigDEddie) received: [2026 Round 2nd Pick (originally from Ryley (MassiveLegend62)) -> Resulted in drafting: Zachariah Branch (WR), 2027 Round 2nd Pick (originally from Ryley (MassiveLegend62))]": {
    "trade_day": {
     "as_of": "2025-09-19",
@@ -3143,16 +3153,6 @@
      "2027 Round 1st Pick (originally from Purdy ButtHole (Tstruck97))": 1573,
      "2027 Round 3rd Pick (originally from Purdy ButtHole (Tstruck97))": 35,
      "Chuba Hubbard (RB)": 1781
-    }
-   }
-  },
-  "Dante's league||2025||9/3/2025||Bend over and goff (Dontiddy) received: [2027 Round 3rd Pick (originally from Maye like em young (Wade55720)), 2026 Round 2nd Pick (originally from Kolbys discord mod  (lilfishy2011)) -> Resulted in drafting: Emmett Johnson (RB)] <---> Kolbys discord mod  (lilfishy2011) received: [Tucker Kraft (TE)]": {
-   "trade_day": {
-    "as_of": "2025-08-29",
-    "values": {
-     "2027 Round 3rd Pick (originally from Maye like em young (Wade55720))": 35,
-     "2026 Round 2nd Pick (originally from Kolbys discord mod  (lilfishy2011)) -> Resulted in drafting: Emmett Johnson (RB)": 263,
-     "Tucker Kraft (TE)": 1752
     }
    }
   },
@@ -3325,9 +3325,9 @@
     }
    }
   },
-  "Fish's League||2018||11/5/2018||Defend the North (HouseGordon) received: [Alex Collins (RB), 2019 Round 1st Pick (originally from APsdaycare) -> Resulted in drafting: T.J. Hockenson (TE)] <---> APsdaycare received: [Rob Gronkowski (TE), 2019 Round 1st Pick (originally from Defend the North (HouseGordon)) -> Resulted in drafting: Damien Harris (RB)]": {
+  "Fish's League||2018||11/4/2018||Defend the North (HouseGordon) received: [Alex Collins (RB), 2019 Round 1st Pick (originally from APsdaycare) -> Resulted in drafting: T.J. Hockenson (TE)] <---> APsdaycare received: [Rob Gronkowski (TE), 2019 Round 1st Pick (originally from Defend the North (HouseGordon)) -> Resulted in drafting: Damien Harris (RB)]": {
    "grade": {
-    "mark": "2021-11-05",
+    "mark": "2021-11-04",
     "as_of": "2021-11-05",
     "values": {
      "Alex Collins (RB)": 91,
@@ -3337,9 +3337,9 @@
     }
    }
   },
-  "Fish's League||2018||11/5/2018||KillerCards received: [2019 Round 3rd Pick (originally from APsdaycare) -> Resulted in drafting: Irv Smith (TE), 2020 Round 1st Pick (originally from APsdaycare) -> Resulted in drafting: Michael Pittman Jr. (WR)] <---> APsdaycare received: [James White (RB)]": {
+  "Fish's League||2018||11/4/2018||KillerCards received: [2019 Round 3rd Pick (originally from APsdaycare) -> Resulted in drafting: Irv Smith (TE), 2020 Round 1st Pick (originally from APsdaycare) -> Resulted in drafting: Michael Pittman Jr. (WR)] <---> APsdaycare received: [James White (RB)]": {
    "grade": {
-    "mark": "2021-11-05",
+    "mark": "2021-11-04",
     "as_of": "2021-11-05",
     "values": {
      "2019 Round 3rd Pick (originally from APsdaycare) -> Resulted in drafting: Irv Smith (TE)": 401,
@@ -3358,9 +3358,9 @@
     }
    }
   },
-  "Fish's League||2018||11/8/2018||APsdaycare received: [Dez Bryant (WR), Amari Cooper (WR), Carson Wentz (QB), Christian McCaffrey (RB)] <---> JayLeno received: [Marcus Mariota (QB), Ezekiel Elliott (RB), Calvin Ridley (WR), 2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE), 2021 Round 1st Pick (originally from APsdaycare) -> Resulted in drafting: DeVonta Smith (WR)]": {
+  "Fish's League||2018||11/7/2018||APsdaycare received: [Dez Bryant (WR), Amari Cooper (WR), Carson Wentz (QB), Christian McCaffrey (RB)] <---> JayLeno received: [Marcus Mariota (QB), Ezekiel Elliott (RB), Calvin Ridley (WR), 2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE), 2021 Round 1st Pick (originally from APsdaycare) -> Resulted in drafting: DeVonta Smith (WR)]": {
    "grade": {
-    "mark": "2021-11-08",
+    "mark": "2021-11-07",
     "as_of": "2021-11-05",
     "values": {
      "Dez Bryant (WR)": 0,
@@ -3375,9 +3375,9 @@
     }
    }
   },
-  "Fish's League||2018||3/15/2019||bandito26 received: [Tevin Coleman (RB)] <---> Defend the North (HouseGordon) received: [Kenny Golladay (WR)]": {
+  "Fish's League||2018||3/13/2019||bandito26 received: [Tevin Coleman (RB)] <---> Defend the North (HouseGordon) received: [Kenny Golladay (WR)]": {
    "grade": {
-    "mark": "2022-03-15",
+    "mark": "2022-03-13",
     "as_of": "2022-03-11",
     "values": {
      "Tevin Coleman (RB)": 5,
@@ -3385,9 +3385,9 @@
     }
    }
   },
-  "Fish's League||2018||3/23/2019||bandito26 received: [Golden Tate (WR), Leonard Fournette (RB), Phillip Lindsay (RB)] <---> Defend the North (HouseGordon) received: [Tyler Lockett (WR), Kerryon Johnson (RB)]": {
+  "Fish's League||2018||3/21/2019||bandito26 received: [Golden Tate (WR), Leonard Fournette (RB), Phillip Lindsay (RB)] <---> Defend the North (HouseGordon) received: [Tyler Lockett (WR), Kerryon Johnson (RB)]": {
    "grade": {
-    "mark": "2022-03-23",
+    "mark": "2022-03-21",
     "as_of": "2022-03-18",
     "values": {
      "Golden Tate (WR)": 2,
@@ -3395,6 +3395,17 @@
      "Phillip Lindsay (RB)": 14,
      "Tyler Lockett (WR)": 1418,
      "Kerryon Johnson (RB)": 3
+    }
+   }
+  },
+  "Fish's League||2018||9/2/2018||Defend the North (HouseGordon) received: [Julio Jones (WR)] <---> JayLeno received: [Amari Cooper (WR), 2020 Round 1st Pick (originally from Defend the North (HouseGordon)) -> Resulted in drafting: Jonathan Taylor (RB)]": {
+   "grade": {
+    "mark": "2021-09-02",
+    "as_of": "2021-08-27",
+    "values": {
+     "Julio Jones (WR)": 1943,
+     "Amari Cooper (WR)": 4054,
+     "2020 Round 1st Pick (originally from Defend the North (HouseGordon)) -> Resulted in drafting: Jonathan Taylor (RB)": 9603
     }
    }
   },
@@ -3407,17 +3418,6 @@
      "2019 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: J.J. Arcega-Whiteside (WR)": 3,
      "Tom Brady (QB)": 190,
      "Latavius Murray (RB)": 77
-    }
-   }
-  },
-  "Fish's League||2018||9/6/2018||Defend the North (HouseGordon) received: [Julio Jones (WR)] <---> JayLeno received: [Amari Cooper (WR), 2020 Round 1st Pick (originally from Defend the North (HouseGordon)) -> Resulted in drafting: Jonathan Taylor (RB)]": {
-   "grade": {
-    "mark": "2021-09-06",
-    "as_of": "2021-09-03",
-    "values": {
-     "Julio Jones (WR)": 2060,
-     "Amari Cooper (WR)": 4092,
-     "2020 Round 1st Pick (originally from Defend the North (HouseGordon)) -> Resulted in drafting: Jonathan Taylor (RB)": 9558
     }
    }
   },
@@ -3457,7 +3457,7 @@
     }
    }
   },
-  "Fish's League||2019||10/23/2019||Wade55720 received: [2020 Round 2nd Pick (originally from austin143) -> Resulted in drafting: Laviska Shenault (WR), 2020 Round 3rd Pick (originally from austin143) -> Resulted in drafting: Adam Trautman (TE), 2021 Round 3rd Pick (originally from austin143) -> Resulted in drafting: Khalil Herbert (RB), 2022 Round 1st Pick (originally from austin143) -> Resulted in drafting: Garrett Wilson (WR), 2022 Round 3rd Pick (originally from austin143) -> Resulted in drafting: Wan'Dale Robinson (WR)] <---> austin143 received: [Austin Ekeler (RB)]": {
+  "Fish's League||2019||10/21/2019||Wade55720 received: [2020 Round 2nd Pick (originally from austin143) -> Resulted in drafting: Laviska Shenault (WR), 2020 Round 3rd Pick (originally from austin143) -> Resulted in drafting: Adam Trautman (TE), 2021 Round 3rd Pick (originally from austin143) -> Resulted in drafting: Khalil Herbert (RB), 2022 Round 1st Pick (originally from austin143) -> Resulted in drafting: Garrett Wilson (WR), 2022 Round 3rd Pick (originally from austin143) -> Resulted in drafting: Wan'Dale Robinson (WR)] <---> austin143 received: [Austin Ekeler (RB)]": {
    "trade_day": {
     "as_of": "2019-10-05",
     "values": {
@@ -3470,7 +3470,7 @@
     }
    },
    "grade": {
-    "mark": "2022-10-23",
+    "mark": "2022-10-21",
     "as_of": "2022-10-21",
     "values": {
      "2020 Round 2nd Pick (originally from austin143) -> Resulted in drafting: Laviska Shenault (WR)": 51,
@@ -3482,7 +3482,7 @@
     }
    }
   },
-  "Fish's League||2019||12/29/2019||HouseGordon received: [Matt Ryan (QB), 2020 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jonathan Taylor (RB)] <---> JayLeno received: [Chris Godwin Jr. (WR)]": {
+  "Fish's League||2019||12/27/2019||HouseGordon received: [Matt Ryan (QB), 2020 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jonathan Taylor (RB)] <---> JayLeno received: [Chris Godwin Jr. (WR)]": {
    "trade_day": {
     "as_of": "2019-11-17",
     "values": {
@@ -3492,7 +3492,7 @@
     }
    },
    "grade": {
-    "mark": "2022-12-29",
+    "mark": "2022-12-27",
     "as_of": "2022-12-23",
     "values": {
      "Matt Ryan (QB)": 15,
@@ -3501,7 +3501,7 @@
     }
    }
   },
-  "Fish's League||2019||4/28/2019||Smokers Haven (AnthonyZ) received: [2019 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Damien Harris (RB)] <---> austin143 received: [Tyreek Hill (WR)]": {
+  "Fish's League||2019||4/26/2019||Smokers Haven (AnthonyZ) received: [2019 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Damien Harris (RB)] <---> austin143 received: [Tyreek Hill (WR)]": {
    "trade_day": {
     "as_of": "2019-04-22",
     "values": {
@@ -3510,7 +3510,7 @@
     }
    },
    "grade": {
-    "mark": "2022-04-28",
+    "mark": "2022-04-26",
     "as_of": "2022-04-22",
     "values": {
      "2019 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Damien Harris (RB)": 1504,
@@ -3518,18 +3518,18 @@
     }
    }
   },
-  "Fish's League||2019||5/9/2019||Wade55720 received: [2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE), 2020 Round 1st Pick (originally from JayLeno) -> Resulted in drafting: Cam Akers (RB)] <---> JayLeno received: [Jimmy Graham (TE), Kareem Hunt (RB)]": {
+  "Fish's League||2019||5/7/2019||Wade55720 received: [2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE), 2020 Round 1st Pick (originally from JayLeno) -> Resulted in drafting: Cam Akers (RB)] <---> JayLeno received: [Jimmy Graham (TE), Kareem Hunt (RB)]": {
    "trade_day": {
-    "as_of": "2019-05-09",
+    "as_of": "2019-04-22",
     "values": {
-     "2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE)": 1380,
-     "2020 Round 1st Pick (originally from JayLeno) -> Resulted in drafting: Cam Akers (RB)": 1273,
-     "Jimmy Graham (TE)": 88,
-     "Kareem Hunt (RB)": 2150
+     "2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE)": 2647,
+     "2020 Round 1st Pick (originally from JayLeno) -> Resulted in drafting: Cam Akers (RB)": 2139,
+     "Jimmy Graham (TE)": 148,
+     "Kareem Hunt (RB)": 2211
     }
    },
    "grade": {
-    "mark": "2022-05-09",
+    "mark": "2022-05-07",
     "as_of": "2022-05-06",
     "values": {
      "2019 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Noah Fant (TE)": 719,
@@ -3604,17 +3604,17 @@
     }
    }
   },
-  "Fish's League||2019||8/31/2019||HouseGordon received: [2020 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Bryce Love (RB), 2021 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Terrace Marshall (WR)] <---> lilfishy received: [Chad Beebe (WR)]": {
+  "Fish's League||2019||8/29/2019||HouseGordon received: [2020 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Bryce Love (RB), 2021 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Terrace Marshall (WR)] <---> lilfishy received: [Chad Beebe (WR)]": {
    "trade_day": {
-    "as_of": "2019-08-31",
+    "as_of": "2019-08-29",
     "values": {
-     "2020 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Bryce Love (RB)": 67,
-     "2021 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Terrace Marshall (WR)": 348,
-     "Chad Beebe (WR)": 10
+     "2020 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Bryce Love (RB)": 54,
+     "2021 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Terrace Marshall (WR)": 241,
+     "Chad Beebe (WR)": 4
     }
    },
    "grade": {
-    "mark": "2022-08-31",
+    "mark": "2022-08-29",
     "as_of": "2022-08-26",
     "values": {
      "2020 Round 3rd Pick (originally from lilfishy) -> Resulted in drafting: Bryce Love (RB)": 0,
@@ -3697,7 +3697,7 @@
     }
    }
   },
-  "Fish's League||2020||11/7/2020||Team 2021 (Wade55720) received: [2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Dee Eskridge (WR), 2022 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Khalil Shakir (WR)] <---> Kronik received: [Melvin Gordon (RB)]": {
+  "Fish's League||2020||11/6/2020||Team 2021 (Wade55720) received: [2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Dee Eskridge (WR), 2022 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Khalil Shakir (WR)] <---> Kronik received: [Melvin Gordon (RB)]": {
    "trade_day": {
     "as_of": "2020-11-07",
     "values": {
@@ -3707,7 +3707,7 @@
     }
    },
    "grade": {
-    "mark": "2023-11-07",
+    "mark": "2023-11-06",
     "as_of": "2023-11-03",
     "values": {
      "2021 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Dee Eskridge (WR)": 2,
@@ -3733,7 +3733,7 @@
     }
    }
   },
-  "Fish's League||2020||4/11/2020||bandito26 received: [Kareem Hunt (RB), Courtland Sutton (WR), 2020 Round 2nd Pick (originally from Honest Assholes  (AnthonyZ)) -> Resulted in drafting: Brandon Aiyuk (WR)] <---> JayLeno received: [Jamaal Williams (RB), 2020 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Jerry Jeudy (WR), 2020 Round 2nd Pick (originally from bandito26) -> Resulted in drafting: Tua Tagovailoa (QB), 2021 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Trey Lance (QB), 2021 Round 2nd Pick (originally from bandito26) -> Resulted in drafting: Amari Rodgers (WR), 2021 Round 2nd Pick (originally from What bet? (austin143)) -> Resulted in drafting: Chuba Hubbard (RB)]": {
+  "Fish's League||2020||4/10/2020||bandito26 received: [Kareem Hunt (RB), Courtland Sutton (WR), 2020 Round 2nd Pick (originally from Honest Assholes  (AnthonyZ)) -> Resulted in drafting: Brandon Aiyuk (WR)] <---> JayLeno received: [Jamaal Williams (RB), 2020 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Jerry Jeudy (WR), 2020 Round 2nd Pick (originally from bandito26) -> Resulted in drafting: Tua Tagovailoa (QB), 2021 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Trey Lance (QB), 2021 Round 2nd Pick (originally from bandito26) -> Resulted in drafting: Amari Rodgers (WR), 2021 Round 2nd Pick (originally from What bet? (austin143)) -> Resulted in drafting: Chuba Hubbard (RB)]": {
    "trade_day": {
     "as_of": "2020-02-06",
     "values": {
@@ -3749,7 +3749,7 @@
     }
    },
    "grade": {
-    "mark": "2023-04-11",
+    "mark": "2023-04-10",
     "as_of": "2023-04-07",
     "values": {
      "Kareem Hunt (RB)": 297,
@@ -3789,7 +3789,7 @@
     }
    }
   },
-  "Fish's League||2020||6/7/2020||What bet? (austin143) received: [2020 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Jerry Jeudy (WR), 2020 Round 2nd Pick (originally from bandito26) -> Resulted in drafting: Tua Tagovailoa (QB)] <---> JayLeno received: [Kenyan Drake (RB)]": {
+  "Fish's League||2020||6/5/2020||What bet? (austin143) received: [2020 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Jerry Jeudy (WR), 2020 Round 2nd Pick (originally from bandito26) -> Resulted in drafting: Tua Tagovailoa (QB)] <---> JayLeno received: [Kenyan Drake (RB)]": {
    "trade_day": {
     "as_of": "2020-06-05",
     "values": {
@@ -3799,7 +3799,7 @@
     }
    },
    "grade": {
-    "mark": "2023-06-07",
+    "mark": "2023-06-05",
     "as_of": "2023-06-02",
     "values": {
      "2020 Round 1st Pick (originally from bandito26) -> Resulted in drafting: Jerry Jeudy (WR)": 2987,
@@ -3831,6 +3831,31 @@
     }
    }
   },
+  "Fish's League||2020||7/3/2020||bandito26 received: [Julio Jones (WR), 2021 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Dyami Brown (WR), 2022 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Zamir White (RB)] <---> HouseGordon received: [JuJu Smith-Schuster (WR), 2020 Round 3rd Pick (originally from bandito26) -> Resulted in drafting: Anthony McFarland (RB), 2020 Round 4th Pick (originally from bandito26) -> Resulted in drafting: Bisi Johnson (WR)]": {
+   "trade_day": {
+    "as_of": "2020-07-03",
+    "values": {
+     "Julio Jones (WR)": 5400,
+     "2021 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Dyami Brown (WR)": 58,
+     "2022 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Zamir White (RB)": 306,
+     "JuJu Smith-Schuster (WR)": 7346,
+     "2020 Round 3rd Pick (originally from bandito26) -> Resulted in drafting: Anthony McFarland (RB)": 222,
+     "2020 Round 4th Pick (originally from bandito26) -> Resulted in drafting: Bisi Johnson (WR)": 0
+    }
+   },
+   "grade": {
+    "mark": "2023-07-03",
+    "as_of": "2023-06-30",
+    "values": {
+     "Julio Jones (WR)": 3,
+     "2021 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Dyami Brown (WR)": 6,
+     "2022 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Zamir White (RB)": 64,
+     "JuJu Smith-Schuster (WR)": 632,
+     "2020 Round 3rd Pick (originally from bandito26) -> Resulted in drafting: Anthony McFarland (RB)": 2,
+     "2020 Round 4th Pick (originally from bandito26) -> Resulted in drafting: Bisi Johnson (WR)": 0
+    }
+   }
+  },
   "Fish's League||2020||7/4/2020||Team 2021 (Wade55720) received: [2020 Round 3rd Pick (originally from Honest Assholes  (AnthonyZ)) -> Resulted in drafting: Jerick McKinnon (RB), 2020 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Chase Claypool (WR)] <---> HouseGordon received: [2020 Round 2nd Pick (originally from What bet? (austin143)) -> Resulted in drafting: Laviska Shenault (WR)]": {
    "trade_day": {
     "as_of": "2020-07-03",
@@ -3847,31 +3872,6 @@
      "2020 Round 3rd Pick (originally from Honest Assholes  (AnthonyZ)) -> Resulted in drafting: Jerick McKinnon (RB)": 53,
      "2020 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Chase Claypool (WR)": 179,
      "2020 Round 2nd Pick (originally from What bet? (austin143)) -> Resulted in drafting: Laviska Shenault (WR)": 13
-    }
-   }
-  },
-  "Fish's League||2020||7/6/2020||bandito26 received: [Julio Jones (WR), 2021 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Dyami Brown (WR), 2022 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Zamir White (RB)] <---> HouseGordon received: [JuJu Smith-Schuster (WR), 2020 Round 3rd Pick (originally from bandito26) -> Resulted in drafting: Anthony McFarland (RB), 2020 Round 4th Pick (originally from bandito26) -> Resulted in drafting: Bisi Johnson (WR)]": {
-   "trade_day": {
-    "as_of": "2020-07-03",
-    "values": {
-     "Julio Jones (WR)": 5400,
-     "2021 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Dyami Brown (WR)": 58,
-     "2022 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Zamir White (RB)": 306,
-     "JuJu Smith-Schuster (WR)": 7346,
-     "2020 Round 3rd Pick (originally from bandito26) -> Resulted in drafting: Anthony McFarland (RB)": 222,
-     "2020 Round 4th Pick (originally from bandito26) -> Resulted in drafting: Bisi Johnson (WR)": 0
-    }
-   },
-   "grade": {
-    "mark": "2023-07-06",
-    "as_of": "2023-06-30",
-    "values": {
-     "Julio Jones (WR)": 3,
-     "2021 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Dyami Brown (WR)": 6,
-     "2022 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Zamir White (RB)": 64,
-     "JuJu Smith-Schuster (WR)": 632,
-     "2020 Round 3rd Pick (originally from bandito26) -> Resulted in drafting: Anthony McFarland (RB)": 2,
-     "2020 Round 4th Pick (originally from bandito26) -> Resulted in drafting: Bisi Johnson (WR)": 0
     }
    }
   },
@@ -3951,7 +3951,7 @@
     }
    }
   },
-  "Fish's League||2021||10/11/2021||Wade55720 received: [2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: C.J. Stroud (QB), 2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR), 2022 Round 2nd Pick (originally from jarvisevans) -> Resulted in drafting: Isiah Pacheco (RB)] <---> KillerCards received: [Aaron Rodgers (QB), 2023 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Luke Musgrave (TE)]": {
+  "Fish's League||2021||10/9/2021||Wade55720 received: [2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: C.J. Stroud (QB), 2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR), 2022 Round 2nd Pick (originally from jarvisevans) -> Resulted in drafting: Isiah Pacheco (RB)] <---> KillerCards received: [Aaron Rodgers (QB), 2023 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Luke Musgrave (TE)]": {
    "trade_day": {
     "as_of": "2021-10-08",
     "values": {
@@ -3963,14 +3963,14 @@
     }
    },
    "grade": {
-    "mark": "2024-10-11",
-    "as_of": "2024-10-11",
+    "mark": "2024-10-09",
+    "as_of": "2024-10-04",
     "values": {
-     "2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: C.J. Stroud (QB)": 4927,
-     "2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)": 239,
-     "2022 Round 2nd Pick (originally from jarvisevans) -> Resulted in drafting: Isiah Pacheco (RB)": 3604,
-     "Aaron Rodgers (QB)": 47,
-     "2023 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Luke Musgrave (TE)": 187
+     "2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: C.J. Stroud (QB)": 5274,
+     "2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)": 297,
+     "2022 Round 2nd Pick (originally from jarvisevans) -> Resulted in drafting: Isiah Pacheco (RB)": 2849,
+     "Aaron Rodgers (QB)": 38,
+     "2023 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Luke Musgrave (TE)": 213
     }
    }
   },
@@ -4022,7 +4022,7 @@
     }
    }
   },
-  "Fish's League||2021||6/15/2021||DerrickFish received: [Kenyan Drake (RB)] <---> JayLeno received: [2022 Round 2nd Pick (originally from DerrickFish) -> Resulted in drafting: Romeo Doubs (WR), 2023 Round 3rd Pick (originally from DerrickFish) -> Resulted in drafting: Irv Smith (TE)]": {
+  "Fish's League||2021||6/13/2021||DerrickFish received: [Kenyan Drake (RB)] <---> JayLeno received: [2022 Round 2nd Pick (originally from DerrickFish) -> Resulted in drafting: Romeo Doubs (WR), 2023 Round 3rd Pick (originally from DerrickFish) -> Resulted in drafting: Irv Smith (TE)]": {
    "trade_day": {
     "as_of": "2021-06-11",
     "values": {
@@ -4032,12 +4032,12 @@
     }
    },
    "grade": {
-    "mark": "2024-06-15",
-    "as_of": "2024-06-14",
+    "mark": "2024-06-13",
+    "as_of": "2024-06-07",
     "values": {
-     "Kenyan Drake (RB)": 1,
-     "2022 Round 2nd Pick (originally from DerrickFish) -> Resulted in drafting: Romeo Doubs (WR)": 406,
-     "2023 Round 3rd Pick (originally from DerrickFish) -> Resulted in drafting: Irv Smith (TE)": 7
+     "Kenyan Drake (RB)": 2,
+     "2022 Round 2nd Pick (originally from DerrickFish) -> Resulted in drafting: Romeo Doubs (WR)": 392,
+     "2023 Round 3rd Pick (originally from DerrickFish) -> Resulted in drafting: Irv Smith (TE)": 6
     }
    }
   },
@@ -4245,7 +4245,7 @@
     }
    }
   },
-  "Fish's League||2022||3/2/2022||Wade55720 received: [Calvin Ridley (WR)] <---> JayLeno received: [2022 Round 1st Pick (originally from DerrickFish) -> Resulted in drafting: Skyy Moore (WR), 2022 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: David Bell (WR), 2022 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Khalil Shakir (WR), 2022 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Tyler Allgeier (RB), 2022 Round 3rd Pick (originally from jarvisevans) -> Resulted in drafting: Wan'Dale Robinson (WR)]": {
+  "Fish's League||2022||2/25/2022||Wade55720 received: [Calvin Ridley (WR)] <---> JayLeno received: [2022 Round 1st Pick (originally from DerrickFish) -> Resulted in drafting: Skyy Moore (WR), 2022 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: David Bell (WR), 2022 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Khalil Shakir (WR), 2022 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Tyler Allgeier (RB), 2022 Round 3rd Pick (originally from jarvisevans) -> Resulted in drafting: Wan'Dale Robinson (WR)]": {
    "trade_day": {
     "as_of": "2022-02-25",
     "values": {
@@ -4258,15 +4258,15 @@
     }
    },
    "grade": {
-    "mark": "2025-03-02",
-    "as_of": "2025-02-28",
+    "mark": "2025-02-25",
+    "as_of": "2025-02-21",
     "values": {
-     "Calvin Ridley (WR)": 864,
-     "2022 Round 1st Pick (originally from DerrickFish) -> Resulted in drafting: Skyy Moore (WR)": 3,
-     "2022 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: David Bell (WR)": 4,
-     "2022 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Khalil Shakir (WR)": 1425,
-     "2022 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Tyler Allgeier (RB)": 185,
-     "2022 Round 3rd Pick (originally from jarvisevans) -> Resulted in drafting: Wan'Dale Robinson (WR)": 258
+     "Calvin Ridley (WR)": 914,
+     "2022 Round 1st Pick (originally from DerrickFish) -> Resulted in drafting: Skyy Moore (WR)": 2,
+     "2022 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: David Bell (WR)": 2,
+     "2022 Round 3rd Pick (originally from Kronik) -> Resulted in drafting: Khalil Shakir (WR)": 1372,
+     "2022 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Tyler Allgeier (RB)": 183,
+     "2022 Round 3rd Pick (originally from jarvisevans) -> Resulted in drafting: Wan'Dale Robinson (WR)": 224
     }
    }
   },
@@ -4287,7 +4287,7 @@
     }
    }
   },
-  "Fish's League||2022||8/28/2022||Wade55720 received: [2022 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Treylon Burks (WR)] <---> lilfishy received: [2022 Round 1st Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Jameson Williams (WR), 2023 Round 3rd Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Jordan Love (QB), 2022 Round 3rd Pick (originally from Wade55720) -> Resulted in drafting: Albert Okwuegbunam (TE), 2022 Round 6th Pick (originally from Wade55720) -> Resulted in drafting: Justyn Ross (WR), 2023 Round 4th Pick (originally from Wade55720) -> Resulted in drafting: Zach Evans (RB), 2023 Round 6th Pick (originally from Wade55720) -> Resulted in drafting: Stetson Bennett IV (QB), 2024 Round 4th Pick (originally from Wade55720) -> Resulted in drafting: Javon Baker (WR), 2024 Round 5th Pick (originally from Wade55720) -> Resulted in drafting: Noah Fant (TE), 2024 Round 6th Pick (originally from Wade55720) -> Resulted in drafting: Rondale Moore (WR)]": {
+  "Fish's League||2022||8/27/2022||Wade55720 received: [2022 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Treylon Burks (WR)] <---> lilfishy received: [2022 Round 1st Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Jameson Williams (WR), 2023 Round 3rd Pick (originally from Smokers Haven (AnthonyZ)) -> Resulted in drafting: Jordan Love (QB), 2022 Round 3rd Pick (originally from Wade55720) -> Resulted in drafting: Albert Okwuegbunam (TE), 2022 Round 6th Pick (originally from Wade55720) -> Resulted in drafting: Justyn Ross (WR), 2023 Round 4th Pick (originally from Wade55720) -> Resulted in drafting: Zach Evans (RB), 2023 Round 6th Pick (originally from Wade55720) -> Resulted in drafting: Stetson Bennett IV (QB), 2024 Round 4th Pick (originally from Wade55720) -> Resulted in drafting: Javon Baker (WR), 2024 Round 5th Pick (originally from Wade55720) -> Resulted in drafting: Noah Fant (TE), 2024 Round 6th Pick (originally from Wade55720) -> Resulted in drafting: Rondale Moore (WR)]": {
    "trade_day": {
     "as_of": "2022-08-26",
     "values": {
@@ -4321,7 +4321,7 @@
     }
    }
   },
-  "Fish's League||2022||9/29/2022||HouseGordon received: [2023 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Rashee Rice (WR)] <---> lilfishy received: [Cordarrelle Patterson (RB)]": {
+  "Fish's League||2022||9/26/2022||HouseGordon received: [2023 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Rashee Rice (WR)] <---> lilfishy received: [Cordarrelle Patterson (RB)]": {
    "trade_day": {
     "as_of": "2022-09-23",
     "values": {
@@ -4330,7 +4330,7 @@
     }
    },
    "grade": {
-    "mark": "2025-09-29",
+    "mark": "2025-09-26",
     "as_of": "2025-09-26",
     "values": {
      "2023 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Rashee Rice (WR)": 5262,
@@ -4380,7 +4380,7 @@
     }
    }
   },
-  "Fish's League||2023||1/12/2023||Amish oil change (Wade55720) received: [Josh Allen (QB)] <---> JayLeno received: [Rashod Bateman (WR), 2023 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Kadarius Toney (WR), 2024 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Marvin Harrison Jr. (WR), 2023 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zay Flowers (WR), 2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)]": {
+  "Fish's League||2023||1/11/2023||Amish oil change (Wade55720) received: [Josh Allen (QB)] <---> JayLeno received: [Rashod Bateman (WR), 2023 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Kadarius Toney (WR), 2024 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Marvin Harrison Jr. (WR), 2023 Round 1st Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Zay Flowers (WR), 2024 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: MarShawn Lloyd (RB)]": {
    "trade_day": {
     "as_of": "2023-01-06",
     "values": {
@@ -4393,7 +4393,7 @@
     }
    },
    "grade": {
-    "mark": "2026-01-12",
+    "mark": "2026-01-11",
     "as_of": "2026-01-09",
     "values": {
      "Josh Allen (QB)": 6563,
@@ -4426,18 +4426,7 @@
     }
    }
   },
-  "Fish's League||2023||1/15/2023||Dontiddy received: [2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB), 2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR), 2023 Round 3rd Pick (originally from JayLeno) -> Resulted in drafting: Tank Dell (WR)] <---> JayLeno received: [2025 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: RJ Harvey (RB)]": {
-   "trade_day": {
-    "as_of": "2023-01-15",
-    "values": {
-     "2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)": 396,
-     "2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR)": 396,
-     "2023 Round 3rd Pick (originally from JayLeno) -> Resulted in drafting: Tank Dell (WR)": 68,
-     "2025 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: RJ Harvey (RB)": 1728
-    }
-   }
-  },
-  "Fish's League||2023||1/15/2023||Dontiddy received: [2023 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Josh Downs (WR), 2023 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: DeWayne McBride (RB), 2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)] <---> Amish oil change (Wade55720) received: [2023 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: Quentin Johnston (WR)]": {
+  "Fish's League||2023||1/14/2023||Dontiddy received: [2023 Round 2nd Pick (originally from Kronik) -> Resulted in drafting: Josh Downs (WR), 2023 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: DeWayne McBride (RB), 2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)] <---> Amish oil change (Wade55720) received: [2023 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: Quentin Johnston (WR)]": {
    "trade_day": {
     "as_of": "2023-01-15",
     "values": {
@@ -4455,6 +4444,34 @@
      "2023 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: DeWayne McBride (RB)": 1,
      "2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)": 6247,
      "2023 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: Quentin Johnston (WR)": 684
+    }
+   }
+  },
+  "Fish's League||2023||1/14/2023||jarvisevans received: [Elijah Mitchell (RB)] <---> JayLeno received: [2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)]": {
+   "trade_day": {
+    "as_of": "2023-01-15",
+    "values": {
+     "Elijah Mitchell (RB)": 635,
+     "2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)": 396
+    }
+   },
+   "grade": {
+    "mark": "2026-01-14",
+    "as_of": "2026-01-09",
+    "values": {
+     "Elijah Mitchell (RB)": 6,
+     "2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)": 29
+    }
+   }
+  },
+  "Fish's League||2023||1/15/2023||Dontiddy received: [2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB), 2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR), 2023 Round 3rd Pick (originally from JayLeno) -> Resulted in drafting: Tank Dell (WR)] <---> JayLeno received: [2025 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: RJ Harvey (RB)]": {
+   "trade_day": {
+    "as_of": "2023-01-15",
+    "values": {
+     "2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)": 396,
+     "2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR)": 396,
+     "2023 Round 3rd Pick (originally from JayLeno) -> Resulted in drafting: Tank Dell (WR)": 68,
+     "2025 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: RJ Harvey (RB)": 1728
     }
    }
   },
@@ -4498,24 +4515,7 @@
     }
    }
   },
-  "Fish's League||2023||1/15/2023||jarvisevans received: [Elijah Mitchell (RB)] <---> JayLeno received: [2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)]": {
-   "trade_day": {
-    "as_of": "2023-01-15",
-    "values": {
-     "Elijah Mitchell (RB)": 635,
-     "2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)": 396
-    }
-   },
-   "grade": {
-    "mark": "2026-01-15",
-    "as_of": "2026-01-09",
-    "values": {
-     "Elijah Mitchell (RB)": 6,
-     "2023 Round 2nd Pick (originally from Dontiddy) -> Resulted in drafting: Roschon Johnson (RB)": 29
-    }
-   }
-  },
-  "Fish's League||2023||1/28/2023||Dontiddy received: [2023 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: Quentin Johnston (WR), 2024 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Ja'Lynn Polk (WR), 2025 Round 2nd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Jaydon Blue (RB)] <---> Amish oil change (Wade55720) received: [Cooper Kupp (WR)]": {
+  "Fish's League||2023||1/27/2023||Dontiddy received: [2023 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: Quentin Johnston (WR), 2024 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Ja'Lynn Polk (WR), 2025 Round 2nd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Jaydon Blue (RB)] <---> Amish oil change (Wade55720) received: [Cooper Kupp (WR)]": {
    "trade_day": {
     "as_of": "2023-01-27",
     "values": {
@@ -4526,7 +4526,7 @@
     }
    },
    "grade": {
-    "mark": "2026-01-28",
+    "mark": "2026-01-27",
     "as_of": "2026-01-23",
     "values": {
      "2023 Round 1st Pick (originally from Dontiddy) -> Resulted in drafting: Quentin Johnston (WR)": 949,
@@ -4614,28 +4614,28 @@
     }
    }
   },
-  "Fish's League||2023||10/20/2023||HouseGordon received: [Deshaun Watson (QB)] <---> lilfishy received: [2024 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Isaiah Likely (TE), 2025 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Bhayshul Tuten (RB), 2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)]": {
+  "Fish's League||2023||10/18/2023||HouseGordon received: [Deshaun Watson (QB)] <---> lilfishy received: [2024 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Isaiah Likely (TE), 2025 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Bhayshul Tuten (RB), 2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)]": {
    "trade_day": {
-    "as_of": "2023-10-20",
+    "as_of": "2023-10-13",
     "values": {
-     "Deshaun Watson (QB)": 603,
+     "Deshaun Watson (QB)": 701,
      "2024 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Isaiah Likely (TE)": 44,
-     "2025 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Bhayshul Tuten (RB)": 196,
-     "2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)": 273
+     "2025 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Bhayshul Tuten (RB)": 194,
+     "2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)": 269
     }
    },
    "grade": {
-    "mark": "2026-10-20",
-    "as_of": "2026-10-26",
+    "mark": "2026-10-18",
+    "as_of": "2026-10-16",
     "values": {
-     "Deshaun Watson (QB)": 49,
-     "2024 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Isaiah Likely (TE)": 2046,
-     "2025 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Bhayshul Tuten (RB)": 1907,
-     "2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)": 1
+     "Deshaun Watson (QB)": 46,
+     "2024 Round 3rd Pick (originally from HouseGordon) -> Resulted in drafting: Isaiah Likely (TE)": 1810,
+     "2025 Round 2nd Pick (originally from HouseGordon) -> Resulted in drafting: Bhayshul Tuten (RB)": 1543,
+     "2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Jermaine Burton (WR)": 0
     }
    }
   },
-  "Fish's League||2023||10/24/2023||HouseGordon received: [Joe Mixon (RB), 2024 Round 4th Pick (originally from JayLeno) -> Resulted in drafting: Sam Darnold (QB)] <---> JayLeno received: [2025 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: TreVeyon Henderson (RB)]": {
+  "Fish's League||2023||10/21/2023||HouseGordon received: [Joe Mixon (RB), 2024 Round 4th Pick (originally from JayLeno) -> Resulted in drafting: Sam Darnold (QB)] <---> JayLeno received: [2025 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: TreVeyon Henderson (RB)]": {
    "trade_day": {
     "as_of": "2023-10-20",
     "values": {
@@ -4645,27 +4645,27 @@
     }
    },
    "grade": {
-    "mark": "2026-10-24",
-    "as_of": "2026-10-26",
+    "mark": "2026-10-21",
+    "as_of": "2026-11-11",
     "values": {
      "Joe Mixon (RB)": 2,
-     "2024 Round 4th Pick (originally from JayLeno) -> Resulted in drafting: Sam Darnold (QB)": 440,
-     "2025 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: TreVeyon Henderson (RB)": 2423
+     "2024 Round 4th Pick (originally from JayLeno) -> Resulted in drafting: Sam Darnold (QB)": 453,
+     "2025 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: TreVeyon Henderson (RB)": 2031
     }
    }
   },
-  "Fish's League||2023||2/15/2023||Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR), 2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB), 2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR)] <---> Dontiddy received: [CeeDee Lamb (WR)]": {
+  "Fish's League||2023||2/13/2023||Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR), 2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB), 2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR)] <---> Dontiddy received: [CeeDee Lamb (WR)]": {
    "trade_day": {
-    "as_of": "2023-02-15",
+    "as_of": "2023-01-27",
     "values": {
-     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)": 2782,
-     "2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)": 2782,
-     "2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR)": 1293,
-     "CeeDee Lamb (WR)": 9184
+     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)": 3233,
+     "2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)": 3233,
+     "2023 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Jalin Hyatt (WR)": 387,
+     "CeeDee Lamb (WR)": 9119
     }
    },
    "grade": {
-    "mark": "2026-02-15",
+    "mark": "2026-02-13",
     "as_of": "2026-02-13",
     "values": {
      "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR)": 2328,
@@ -4675,7 +4675,7 @@
     }
    }
   },
-  "Fish's League||2023||2/5/2023||Smokers Haven (SmokersHaven) received: [Kareem Hunt (RB), 2024 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Ja'Lynn Polk (WR), 2024 Round 2nd Pick (originally from jarvisevans) -> Resulted in drafting: Adonai Mitchell (WR)] <---> Dontiddy received: [Isiah Pacheco (RB)]": {
+  "Fish's League||2023||2/2/2023||Smokers Haven (SmokersHaven) received: [Kareem Hunt (RB), 2024 Round 3rd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Ja'Lynn Polk (WR), 2024 Round 2nd Pick (originally from jarvisevans) -> Resulted in drafting: Adonai Mitchell (WR)] <---> Dontiddy received: [Isiah Pacheco (RB)]": {
    "trade_day": {
     "as_of": "2023-01-27",
     "values": {
@@ -4686,7 +4686,7 @@
     }
    },
    "grade": {
-    "mark": "2026-02-05",
+    "mark": "2026-02-02",
     "as_of": "2026-01-30",
     "values": {
      "Kareem Hunt (RB)": 12,
@@ -4696,7 +4696,7 @@
     }
    }
   },
-  "Fish's League||2023||2/8/2023||Big Fish (DerrickFish) received: [Courtland Sutton (WR)] <---> Dontiddy received: [2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Ricky Pearsall (WR), 2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Dylan Sampson (RB)]": {
+  "Fish's League||2023||2/3/2023||Big Fish (DerrickFish) received: [Courtland Sutton (WR)] <---> Dontiddy received: [2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Ricky Pearsall (WR), 2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Dylan Sampson (RB)]": {
    "trade_day": {
     "as_of": "2023-01-27",
     "values": {
@@ -4706,12 +4706,12 @@
     }
    },
    "grade": {
-    "mark": "2026-02-08",
-    "as_of": "2026-02-06",
+    "mark": "2026-02-03",
+    "as_of": "2026-01-30",
     "values": {
-     "Courtland Sutton (WR)": 1920,
-     "2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Ricky Pearsall (WR)": 1893,
-     "2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Dylan Sampson (RB)": 164
+     "Courtland Sutton (WR)": 1602,
+     "2024 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Ricky Pearsall (WR)": 2211,
+     "2025 Round 2nd Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Dylan Sampson (RB)": 126
     }
    }
   },
@@ -4752,7 +4752,7 @@
     }
    }
   },
-  "Fish's League||2023||5/11/2023||Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jahmyr Gibbs (RB)] <---> HouseGordon received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR), 2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)]": {
+  "Fish's League||2023||5/10/2023||Big Fish (DerrickFish) received: [2023 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jahmyr Gibbs (RB)] <---> HouseGordon received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Jordan Addison (WR), 2023 Round 1st Pick (originally from jarvisevans) -> Resulted in drafting: De'Von Achane (RB)]": {
    "trade_day": {
     "as_of": "2023-04-21",
     "values": {
@@ -4771,7 +4771,7 @@
     }
    }
   },
-  "Fish's League||2023||5/14/2023||Amish oil change (Wade55720) received: [Pat Freiermuth (TE)] <---> KillerCards received: [2023 Round 2nd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Michael Mayer (TE)]": {
+  "Fish's League||2023||5/13/2023||Amish oil change (Wade55720) received: [Pat Freiermuth (TE)] <---> KillerCards received: [2023 Round 2nd Pick (originally from Amish oil change (Wade55720)) -> Resulted in drafting: Michael Mayer (TE)]": {
    "trade_day": {
     "as_of": "2023-04-21",
     "values": {
@@ -4780,7 +4780,7 @@
     }
    },
    "grade": {
-    "mark": "2026-05-14",
+    "mark": "2026-05-13",
     "as_of": "2026-05-08",
     "values": {
      "Pat Freiermuth (TE)": 73,
@@ -4962,21 +4962,21 @@
     }
    }
   },
+  "Fish's League||2024||8/26/2024||Smokers Haven (SmokersHaven) received: [2025 Round 3rd Pick (originally from OverRated (Dontiddy)) -> Resulted in drafting: Jalen Milroe (QB)] <---> lilfishy received: [Nick Chubb (RB)]": {
+   "trade_day": {
+    "as_of": "2024-08-23",
+    "values": {
+     "2025 Round 3rd Pick (originally from OverRated (Dontiddy)) -> Resulted in drafting: Jalen Milroe (QB)": 42,
+     "Nick Chubb (RB)": 706
+    }
+   }
+  },
   "Fish's League||2024||8/27/2024||Amish oil change (Wade55720) received: [2026 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jeremiyah Love (RB)] <---> HouseGordon received: [Jaxon Smith-Njigba (WR)]": {
    "trade_day": {
     "as_of": "2024-08-23",
     "values": {
      "2026 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jeremiyah Love (RB)": 1593,
      "Jaxon Smith-Njigba (WR)": 2492
-    }
-   }
-  },
-  "Fish's League||2024||8/27/2024||Smokers Haven (SmokersHaven) received: [2025 Round 3rd Pick (originally from OverRated (Dontiddy)) -> Resulted in drafting: Jalen Milroe (QB)] <---> lilfishy received: [Nick Chubb (RB)]": {
-   "trade_day": {
-    "as_of": "2024-08-23",
-    "values": {
-     "2025 Round 3rd Pick (originally from OverRated (Dontiddy)) -> Resulted in drafting: Jalen Milroe (QB)": 42,
-     "Nick Chubb (RB)": 706
     }
    }
   },
@@ -5001,7 +5001,7 @@
     }
    }
   },
-  "Fish's League||2024||9/25/2024||Worst team (DerrickFish) received: [Diontae Johnson (WR)] <---> HouseGordon received: [2026 Round 2nd Pick (originally from Worst team (DerrickFish)) -> Resulted in drafting: Chig Okonkwo (TE)]": {
+  "Fish's League||2024||9/22/2024||Worst team (DerrickFish) received: [Diontae Johnson (WR)] <---> HouseGordon received: [2026 Round 2nd Pick (originally from Worst team (DerrickFish)) -> Resulted in drafting: Chig Okonkwo (TE)]": {
    "trade_day": {
     "as_of": "2024-09-20",
     "values": {
@@ -5010,7 +5010,7 @@
     }
    }
   },
-  "Fish's League||2025||10/2/2025||Smokers Haven (SmokersHaven) received: [Ricky Pearsall (WR), 2026 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Ted Hurst III (WR), 2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)), 2027 Round 2nd Pick (originally from SeasonHerosPlayoffZeros (KillerCards))] <---> Run Achane on her (Dontiddy) received: [Brian Thomas Jr. (WR)]": {
+  "Fish's League||2025||10/1/2025||Smokers Haven (SmokersHaven) received: [Ricky Pearsall (WR), 2026 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Ted Hurst III (WR), 2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven)), 2027 Round 2nd Pick (originally from SeasonHerosPlayoffZeros (KillerCards))] <---> Run Achane on her (Dontiddy) received: [Brian Thomas Jr. (WR)]": {
    "trade_day": {
     "as_of": "2025-09-26",
     "values": {
@@ -5032,7 +5032,7 @@
     }
    }
   },
-  "Fish's League||2025||10/9/2025||Run Achane on her (Dontiddy) received: [Kendre Miller (RB)] <---> SeasonHerosPlayoffZeros (KillerCards) received: [2026 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish)) -> Resulted in drafting: Ty Simpson (QB), 2027 Round 6th Pick (originally from Run Achane on her (Dontiddy))]": {
+  "Fish's League||2025||10/7/2025||Run Achane on her (Dontiddy) received: [Kendre Miller (RB)] <---> SeasonHerosPlayoffZeros (KillerCards) received: [2026 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish)) -> Resulted in drafting: Ty Simpson (QB), 2027 Round 6th Pick (originally from Run Achane on her (Dontiddy))]": {
    "trade_day": {
     "as_of": "2025-10-03",
     "values": {
@@ -5042,7 +5042,7 @@
     }
    }
   },
-  "Fish's League||2025||11/11/2025||White Bowser (Wade55720) received: [CeeDee Lamb (WR), Jonathan Taylor (RB), Braelon Allen (RB), 2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Ja'Kobi Lane (WR)] <---> JayLeno received: [Garrett Wilson (WR), Bijan Robinson (RB), TreVeyon Henderson (RB), 2028 Round 1st Pick (originally from White Bowser (Wade55720))]": {
+  "Fish's League||2025||11/9/2025||White Bowser (Wade55720) received: [CeeDee Lamb (WR), Jonathan Taylor (RB), Braelon Allen (RB), 2026 Round 2nd Pick (originally from Smokers Haven (SmokersHaven)) -> Resulted in drafting: Ja'Kobi Lane (WR)] <---> JayLeno received: [Garrett Wilson (WR), Bijan Robinson (RB), TreVeyon Henderson (RB), 2028 Round 1st Pick (originally from White Bowser (Wade55720))]": {
    "trade_day": {
     "as_of": "2025-11-07",
     "values": {
@@ -5128,7 +5128,7 @@
     }
    }
   },
-  "Fish's League||2025||7/30/2025||Run Achane on her (Dontiddy) received: [Jordan Mason (RB), 2027 Round 2nd Pick (originally from SeasonHerosPlayoffZeros (KillerCards))] <---> SeasonHerosPlayoffZeros (KillerCards) received: [2026 Round 1st Pick (originally from Run Achane on her (Dontiddy)) -> Resulted in drafting: Jadarian Price (RB), 2026 Round 4th Pick (originally from Run Achane on her (Dontiddy)) -> Resulted in drafting: Malik Washington (WR), 2026 Round 3rd Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)]": {
+  "Fish's League||2025||7/29/2025||Run Achane on her (Dontiddy) received: [Jordan Mason (RB), 2027 Round 2nd Pick (originally from SeasonHerosPlayoffZeros (KillerCards))] <---> SeasonHerosPlayoffZeros (KillerCards) received: [2026 Round 1st Pick (originally from Run Achane on her (Dontiddy)) -> Resulted in drafting: Jadarian Price (RB), 2026 Round 4th Pick (originally from Run Achane on her (Dontiddy)) -> Resulted in drafting: Malik Washington (WR), 2026 Round 3rd Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)]": {
    "trade_day": {
     "as_of": "2025-07-25",
     "values": {
@@ -5137,6 +5137,17 @@
      "2026 Round 1st Pick (originally from Run Achane on her (Dontiddy)) -> Resulted in drafting: Jadarian Price (RB)": 2241,
      "2026 Round 4th Pick (originally from Run Achane on her (Dontiddy)) -> Resulted in drafting: Malik Washington (WR)": 12,
      "2026 Round 3rd Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)": 43
+    }
+   }
+  },
+  "Fish's League||2025||7/29/2025||Thielen Mythelf (DerrickFish) received: [Alvin Kamara (RB)] <---> Run Achane on her (Dontiddy) received: [Joshua Palmer (WR), 2027 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish)), 2028 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish))]": {
+   "trade_day": {
+    "as_of": "2025-07-25",
+    "values": {
+     "Alvin Kamara (RB)": 1315,
+     "Joshua Palmer (WR)": 142,
+     "2027 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish))": 32,
+     "2028 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish))": 32
     }
    }
   },
@@ -5152,31 +5163,20 @@
     }
    }
   },
-  "Fish's League||2025||7/30/2025||Thielen Mythelf (DerrickFish) received: [Alvin Kamara (RB)] <---> Run Achane on her (Dontiddy) received: [Joshua Palmer (WR), 2027 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish)), 2028 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish))]": {
+  "Fish's League||2025||8/14/2025||Smokers Haven (SmokersHaven) received: [DeVonta Smith (WR), Brandon Aubrey (K), 2027 Round 1st Pick (originally from Run Achane on her (Dontiddy))] <---> Run Achane on her (Dontiddy) received: [Hunter Henry (TE), Chase Brown (RB), 2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))]": {
    "trade_day": {
-    "as_of": "2025-07-25",
+    "as_of": "2025-08-08",
     "values": {
-     "Alvin Kamara (RB)": 1315,
-     "Joshua Palmer (WR)": 142,
-     "2027 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish))": 32,
-     "2028 Round 3rd Pick (originally from Thielen Mythelf (DerrickFish))": 32
-    }
-   }
-  },
-  "Fish's League||2025||8/16/2025||Smokers Haven (SmokersHaven) received: [DeVonta Smith (WR), Brandon Aubrey (K), 2027 Round 1st Pick (originally from Run Achane on her (Dontiddy))] <---> Run Achane on her (Dontiddy) received: [Hunter Henry (TE), Chase Brown (RB), 2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))]": {
-   "trade_day": {
-    "as_of": "2025-08-15",
-    "values": {
-     "DeVonta Smith (WR)": 5092,
+     "DeVonta Smith (WR)": 4950,
      "Brandon Aubrey (K)": 0,
-     "2027 Round 1st Pick (originally from Run Achane on her (Dontiddy))": 1587,
-     "Hunter Henry (TE)": 149,
-     "Chase Brown (RB)": 3725,
-     "2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))": 35
+     "2027 Round 1st Pick (originally from Run Achane on her (Dontiddy))": 1576,
+     "Hunter Henry (TE)": 161,
+     "Chase Brown (RB)": 3655,
+     "2027 Round 3rd Pick (originally from Smokers Haven (SmokersHaven))": 34
     }
    }
   },
-  "Fish's League||2025||8/6/2025||Smokers Haven (SmokersHaven) received: [Alec Pierce (WR)] <---> SeasonHerosPlayoffZeros (KillerCards) received: [Michael Wilson (WR)]": {
+  "Fish's League||2025||8/4/2025||Smokers Haven (SmokersHaven) received: [Alec Pierce (WR)] <---> SeasonHerosPlayoffZeros (KillerCards) received: [Michael Wilson (WR)]": {
    "trade_day": {
     "as_of": "2025-08-01",
     "values": {
@@ -5194,7 +5194,7 @@
     }
    }
   },
-  "Fish's League||2025||9/20/2025||HouseGordon received: [2026 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jeremiyah Love (RB), 2028 Round 3rd Pick (originally from JayLeno)] <---> JayLeno received: [Marvin Harrison Jr. (WR), 2028 Round 2nd Pick (originally from HouseGordon)]": {
+  "Fish's League||2025||9/19/2025||HouseGordon received: [2026 Round 1st Pick (originally from HouseGordon) -> Resulted in drafting: Jeremiyah Love (RB), 2028 Round 3rd Pick (originally from JayLeno)] <---> JayLeno received: [Marvin Harrison Jr. (WR), 2028 Round 2nd Pick (originally from HouseGordon)]": {
    "trade_day": {
     "as_of": "2025-09-19",
     "values": {
@@ -5226,7 +5226,7 @@
     }
    }
   },
-  "Fish's League||2025||9/28/2025||HouseGordon received: [2026 Round 2nd Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Germie Bernard (WR)] <---> SeasonHerosPlayoffZeros (KillerCards) received: [David Montgomery (RB)]": {
+  "Fish's League||2025||9/26/2025||HouseGordon received: [2026 Round 2nd Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Germie Bernard (WR)] <---> SeasonHerosPlayoffZeros (KillerCards) received: [David Montgomery (RB)]": {
    "trade_day": {
     "as_of": "2025-09-26",
     "values": {
@@ -5235,7 +5235,7 @@
     }
    }
   },
-  "Fish's League||2025||9/28/2025||Run Achane on her (Dontiddy) received: [2027 Round 3rd Pick (originally from White Bowser (Wade55720))] <---> White Bowser (Wade55720) received: [Joe Mixon (RB)]": {
+  "Fish's League||2025||9/27/2025||Run Achane on her (Dontiddy) received: [2027 Round 3rd Pick (originally from White Bowser (Wade55720))] <---> White Bowser (Wade55720) received: [Joe Mixon (RB)]": {
    "trade_day": {
     "as_of": "2025-09-26",
     "values": {
@@ -5265,7 +5265,7 @@
     }
    }
   },
-  "Fish's League||2026||5/8/2026||SeasonHerosPlayoffZeros (KillerCards) received: [Joe Burrow (QB), Kenneth Walker III (RB), 2026 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Chris Bell (WR)] <---> JayLeno received: [2026 Round 1st Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Carnell Tate (WR), 2027 Round 1st Pick (originally from SeasonHerosPlayoffZeros (KillerCards))]": {
+  "Fish's League||2026||5/7/2026||SeasonHerosPlayoffZeros (KillerCards) received: [Joe Burrow (QB), Kenneth Walker III (RB), 2026 Round 2nd Pick (originally from JayLeno) -> Resulted in drafting: Chris Bell (WR)] <---> JayLeno received: [2026 Round 1st Pick (originally from SeasonHerosPlayoffZeros (KillerCards)) -> Resulted in drafting: Carnell Tate (WR), 2027 Round 1st Pick (originally from SeasonHerosPlayoffZeros (KillerCards))]": {
    "trade_day": {
     "as_of": "2026-05-08",
     "values": {
@@ -6358,7 +6358,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2021||11/18/2021||KillerCards received: [Nick Chubb (RB)] <---> DerrickFish received: [2022 Round 1st Pick (originally from KillerCards) -> Resulted in drafting: Treylon Burks (WR), 2023 Round 1st Pick (originally from KillerCards) -> Resulted in drafting: Dalton Kincaid (TE), 2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: J.J. McCarthy (QB)]": {
+  "Hail Mary Jane Congregation||2021||11/17/2021||KillerCards received: [Nick Chubb (RB)] <---> DerrickFish received: [2022 Round 1st Pick (originally from KillerCards) -> Resulted in drafting: Treylon Burks (WR), 2023 Round 1st Pick (originally from KillerCards) -> Resulted in drafting: Dalton Kincaid (TE), 2024 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: J.J. McCarthy (QB)]": {
    "trade_day": {
     "as_of": "2021-11-12",
     "values": {
@@ -6369,7 +6369,7 @@
     }
    },
    "grade": {
-    "mark": "2024-11-18",
+    "mark": "2024-11-17",
     "as_of": "2024-11-15",
     "values": {
      "Nick Chubb (RB)": 566,
@@ -6400,7 +6400,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2022||10/23/2022||InsideInsightt received: [P.J. Walker (QB), 2023 Round 4th Pick (originally from Smokers Haven  (AnthonyZ)) -> Resulted in drafting: Kayshon Boutte (WR)] <---> Smokers Haven  (AnthonyZ) received: [2023 Round 3rd Pick (originally from InsideInsightt) -> Resulted in drafting: Eric Gray (RB)]": {
+  "Hail Mary Jane Congregation||2022||10/22/2022||InsideInsightt received: [P.J. Walker (QB), 2023 Round 4th Pick (originally from Smokers Haven  (AnthonyZ)) -> Resulted in drafting: Kayshon Boutte (WR)] <---> Smokers Haven  (AnthonyZ) received: [2023 Round 3rd Pick (originally from InsideInsightt) -> Resulted in drafting: Eric Gray (RB)]": {
    "trade_day": {
     "as_of": "2022-10-21",
     "values": {
@@ -6410,7 +6410,7 @@
     }
    },
    "grade": {
-    "mark": "2025-10-23",
+    "mark": "2025-10-22",
     "as_of": "2025-10-17",
     "values": {
      "P.J. Walker (QB)": 0,
@@ -6488,7 +6488,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2022||6/8/2022||commish (JayLeno) received: [Javonte Williams (RB), 2022 Round 1st Pick (originally from DerrickFish) -> Resulted in drafting: Kenneth Walker III (RB)] <---> DerrickFish received: [Chris Godwin Jr. (WR), 2022 Round 1st Pick (originally from commish (JayLeno)) -> Resulted in drafting: Tyler Allgeier (RB), 2022 Round 3rd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Hassan Haskins (RB), 2022 Round 3rd Pick (originally from Burntcooks) -> Resulted in drafting: Jelani Woods (TE), 2022 Round 3rd Pick (originally from jarvisevans) -> Resulted in drafting: Trey McBride (TE)]": {
+  "Hail Mary Jane Congregation||2022||6/7/2022||commish (JayLeno) received: [Javonte Williams (RB), 2022 Round 1st Pick (originally from DerrickFish) -> Resulted in drafting: Kenneth Walker III (RB)] <---> DerrickFish received: [Chris Godwin Jr. (WR), 2022 Round 1st Pick (originally from commish (JayLeno)) -> Resulted in drafting: Tyler Allgeier (RB), 2022 Round 3rd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Hassan Haskins (RB), 2022 Round 3rd Pick (originally from Burntcooks) -> Resulted in drafting: Jelani Woods (TE), 2022 Round 3rd Pick (originally from jarvisevans) -> Resulted in drafting: Trey McBride (TE)]": {
    "trade_day": {
     "as_of": "2022-06-03",
     "values": {
@@ -6502,7 +6502,7 @@
     }
    },
    "grade": {
-    "mark": "2025-06-08",
+    "mark": "2025-06-07",
     "as_of": "2025-06-06",
     "values": {
      "Javonte Williams (RB)": 240,
@@ -6538,17 +6538,17 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2022||8/20/2022||KillerCards received: [DeAndre Hopkins (WR)] <---> Smokers Haven  (AnthonyZ) received: [2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Josh Downs (WR), 2024 Round 3rd Pick (originally from KillerCards) -> Resulted in drafting: Luke McCaffrey (WR)]": {
+  "Hail Mary Jane Congregation||2022||8/18/2022||KillerCards received: [DeAndre Hopkins (WR)] <---> Smokers Haven  (AnthonyZ) received: [2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Josh Downs (WR), 2024 Round 3rd Pick (originally from KillerCards) -> Resulted in drafting: Luke McCaffrey (WR)]": {
    "trade_day": {
-    "as_of": "2022-08-19",
+    "as_of": "2022-08-12",
     "values": {
-     "DeAndre Hopkins (WR)": 1353,
-     "2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Josh Downs (WR)": 292,
-     "2024 Round 3rd Pick (originally from KillerCards) -> Resulted in drafting: Luke McCaffrey (WR)": 38
+     "DeAndre Hopkins (WR)": 1507,
+     "2023 Round 2nd Pick (originally from KillerCards) -> Resulted in drafting: Josh Downs (WR)": 284,
+     "2024 Round 3rd Pick (originally from KillerCards) -> Resulted in drafting: Luke McCaffrey (WR)": 37
     }
    },
    "grade": {
-    "mark": "2025-08-20",
+    "mark": "2025-08-18",
     "as_of": "2025-08-15",
     "values": {
      "DeAndre Hopkins (WR)": 86,
@@ -6731,7 +6731,28 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2023||10/31/2023||Burntcooks received: [2024 Round 1st Pick (originally from Burntcooks) -> Resulted in drafting: Brock Bowers (TE), 2024 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Troy Franklin (WR), 2025 Round 1st Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Kaleb Johnson (RB), 2025 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Jalen Royals (WR), 2025 Round 5th Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Efton Chism III (WR)] <---> Smokers Haven  (SmokersHaven) received: [Garrett Wilson (WR)]": {
+  "Hail Mary Jane Congregation||2023||10/27/2023||Killer Cards (KillerCards) received: [De'Von Achane (RB)] <---> Miksimus80 received: [Christian Kirk (WR), Gabe Davis (WR), 2026 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)]": {
+   "trade_day": {
+    "as_of": "2023-10-27",
+    "values": {
+     "De'Von Achane (RB)": 5387,
+     "Christian Kirk (WR)": 1938,
+     "Gabe Davis (WR)": 912,
+     "2026 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)": 184
+    }
+   },
+   "grade": {
+    "mark": "2026-10-27",
+    "as_of": "2026-11-11",
+    "values": {
+     "De'Von Achane (RB)": 4881,
+     "Christian Kirk (WR)": 8,
+     "Gabe Davis (WR)": 0,
+     "2026 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)": 847
+    }
+   }
+  },
+  "Hail Mary Jane Congregation||2023||10/30/2023||Burntcooks received: [2024 Round 1st Pick (originally from Burntcooks) -> Resulted in drafting: Brock Bowers (TE), 2024 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Troy Franklin (WR), 2025 Round 1st Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Kaleb Johnson (RB), 2025 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Jalen Royals (WR), 2025 Round 5th Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Efton Chism III (WR)] <---> Smokers Haven  (SmokersHaven) received: [Garrett Wilson (WR)]": {
    "trade_day": {
     "as_of": "2023-10-27",
     "values": {
@@ -6744,7 +6765,7 @@
     }
    },
    "grade": {
-    "mark": "2026-10-31",
+    "mark": "2026-10-30",
     "as_of": "2026-10-31",
     "values": {
      "2024 Round 1st Pick (originally from Burntcooks) -> Resulted in drafting: Brock Bowers (TE)": 6073,
@@ -6753,27 +6774,6 @@
      "2025 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Jalen Royals (WR)": 14,
      "2025 Round 5th Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Efton Chism III (WR)": 4,
      "Garrett Wilson (WR)": 6306
-    }
-   }
-  },
-  "Hail Mary Jane Congregation||2023||10/31/2023||Killer Cards (KillerCards) received: [De'Von Achane (RB)] <---> Miksimus80 received: [Christian Kirk (WR), Gabe Davis (WR), 2026 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)]": {
-   "trade_day": {
-    "as_of": "2023-10-27",
-    "values": {
-     "De'Von Achane (RB)": 5387,
-     "Christian Kirk (WR)": 1938,
-     "Gabe Davis (WR)": 912,
-     "2026 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)": 184
-    }
-   },
-   "grade": {
-    "mark": "2026-10-31",
-    "as_of": "2026-10-31",
-    "values": {
-     "De'Von Achane (RB)": 4915,
-     "Christian Kirk (WR)": 13,
-     "Gabe Davis (WR)": 0,
-     "2026 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Antonio Williams (WR)": 738
     }
    }
   },
@@ -6805,9 +6805,17 @@
      "Chris Godwin Jr. (WR)": 2356,
      "James Conner (RB)": 678
     }
+   },
+   "grade": {
+    "mark": "2026-11-11",
+    "as_of": "2026-11-11",
+    "values": {
+     "Chris Godwin Jr. (WR)": 393,
+     "James Conner (RB)": 27
+    }
    }
   },
-  "Hail Mary Jane Congregation||2023||11/16/2023||Massage watson (tokenwhiteguy) received: [2024 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jonathon Brooks (RB)] <---> Big Fish (DerrickFish) received: [Joshua Dobbs (QB)]": {
+  "Hail Mary Jane Congregation||2023||11/15/2023||Massage watson (tokenwhiteguy) received: [2024 Round 1st Pick (originally from Big Fish (DerrickFish)) -> Resulted in drafting: Jonathon Brooks (RB)] <---> Big Fish (DerrickFish) received: [Joshua Dobbs (QB)]": {
    "trade_day": {
     "as_of": "2023-11-10",
     "values": {
@@ -6816,7 +6824,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2023||4/30/2023||Killer Cards (KillerCards) received: [2024 Round 4th Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Jacob Cowing (WR)] <---> Love Hurts 🎶 (michaelpacheco) received: [Dalton Schultz (TE)]": {
+  "Hail Mary Jane Congregation||2023||4/29/2023||Killer Cards (KillerCards) received: [2024 Round 4th Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Jacob Cowing (WR)] <---> Love Hurts 🎶 (michaelpacheco) received: [Dalton Schultz (TE)]": {
    "trade_day": {
     "as_of": "2023-04-21",
     "values": {
@@ -6825,11 +6833,30 @@
     }
    },
    "grade": {
-    "mark": "2026-04-30",
+    "mark": "2026-04-29",
     "as_of": "2026-04-30",
     "values": {
      "2024 Round 4th Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Jacob Cowing (WR)": 2,
      "Dalton Schultz (TE)": 138
+    }
+   }
+  },
+  "Hail Mary Jane Congregation||2023||4/30/2023||Love Hurts 🎶 (michaelpacheco) received: [2023 Round 1st Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Jahmyr Gibbs (RB)] <---> Massage watson (tokenwhiteguy) received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Zay Flowers (WR), 2023 Round 1st Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Anthony Richardson Sr. (QB)]": {
+   "trade_day": {
+    "as_of": "2023-04-21",
+    "values": {
+     "2023 Round 1st Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Jahmyr Gibbs (RB)": 3030,
+     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Zay Flowers (WR)": 3030,
+     "2023 Round 1st Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 3030
+    }
+   },
+   "grade": {
+    "mark": "2026-06-01",
+    "as_of": "2026-05-29",
+    "values": {
+     "2023 Round 1st Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Jahmyr Gibbs (RB)": 9034,
+     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Zay Flowers (WR)": 3913,
+     "2023 Round 1st Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 294
     }
    }
   },
@@ -6851,25 +6878,6 @@
      "2023 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: DeWayne McBride (RB)": 0,
      "2023 Round 2nd Pick (originally from Killer Cards (KillerCards)) -> Resulted in drafting: Josh Downs (WR)": 922,
      "2024 Round 1st Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Blake Corum (RB)": 449
-    }
-   }
-  },
-  "Hail Mary Jane Congregation||2023||5/1/2023||Love Hurts 🎶 (michaelpacheco) received: [2023 Round 1st Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Jahmyr Gibbs (RB)] <---> Massage watson (tokenwhiteguy) received: [2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Zay Flowers (WR), 2023 Round 1st Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Anthony Richardson Sr. (QB)]": {
-   "trade_day": {
-    "as_of": "2023-04-21",
-    "values": {
-     "2023 Round 1st Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Jahmyr Gibbs (RB)": 3030,
-     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Zay Flowers (WR)": 3030,
-     "2023 Round 1st Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 3030
-    }
-   },
-   "grade": {
-    "mark": "2026-06-01",
-    "as_of": "2026-05-29",
-    "values": {
-     "2023 Round 1st Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Jahmyr Gibbs (RB)": 9034,
-     "2023 Round 1st Pick (originally from lilfishy) -> Resulted in drafting: Zay Flowers (WR)": 3913,
-     "2023 Round 1st Pick (originally from Love Hurts 🎶 (michaelpacheco)) -> Resulted in drafting: Anthony Richardson Sr. (QB)": 294
     }
    }
   },
@@ -6919,7 +6927,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2023||5/19/2023||commish (JayLeno) received: [2023 Round 3rd Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Luke Musgrave (TE), 2023 Round 2nd Pick (originally from Miksimus80) -> Resulted in drafting: Roschon Johnson (RB), 2023 Round 2nd Pick (originally from Burntcooks) -> Resulted in drafting: Tank Bigsby (RB), 2024 Round 1st Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Blake Corum (RB)] <---> Smokers Haven  (SmokersHaven) received: [DK Metcalf (WR), 2023 Round 2nd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Marvin Mims Jr. (WR), 2023 Round 4th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Chris Rodriguez Jr. (RB), 2023 Round 5th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Dorian Thompson-Robinson (QB), 2024 Round 3rd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Ja'Lynn Polk (WR), 2025 Round 3rd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Jalen Milroe (QB), 2025 Round 4th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Tory Horton (WR), 2025 Round 5th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Xavier Restrepo (WR), 2023 Round 3rd Pick (originally from Burntcooks) -> Resulted in drafting: Cedric Tillman (WR), 2023 Round 4th Pick (originally from jarvisevans) -> Resulted in drafting: Will Levis (QB)]": {
+  "Hail Mary Jane Congregation||2023||5/18/2023||commish (JayLeno) received: [2023 Round 3rd Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Luke Musgrave (TE), 2023 Round 2nd Pick (originally from Miksimus80) -> Resulted in drafting: Roschon Johnson (RB), 2023 Round 2nd Pick (originally from Burntcooks) -> Resulted in drafting: Tank Bigsby (RB), 2024 Round 1st Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Blake Corum (RB)] <---> Smokers Haven  (SmokersHaven) received: [DK Metcalf (WR), 2023 Round 2nd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Marvin Mims Jr. (WR), 2023 Round 4th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Chris Rodriguez Jr. (RB), 2023 Round 5th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Dorian Thompson-Robinson (QB), 2024 Round 3rd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Ja'Lynn Polk (WR), 2025 Round 3rd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Jalen Milroe (QB), 2025 Round 4th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Tory Horton (WR), 2025 Round 5th Pick (originally from commish (JayLeno)) -> Resulted in drafting: Xavier Restrepo (WR), 2023 Round 3rd Pick (originally from Burntcooks) -> Resulted in drafting: Cedric Tillman (WR), 2023 Round 4th Pick (originally from jarvisevans) -> Resulted in drafting: Will Levis (QB)]": {
    "trade_day": {
     "as_of": "2023-04-21",
     "values": {
@@ -6940,7 +6948,7 @@
     }
    },
    "grade": {
-    "mark": "2026-05-19",
+    "mark": "2026-05-18",
     "as_of": "2026-05-15",
     "values": {
      "2023 Round 3rd Pick (originally from Massage watson (tokenwhiteguy)) -> Resulted in drafting: Luke Musgrave (TE)": 5,
@@ -7070,14 +7078,14 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2024||5/13/2024||lilfishy received: [2024 Round 1st Pick (originally from WAT TUA (tokenwhiteguy)) -> Resulted in drafting: Caleb Williams (QB)] <---> WAT TUA (tokenwhiteguy) received: [2024 Round 1st Pick (originally from commish (JayLeno)) -> Resulted in drafting: Malik Nabers (WR), 2024 Round 2nd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Jaylen Wright (RB), 2024 Round 2nd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Kimani Vidal (RB)]": {
+  "Hail Mary Jane Congregation||2024||5/8/2024||lilfishy received: [2024 Round 1st Pick (originally from WAT TUA (tokenwhiteguy)) -> Resulted in drafting: Caleb Williams (QB)] <---> WAT TUA (tokenwhiteguy) received: [2024 Round 1st Pick (originally from commish (JayLeno)) -> Resulted in drafting: Malik Nabers (WR), 2024 Round 2nd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Jaylen Wright (RB), 2024 Round 2nd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Kimani Vidal (RB)]": {
    "trade_day": {
-    "as_of": "2024-05-10",
+    "as_of": "2024-05-03",
     "values": {
-     "2024 Round 1st Pick (originally from WAT TUA (tokenwhiteguy)) -> Resulted in drafting: Caleb Williams (QB)": 3175,
-     "2024 Round 1st Pick (originally from commish (JayLeno)) -> Resulted in drafting: Malik Nabers (WR)": 3175,
-     "2024 Round 2nd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Jaylen Wright (RB)": 321,
-     "2024 Round 2nd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Kimani Vidal (RB)": 321
+     "2024 Round 1st Pick (originally from WAT TUA (tokenwhiteguy)) -> Resulted in drafting: Caleb Williams (QB)": 3196,
+     "2024 Round 1st Pick (originally from commish (JayLeno)) -> Resulted in drafting: Malik Nabers (WR)": 3196,
+     "2024 Round 2nd Pick (originally from commish (JayLeno)) -> Resulted in drafting: Jaylen Wright (RB)": 319,
+     "2024 Round 2nd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Kimani Vidal (RB)": 319
     }
    }
   },
@@ -7090,7 +7098,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2024||8/28/2024||lilfishy received: [Rhamondre Stevenson (RB)] <---> WAT TUA (tokenwhiteguy) received: [2025 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Jayden Higgins (WR)]": {
+  "Hail Mary Jane Congregation||2024||8/25/2024||lilfishy received: [Rhamondre Stevenson (RB)] <---> WAT TUA (tokenwhiteguy) received: [2025 Round 2nd Pick (originally from lilfishy) -> Resulted in drafting: Jayden Higgins (WR)]": {
    "trade_day": {
     "as_of": "2024-08-23",
     "values": {
@@ -7163,7 +7171,7 @@
     }
    }
   },
-  "Hail Mary Jane Congregation||2026||8/6/2026||Smokers Haven  (SmokersHaven) received: [Jonathon Brooks (RB)] <---> Hail to the Leaf (tokenwhiteguy) received: [2026 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Eli Raridon (TE), 2028 Round 4th Pick (originally from Smokers Haven  (SmokersHaven))]": {
+  "Hail Mary Jane Congregation||2026||8/5/2026||Smokers Haven  (SmokersHaven) received: [Jonathon Brooks (RB)] <---> Hail to the Leaf (tokenwhiteguy) received: [2026 Round 3rd Pick (originally from Smokers Haven  (SmokersHaven)) -> Resulted in drafting: Eli Raridon (TE), 2028 Round 4th Pick (originally from Smokers Haven  (SmokersHaven))]": {
    "trade_day": {
     "as_of": "2026-07-31",
     "values": {

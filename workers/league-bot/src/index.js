@@ -15,6 +15,7 @@
 // HTTP routes (CORS-enabled for the site):
 //   GET /gazette?league=<name>&season=<yyyy>  -> [{ week, text }] for the Season Review tab
 //   GET /run?job=alerts|recap|gazette|previews[&dry=1] with header X-Admin-Key: <ADMIN_KEY>  -> run a job by hand
+//       job=gazette&week=<n>[&league=<name>] writes a missed week's article (one that already exists is left alone)
 //       (?key=<ADMIN_KEY> also works, but the key then shows up in Cloudflare's request logs)
 //
 // Settings: LEAGUES, SITE_URL and CHAT_POSTING (on/off) are vars in wrangler.toml. Secrets (wrangler secret put, or the
@@ -46,7 +47,10 @@ export default {
       if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) return new Response('Forbidden', { status: 403 });
       const job = url.searchParams.get('job');
       if (!['alerts', 'recap', 'gazette', 'previews'].includes(job)) return new Response('Unknown job', { status: 400 });
-      const out = await runJob(job, env, url.searchParams.get('dry') === '1');
+      // job=gazette&week=9 writes that week's missing articles (add &league=<name> for one league)
+      const week = Number(url.searchParams.get('week')) || 0;
+      const only = url.searchParams.get('league') || '';
+      const out = await runJob(job, env, url.searchParams.get('dry') === '1', { week, only });
       return new Response(JSON.stringify(out, null, 2), { headers: cors });
     }
     return new Response('Dynasty Hub league bot', { headers: { 'Content-Type': 'text/plain' } });
@@ -83,7 +87,7 @@ function once(key, fn) {
   return memo.get(key);
 }
 
-async function runJob(job, env, dry) {
+async function runJob(job, env, dry, opts = {}) {
   memo = new Map();
   used = 0;
   lastPost = 0;
@@ -94,10 +98,13 @@ async function runJob(job, env, dry) {
   const notes = [];
   const say = text => messages.push(text);
   for (const lg of leagues) {
+    if (opts.only && lg.name !== opts.only) continue;
     try {
       if (job === 'alerts') await tradeAlerts(lg, state, env, say, dry);
       if (job === 'recap') await weeklyRecap(lg, season, Number(state.week), env, say);
-      if (job === 'gazette') notes.push(`${lg.name}: ${await weeklyGazette(lg, leagues, season, Number(state.week), env, say, dry)}`);
+      if (job === 'gazette' && opts.week) {
+        notes.push(`${lg.name}: ${env.ANTHROPIC_API_KEY ? await backfillGazette(lg, leagues, season, Number(state.week), env, say, dry, opts.week) : 'skipped, no ANTHROPIC_API_KEY'}`);
+      } else if (job === 'gazette') notes.push(`${lg.name}: ${await weeklyGazette(lg, leagues, season, Number(state.week), env, say, dry)}`);
       if (job === 'previews' && state.season_type === 'regular') await previews(lg, season, Number(state.week), say);
     } catch (e) {
       console.log(`${job} ${lg.name}: ${e.stack || e}`);
@@ -262,11 +269,14 @@ function gazetteKey(league, season) {
   return `gazette:${league}:${season}`;
 }
 
-// Facts for the latest week that has final scores (the NFL state may or may not have rolled over yet)
-async function weeklyFacts(lg, season, stateWeek) {
-  let week = stateWeek, games = await weekGames(lg, season, week);
-  if (!games.some(g => g.as > 0 || g.bs > 0) && week > 1) { week--; games = await weekGames(lg, season, week); }
-  if (!games.length || !games.every(g => g.as > 0 && g.bs > 0)) return null;
+// Facts for the latest week that has final scores (the NFL state may or may not have rolled over yet).
+// With exactWeek, facts for that week only (used to fill in a week the Gazette missed).
+// A week counts as played when every game has points on at least one side: a manager who leaves an
+// empty lineup scores 0, and that must not hold up the whole league's recap and Gazette.
+async function weeklyFacts(lg, season, stateWeek, exactWeek) {
+  let week = exactWeek || stateWeek, games = await weekGames(lg, season, week);
+  if (!exactWeek && !games.some(g => g.as > 0 || g.bs > 0) && week > 1) { week--; games = await weekGames(lg, season, week); }
+  if (!games.length || !games.every(g => g.as > 0 || g.bs > 0)) return null;
 
   const sides = games.flatMap(g => [{ t: g.a, s: g.as, o: g.b, os: g.bs }, { t: g.b, s: g.bs, o: g.a, os: g.as }]).sort((x, y) => y.s - x.s);
   const margins = games.map(g => ({ w: g.as >= g.bs ? g.a : g.b, l: g.as >= g.bs ? g.b : g.a, ws: Math.max(g.as, g.bs), ls: Math.min(g.as, g.bs) }))
@@ -292,14 +302,55 @@ async function weeklyRecap(lg, season, stateWeek, env, say) {
 // A dry run returns the article instead of storing or posting it.
 // Worst case for one league: 4 data requests, 2 Claude attempts and 3 chat posts.
 const GAZETTE_REQUESTS = 9;
+// Filling in a missed week: 2 data requests, 2 Claude attempts and 3 chat posts
+const BACKFILL_REQUESTS = 7;
+// How far back a missed week still gets its article
+const BACKFILL_WEEKS = 3;
 async function weeklyGazette(lg, leagues, season, stateWeek, env, say, dry) {
   if (!env.ANTHROPIC_API_KEY) return 'skipped, no ANTHROPIC_API_KEY';
+  const current = await currentGazette(lg, leagues, season, stateWeek, env, say, dry);
+  const missed = await backfillGazette(lg, leagues, season, stateWeek, env, say, dry);
+  return missed ? `${current}; ${missed}` : current;
+}
+
+async function currentGazette(lg, leagues, season, stateWeek, env, say, dry) {
   // Marks a league as posted (or being written) for this week, so later slots and overlapping runs skip it
   const postedKey = `gazette-posted:${lg.name}:${season}:${stateWeek}`;
   if (!dry && await env.BOT_KV.get(postedKey)) return 'already posted this week';
   if (used + GAZETTE_REQUESTS > REQUEST_LIMIT) return 'left for the next run (request limit)';
   const r = await weeklyFacts(lg, season, stateWeek);
   if (!r) return 'scores not final yet';
+  if (!dry) await env.BOT_KV.put(postedKey, 'writing', { expirationTtl: 1800 });
+  const result = await writeAndPost(lg, leagues, season, r, env, say, dry);
+  if (!dry) {
+    if (result.startsWith('Claude')) await env.BOT_KV.delete(postedKey);
+    else await env.BOT_KV.put(postedKey, 'posted', { expirationTtl: 8 * 24 * 3600 });
+  }
+  return result;
+}
+
+// A week can be skipped (scores not ready in every slot, Claude down all morning). A hole between the
+// league's articles, up to BACKFILL_WEEKS behind the newest, gets written in a later run: one week per
+// run, and only when the request budget has room. With onlyWeek, just that week (from /run).
+async function backfillGazette(lg, leagues, season, stateWeek, env, say, dry, onlyWeek) {
+  const list = (await env.BOT_KV.get(gazetteKey(lg.name, season), 'json')) || [];
+  const have = new Set(list.map(a => a.week));
+  let weeks = [];
+  if (onlyWeek) weeks = have.has(onlyWeek) ? [] : [onlyWeek];
+  else if (have.size) {
+    const newest = Math.max(...have), oldest = Math.min(...have);
+    for (let w = newest - 1; w > Math.max(oldest, newest - BACKFILL_WEEKS - 1); w--) if (!have.has(w)) weeks.push(w);
+  }
+  if (!weeks.length) return onlyWeek ? `week ${onlyWeek} already written` : '';
+  for (const week of weeks) {
+    if (used + BACKFILL_REQUESTS > REQUEST_LIMIT) return `week ${week} left for the next run (request limit)`;
+    const r = await weeklyFacts(lg, season, stateWeek, week);
+    if (r) return `week ${week}: ${await writeAndPost(lg, leagues, season, r, env, say, dry)}`;
+  }
+  return `week ${weeks.join('/')} has no final scores`;
+}
+
+async function writeAndPost(lg, leagues, season, r, env, say, dry) {
   const key = gazetteKey(lg.name, season);
   const list = (await env.BOT_KV.get(key, 'json')) || [];
   // Already written from these final scores (e.g. stored but not yet posted); an article written
@@ -307,27 +358,22 @@ async function weeklyGazette(lg, leagues, season, stateWeek, env, say, dry) {
   const board = r.scoreboard.join('|');
   let saved = list.find(a => a.week === r.week && a.board === board);
   if (!saved) {
-    if (!dry) await env.BOT_KV.put(postedKey, 'writing', { expirationTtl: 1800 });
     const angle = GAZETTE_ANGLES[(leagues.indexOf(lg) + r.week) % GAZETTE_ANGLES.length];
     const earlier = await recentGazettes(env, leagues, lg, season, r.week, list);
     const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard, angle, earlier).catch(e => {
       console.log(`gazette ${lg.name}: ${e.stack || e}`);
       return null;
     });
-    if (!article) {
-      if (!dry) await env.BOT_KV.delete(postedKey);
-      return 'Claude returned no article, will retry next run';
-    }
+    if (!article) return 'Claude returned no article, will retry next run';
     if (dry) { say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, not saved):\n${article}`); return 'written (dry run)'; }
     saved = { week: r.week, text: article, at: Date.now(), board };
-    await env.BOT_KV.put(key, JSON.stringify([...list.filter(a => a.week !== r.week), saved]));
+    await env.BOT_KV.put(key, JSON.stringify([...list.filter(a => a.week !== r.week), saved].sort((a, b) => a.week - b.week)));
   } else if (dry) {
     say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, already saved):\n${saved.text}`);
     return 'already written (dry run)';
   }
   const link = `${env.SITE_URL}?${new URLSearchParams({ tab: 'review', league: lg.name, season })}`;
   await post(env, `🗞️ **THE DYNASTY GAZETTE** • ${lg.name} Week ${r.week}\n\n${plainText(saved.text)}\n\nEvery issue: ${link}`);
-  await env.BOT_KV.put(postedKey, 'posted', { expirationTtl: 8 * 24 * 3600 });
   return 'written and posted';
 }
 

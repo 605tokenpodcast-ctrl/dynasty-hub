@@ -135,6 +135,9 @@
                         <button onclick="copyDeepLink()" id="copy-link-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                             🔗<span class="hidden sm:inline"> Copy View Link</span>
                         </button>
+                        <button onclick="openShowNotes()" id="show-notes-btn" title="Podcast show notes: talking points from every league" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            🎧 <span class="sm:hidden">Notes</span><span class="hidden sm:inline">Show Notes</span>
+                        </button>
                         <button onclick="toggleBroadcastMode()" class="hidden sm:inline-block bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                             📺 Broadcast Mode
                         </button>
@@ -675,6 +678,26 @@
         </form>
     </div>
 
+    <!-- PODCAST SHOW NOTES MODAL -->
+    <div id="notes-modal" onclick="if(event.target === this) closeShowNotes()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 bg-slate-900 rounded-t-xl space-y-3">
+                <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-accent text-lg">🎙️ Podcast Show Notes</h3>
+                        <p id="notes-sub" class="text-xs text-slate-400"></p>
+                    </div>
+                    <button onclick="closeShowNotes()" class="text-slate-400 hover:text-white text-2xl font-bold px-2 leading-none">&times;</button>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <select id="notes-week" onchange="renderShowNotes()" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-accent focus:outline-none"></select>
+                    <button type="button" onclick="copyShowNotes(this)" class="flex-1 sm:flex-none bg-accent hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-bold transition">📋 Copy all</button>
+                </div>
+            </div>
+            <div id="notes-body" class="p-4 sm:p-6 overflow-y-auto space-y-4 text-sm"></div>
+        </div>
+    </div>
+
     <!-- HALL OF RECORDS TOP-10 MODAL -->
     <div id="records-modal" onclick="if(event.target === this) closeRecordModal()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
         <div class="bg-cardbg border border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
@@ -1182,6 +1205,7 @@
             }
             if (m1Param || m2Param) calculateH2H();
             switchTab(tabParam || currentActiveTab, true);
+            if (params.get('notes')) openShowNotes();
         }
 
         // The Analytics, Awards Center and Season Review dropdowns need the shared stats layer
@@ -1717,6 +1741,354 @@
                 btn.innerText = '✅ Copied';
                 setTimeout(() => { btn.innerText = orig; }, 1500);
             }).catch(() => {});
+        }
+
+        // --- PODCAST SHOW NOTES ---
+        // One button turns the synced data into talking points for the podcast: each league's week
+        // (scores, upsets, power moves, the playoff race, records in danger, trades, next week's game
+        // to watch, the Gazette's lead) plus an "around the hub" segment across every league.
+        // Leagues the show doesn't cover are left out: SFB16 by name, or exclude_from_podcast in leagues.json.
+        const PODCAST_SKIP = /sfb16|super mario kart/i;
+        let showNotesStore = [];   // plain text per section, for the copy buttons
+        let showNotesToken = 0;    // a newer render cancels Gazette lookups from an older one
+
+        function podcastLeagues() {
+            return Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]))
+                .filter(l => !PODCAST_SKIP.test(l) && !leagueRules(l).exclude_from_podcast && !isAwardExcluded(l))
+                .sort((a, b) => a.localeCompare(b));
+        }
+
+        // Newest season with games in the podcast leagues, and its weeks with final scores
+        function showNotesSeason() {
+            const lg = new Set(podcastLeagues());
+            return buildHubData().games.reduce((mx, g) => (lg.has(g.league) && g.season > mx ? g.season : mx), 0);
+        }
+        function showNotesWeeks(season) {
+            const lg = new Set(podcastLeagues());
+            return [...new Set(buildHubData().games.filter(g => lg.has(g.league) && g.season === season).map(g => g.weekNum))].sort((a, b) => a - b);
+        }
+
+        const notesPts = n => Number(n || 0).toFixed(2);
+        const notesDetail = e => String((e && e.detail) || '').replace(/\s*•\s*[^•]*$/, '').trim(); // drop "• League"
+        const notesList = names => names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+
+        // Power rankings through a week, with the move from the week before (null when there's no week before)
+        function notesPower(league, season, week, ctx) {
+            if (!ctx.values[league]) {
+                const v = {};
+                collectValueTeams(league).forEach(t => { v[t.owner] = (v[t.owner] || 0) + t.totalValue; });
+                ctx.values[league] = v;
+            }
+            const now = computeWeeklyPower(league, String(season), week, ctx.values[league]);
+            if (!now) return null;
+            const prevWeek = now.weeks.length > 1 ? now.weeks[now.weeks.length - 2] : 0;
+            const prev = prevWeek ? computeWeeklyPower(league, String(season), prevWeek, ctx.values[league]) : null;
+            const prevRank = {};
+            if (prev) prev.rows.forEach(r => { prevRank[r.owner] = r.rank; });
+            now.rows.forEach(r => { r.move = prevRank[r.owner] ? prevRank[r.owner] - r.rank : null; });
+            return now;
+        }
+
+        // Current streak per manager in one league this season: { owner: { kind: 'W' | 'L', n } }
+        function notesStreaks(games) {
+            const by = {};
+            [...games].sort((a, b) => a.weekNum - b.weekNum).forEach(g => {
+                [[g.t1, g.s1, g.s2], [g.t2, g.s2, g.s1]].forEach(([o, my, op]) => {
+                    const res = my > op ? 'W' : my < op ? 'L' : 'T';
+                    const s = by[o];
+                    by[o] = s && s.kind === res ? { kind: res, n: s.n + 1 } : { kind: res, n: 1 };
+                });
+            });
+            return by;
+        }
+
+        function leagueShowNotes(league, season, week, ctx) {
+            const hub = buildHubData();
+            const lines = [];
+            const seasonGames = hub.games.filter(g => g.league === league && g.season === season);
+            const games = seasonGames.filter(g => g.weekNum === week);
+            const latest = Math.max(0, ...seasonGames.map(g => g.weekNum));
+            const isLatest = week === latest;
+            const poStart = playoffStartWeek(league, season);
+            const inPlayoffs = week >= poStart;
+            const power = !inPlayoffs && games.length ? notesPower(league, season, week, ctx) : null;
+            const rankOf = {};
+            if (power) power.rows.forEach(r => { rankOf[r.owner] = r; });
+            const rec = o => rankOf[o] ? fmtRecord(rankOf[o]) : '';
+
+            if (games.length && inPlayoffs) {
+                const st = seasonOf(league, season);
+                const seed = o => { const t = st && st.ranked.find(x => x.owner === o); return t ? `#${t.seed} ` : ''; };
+                const po = games.filter(g => g.playoffCounts);
+                const champ = st && st.champ && week === Math.max(...(st.playoffGames || []).map(g => g.weekNum));
+                po.forEach(g => {
+                    const [w, l, sw, sl] = g.s1 >= g.s2 ? [g.t1, g.t2, g.s1, g.s2] : [g.t2, g.t1, g.s2, g.s1];
+                    const isFinalGame = champ && [w, l].includes(st.champ) && [w, l].includes(st.runner);
+                    lines.push(`${isFinalGame ? '🏆 Championship' : '🎟️ Playoffs'}: ${seed(w)}${w} beat ${seed(l)}${l}, ${notesPts(sw)} to ${notesPts(sl)}.`);
+                });
+                if (champ) lines.push(`👑 ${st.champ} wins the ${season} title. ${st.sacko ? `${st.sacko} takes the Sacko.` : ''}`.trim());
+            }
+
+            if (games.length && !inPlayoffs) {
+                // A team under 20 points is abandoned or a data gap: left out of the low score and margins
+                const real = games.filter(g => g.s1 >= 20 && g.s2 >= 20);
+                const ghosts = new Set(games.flatMap(g => [[g.t1, g.s1], [g.t2, g.s2]]).filter(([, sc]) => sc < 20).map(([o]) => o));
+                const sides = games.flatMap(g => [
+                    { o: g.t1, s: g.s1, opp: g.t2, os: g.s2 }, { o: g.t2, s: g.s2, opp: g.t1, os: g.s1 }]).sort((a, b) => b.s - a.s);
+                const realSides = sides.filter(x => x.s >= 20);
+                const hi = sides[0], lo = realSides[realSides.length - 1];
+                lines.push(`🥊 Top score: ${hi.o} put up ${notesPts(hi.s)} and ${hi.s > hi.os ? 'beat' : 'still lost to'} ${hi.opp} (${notesPts(hi.os)}).`);
+                if (lo && lo !== hi && sides.length >= 4) lines.push(`🚽 Low score: ${lo.o} managed ${notesPts(lo.s)} and ${lo.s > lo.os ? 'somehow beat' : 'lost to'} ${lo.opp} (${notesPts(lo.os)}).`);
+                const byMargin = [...real].sort((a, b) => Math.abs(a.s1 - a.s2) - Math.abs(b.s1 - b.s2));
+                const winLose = g => g.s1 >= g.s2 ? [g.t1, g.t2, g.s1, g.s2] : [g.t2, g.t1, g.s2, g.s1];
+                const close = byMargin[0];
+                if (close && Math.abs(close.s1 - close.s2) < 10) {
+                    const [w, l, sw, sl] = winLose(close);
+                    lines.push(`😬 Closest game: ${w} edged ${l} ${notesPts(sw)} to ${notesPts(sl)}, a ${(sw - sl).toFixed(2)} point margin.`);
+                }
+                const blow = byMargin[byMargin.length - 1];
+                if (blow && blow !== close && Math.abs(blow.s1 - blow.s2) >= 30) {
+                    const [w, l, sw, sl] = winLose(blow);
+                    lines.push(`🚜 Blowout: ${w} ran over ${l} by ${(sw - sl).toFixed(2)} (${notesPts(sw)} to ${notesPts(sl)}).`);
+                }
+                const A = weeklyAwards(league, season, week);
+                const top = k => A[k] && A[k][0];
+                if (top('upset')) lines.push(`😱 Upset of the week: ${top('upset').name}, who came in averaging ${parseFloat(top('upset').value).toFixed(1)} more points a week.`);
+                if (top('robbed') && top('robbed').name !== hi.o) lines.push(`🥷 Robbed: ${top('robbed').name} had the second-best score of the week and still lost.`);
+                if (top('blunder')) lines.push(`🤡 Lineup blunder: ${top('blunder').name}. ${notesDetail(top('blunder'))}.`);
+                if (top('hero')) lines.push(`🎣 Waiver hero: ${top('hero').name} got ${top('hero').value} from ${notesDetail(top('hero'))}.`);
+                if (top('army') && !ghosts.has(top('army').name) && parseFloat(top('army').value) >= 30 && parseFloat(top('army').value) < 100) lines.push(`💪 One-man army: ${top('army').name}. ${notesDetail(top('army'))}.`);
+            }
+
+            if (power) {
+                const r = power.rows;
+                lines.push(`📈 Power rankings: ${r.slice(0, 3).map(x => `${x.rank}. ${x.owner} (${fmtRecord(x)})`).join(', ')}. Bottom: ${r[r.length - 1].owner} (${fmtRecord(r[r.length - 1])}).`);
+                const moved = r.filter(x => x.move !== null);
+                const up = moved.filter(x => x.move >= 2).sort((a, b) => b.move - a.move)[0];
+                const down = moved.filter(x => x.move <= -2).sort((a, b) => a.move - b.move)[0];
+                if (up || down) lines.push(`↕️ ${[up && `Riser: ${up.owner} up ${up.move} to #${up.rank}`, down && `Faller: ${down.owner} down ${-down.move} to #${down.rank}`].filter(Boolean).join('. ')}.`);
+                const streaks = notesStreaks(seasonGames.filter(g => g.weekNum <= week && g.weekNum < poStart));
+                const hot = Object.entries(streaks).filter(([, s]) => s.kind === 'W' && s.n >= 3).sort((a, b) => b[1].n - a[1].n)[0];
+                const cold = Object.entries(streaks).filter(([, s]) => s.kind === 'L' && s.n >= 3).sort((a, b) => b[1].n - a[1].n)[0];
+                if (hot || cold) lines.push(`🔥 Streaks: ${[hot && `${hot[0]} has won ${hot[1].n} straight`, cold && `${cold[0]} has lost ${cold[1].n} straight`].filter(Boolean).join(', ')}.`);
+            }
+
+            // Playoff race: only for the newest week, while regular-season games are left
+            if (isLatest && !inPlayoffs && ctx.season === season) {
+                const left = matchupGames.filter(g => g.league === league && g.season === String(season) && !isFinal(g) && g.week < poStart);
+                if (left.length) {
+                    try {
+                        const sim = simulateLeague(league);
+                        const weeksLeft = new Set(left.map(g => g.week)).size;
+                        const locks = sim.rows.filter(x => x.playoff >= 0.99).map(x => x.owner);
+                        const bubble = sim.rows.filter(x => x.playoff > 0.1 && x.playoff < 0.9)
+                            .sort((a, b) => Math.abs(a.playoff - 0.5) - Math.abs(b.playoff - 0.5)).slice(0, 5).sort((a, b) => b.playoff - a.playoff);
+                        const outs = sim.rows.filter(x => x.playoff <= 0.01).map(x => x.owner);
+                        const parts = [];
+                        if (locks.length) parts.push(`Basically in: ${notesList(locks)}`);
+                        if (bubble.length) parts.push(`On the bubble: ${bubble.map(x => `${x.owner} ${pct(x.playoff)}`).join(', ')}`);
+                        if (outs.length) parts.push(`Done: ${notesList(outs)}`);
+                        if (parts.length) lines.push(`🎲 Playoff race (${sim.cfg.teams} spots, ${weeksLeft} week${weeksLeft === 1 ? '' : 's'} left): ${parts.join('. ')}.`);
+                        [...bubble].sort((a, b) => Math.abs(a.playoff - 0.5) - Math.abs(b.playoff - 0.5)).filter(x => x.scenario).slice(0, 2).forEach(x => lines.push(`   ${x.owner}: ${x.scenario}`));
+                    } catch (e) { /* odds are a bonus */ }
+                }
+            }
+
+            if (isLatest && ctx.season === season) {
+                recordWatchItems(hub.games.filter(g => g.league === league), season).slice(0, 3)
+                    .forEach(it => lines.push(`${it.icon} ${it.status === 'broken' ? 'New record this season' : 'Record watch'}, ${it.title.toLowerCase()}: ${it.text}`));
+            }
+
+            // Trades made since the week's games (or during it)
+            hub.trades.filter(t => t.league === league && t.season === season && (t.weekNum === week || t.weekNum === week + 1))
+                .sort((a, b) => b.ts - a.ts).slice(0, 3).forEach(t => {
+                    const sides = t.sides.map(sd => `${sd.owner} gets ${sd.items.length ? sd.items.map(i => shortTradeItem(i.label)).join(', ') : 'nothing'}`);
+                    const byValue = [...t.sides].sort((a, b) => b.value - a.value);
+                    const edge = byValue.length > 1 && byValue[0].value > 0 ? ` On today's values ${byValue[0].owner} comes out ahead (${Math.round(byValue[0].value)} to ${Math.round(byValue[1].value)}).` : '';
+                    lines.push(`🔁 Trade${t.date ? ` (${t.date})` : ''}: ${sides.join('; ')}.${edge}`);
+                });
+
+            // Next week's game to watch (best combined power score) and a rivalry game
+            const next = matchupGames.filter(g => g.league === league && g.season === String(season) && g.week === week + 1 && !isFinal(g) && g.o1 && g.o2);
+            if (next.length) {
+                const score = o => rankOf[o] ? rankOf[o].score : 0;
+                const marquee = [...next].sort((a, b) => (score(b.o1) + score(b.o2)) - (score(a.o1) + score(a.o2)))[0];
+                const series = g => {
+                    const h = headToHead(g.o1, g.o2, league);
+                    const n = h.w + h.l + h.t;
+                    if (!n) return { n, text: 'First time they have met in this league.' };
+                    const lead = h.w === h.l ? `The series is tied ${fmtRecord(h)}` : h.w > h.l ? `${g.o1} leads the series ${fmtRecord(h)}` : `${g.o2} leads the series ${fmtRecord({ w: h.l, l: h.w, t: h.t })}`;
+                    return { n, text: `${lead}.` };
+                };
+                const label = o => `${o}${rankOf[o] ? ` (${rec(o)}, #${rankOf[o].rank})` : ''}`;
+                lines.push(`🍿 Game to watch in week ${week + 1}: ${label(marquee.o1)} vs ${label(marquee.o2)}. ${series(marquee).text}`);
+                const rivalry = next.filter(g => g !== marquee).map(g => ({ g, s: series(g) })).sort((a, b) => b.s.n - a.s.n)[0];
+                if (rivalry && rivalry.s.n >= 6) lines.push(`⚔️ Rivalry game: ${rivalry.g.o1} vs ${rivalry.g.o2}, meeting number ${rivalry.s.n + 1}. ${rivalry.s.text}`);
+            }
+            return lines;
+        }
+
+        // Cross-league segment: best and worst of the week anywhere, managers playing in several leagues
+        function hubShowNotes(leagues, season, week) {
+            const set = new Set(leagues);
+            const hub = buildHubData();
+            const games = hub.games.filter(g => set.has(g.league) && g.season === season && g.weekNum === week);
+            if (!games.length) return [];
+            const lines = [];
+            const sides = games.flatMap(g => [
+                { o: g.t1, s: g.s1, os: g.s2, lg: g.league }, { o: g.t2, s: g.s2, os: g.s1, lg: g.league }]).sort((a, b) => b.s - a.s);
+            const realSides = sides.filter(x => x.s >= 20); // under 20 = abandoned team or a data gap
+            const hi = sides[0], lo = realSides[realSides.length - 1];
+            lines.push(`🔥 Highest score anywhere: ${hi.o}, ${notesPts(hi.s)} in ${hi.lg}.`);
+            if (lo) lines.push(`🧊 Lowest score anywhere: ${lo.o}, ${notesPts(lo.s)} in ${lo.lg}.`);
+            const close = games.filter(g => g.s1 >= 20 && g.s2 >= 20).sort((a, b) => Math.abs(a.s1 - a.s2) - Math.abs(b.s1 - b.s2))[0];
+            if (close) {
+                const [w, l] = close.s1 >= close.s2 ? [close.t1, close.t2] : [close.t2, close.t1];
+                lines.push(`😬 Closest finish anywhere: ${w} over ${l} by ${Math.abs(close.s1 - close.s2).toFixed(2)} in ${close.league}.`);
+            }
+            // Managers with games in two or more leagues this week
+            const multi = {};
+            sides.forEach(x => {
+                const m = multi[x.o] = multi[x.o] || { w: 0, l: 0, t: 0, leagues: [] };
+                if (x.s > x.os) m.w++; else if (x.s < x.os) m.l++; else m.t++;
+                m.leagues.push(x.lg);
+            });
+            const many = Object.entries(multi).filter(([, m]) => m.leagues.length >= 2);
+            const sweeps = many.filter(([, m]) => !m.l && !m.t).sort((a, b) => b[1].w - a[1].w).slice(0, 3);
+            const swept = many.filter(([, m]) => !m.w && !m.t).sort((a, b) => b[1].l - a[1].l).slice(0, 3);
+            if (sweeps.length) lines.push(`🧹 Perfect week: ${sweeps.map(([o, m]) => `${o} went ${m.w}-0 (${notesList(m.leagues)})`).join('; ')}.`);
+            if (swept.length) lines.push(`💀 Rough week: ${swept.map(([o, m]) => `${o} went 0-${m.l} (${notesList(m.leagues)})`).join('; ')}.`);
+            // Season record across every league for managers in 3 or more
+            const seasonRec = {};
+            hub.games.filter(g => set.has(g.league) && g.season === season && g.weekNum <= week && g.weekNum < playoffStartWeek(g.league, season)).forEach(g => {
+                [[g.t1, g.s1, g.s2], [g.t2, g.s2, g.s1]].forEach(([o, my, op]) => {
+                    const r = seasonRec[o] = seasonRec[o] || { w: 0, l: 0, t: 0, lg: new Set() };
+                    if (my > op) r.w++; else if (my < op) r.l++; else r.t++;
+                    r.lg.add(g.league);
+                });
+            });
+            const wide = Object.entries(seasonRec).filter(([, r]) => r.lg.size >= 3).map(([o, r]) => ({ o, r, pct: (r.w + r.t / 2) / Math.max(1, r.w + r.l + r.t) }));
+            if (wide.length >= 2) {
+                wide.sort((a, b) => b.pct - a.pct);
+                const best = wide[0], worst = wide[wide.length - 1];
+                lines.push(`🌎 Across all their leagues this season: ${best.o} is ${fmtRecord(best.r)} in ${best.r.lg.size} leagues, the best of anyone in 3 or more. ${worst.o} is ${fmtRecord(worst.r)} in ${worst.r.lg.size}.`);
+            }
+            return lines;
+        }
+
+        // No games yet this season: last season's finish and recent trades
+        function offseasonShowNotes(league) {
+            const hub = buildHubData();
+            const lines = [];
+            const done = Object.values(hub.seasons).filter(s => s.league === league && s.complete).sort((a, b) => b.season - a.season)[0];
+            if (done) lines.push(`🏆 ${done.season}: ${done.champ} won it${done.runner ? ` over ${done.runner}` : ''}.${done.sacko ? ` ${done.sacko} took the Sacko.` : ''}`);
+            const monthAgo = Date.now() - 30 * 86400000;
+            hub.trades.filter(t => t.league === league && t.ts >= monthAgo).sort((a, b) => b.ts - a.ts).slice(0, 3).forEach(t => {
+                lines.push(`🔁 Trade${t.date ? ` (${t.date})` : ''}: ${t.sides.map(sd => `${sd.owner} gets ${sd.items.map(i => shortTradeItem(i.label)).join(', ') || 'nothing'}`).join('; ')}.`);
+            });
+            return lines;
+        }
+
+        function openShowNotes() {
+            if (!Object.keys(globalMasterData).length) return;
+            if (!matchupGames) buildMatchupGames();
+            const sel = document.getElementById('notes-week');
+            const season = showNotesSeason();
+            const weeks = showNotesWeeks(season);
+            sel.innerHTML = weeks.length
+                ? weeks.slice().reverse().map(w => `<option value="${w}">${season} Week ${w}</option>`).join('')
+                : '<option value="0">Offseason</option>';
+            sel.dataset.season = season;
+            document.getElementById('notes-modal').classList.remove('hidden');
+            renderShowNotes();
+        }
+
+        function closeShowNotes() {
+            document.getElementById('notes-modal').classList.add('hidden');
+            showNotesToken++;
+        }
+
+        function notesSectionHtml(idx, title, lines) {
+            return `
+                <div class="bg-slate-900/60 border border-slate-800 rounded-lg p-3 sm:p-4 space-y-2">
+                    <div class="flex justify-between items-center gap-2">
+                        <h4 class="font-bold text-white">${escHtml(title)}</h4>
+                        <button type="button" onclick="copyShowNotes(this, ${idx})" class="shrink-0 bg-slate-900 border border-slate-700 hover:border-accent rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-200">📋 Copy</button>
+                    </div>
+                    <ul id="notes-list-${idx}" class="space-y-1.5 text-slate-300 text-[13px] leading-snug">${lines.map(l => `<li>${escHtml(l)}</li>`).join('')}</ul>
+                </div>`;
+        }
+
+        function renderShowNotes() {
+            const sel = document.getElementById('notes-week');
+            const body = document.getElementById('notes-body');
+            const season = parseInt(sel.dataset.season, 10) || 0;
+            const week = parseInt(sel.value, 10) || 0;
+            const token = ++showNotesToken;
+            const leagues = podcastLeagues();
+            const ctx = { season: showNotesSeason(), values: {} };
+            const sections = [];
+            const quiet = [];
+            if (week) {
+                const around = hubShowNotes(leagues, season, week);
+                if (around.length) sections.push({ title: `🌐 Around the Hub, Week ${week}`, lines: around });
+                leagues.forEach(lg => {
+                    let lines = [];
+                    try { lines = leagueShowNotes(lg, season, week, ctx); } catch (e) { console.warn('show notes', lg, e); }
+                    if (lines.length) sections.push({ title: lg, league: lg, lines });
+                    else quiet.push(lg);
+                });
+            } else {
+                leagues.forEach(lg => {
+                    const lines = offseasonShowNotes(lg);
+                    if (lines.length) sections.push({ title: lg, league: lg, lines });
+                    else quiet.push(lg);
+                });
+            }
+            const header = week ? `Show notes: ${season} Week ${week}` : 'Show notes: offseason';
+            document.getElementById('notes-sub').innerText = `${leagues.length} leagues${quiet.length ? ` (nothing new: ${quiet.join(', ')})` : ''}. SFB16 is left out.`;
+            showNotesStore = sections.map(s => ({ title: s.title, lines: [...s.lines] }));
+            showNotesStore.header = header;
+            body.innerHTML = sections.length
+                ? sections.map((s, i) => notesSectionHtml(i, s.title, s.lines)).join('')
+                : '<p class="text-sm text-slate-400">Nothing to talk about yet for this week.</p>';
+
+            // The Gazette's lead for the week, added to each league as it arrives
+            if (!week) return;
+            sections.forEach((s, i) => {
+                if (!s.league) return;
+                fetchGazette(s.league, season).then(list => {
+                    if (token !== showNotesToken) return;
+                    const a = (list || []).find(x => Number(x.week) === week);
+                    if (!a) return;
+                    const lead = gazettePlainText(a.text).split('\n').map(x => x.trim()).filter(Boolean)[0] || '';
+                    if (!lead) return;
+                    const line = `📰 Gazette headline: ${lead.length > 180 ? lead.slice(0, 177) + '...' : lead}`;
+                    showNotesStore[i].lines.push(line);
+                    const ul = document.getElementById(`notes-list-${i}`);
+                    if (ul) ul.insertAdjacentHTML('beforeend', `<li>${escHtml(line)}</li>`);
+                }).catch(() => {});
+            });
+        }
+
+        function showNotesText(idx) {
+            const one = s => `${s.title}\n${s.lines.map(l => l.startsWith('   ') ? `   - ${l.trim()}` : `• ${l}`).join('\n')}`;
+            if (idx !== undefined) return one(showNotesStore[idx]);
+            return `🎙️ ${showNotesStore.header}\n\n${showNotesStore.map(one).join('\n\n')}`;
+        }
+
+        async function copyShowNotes(btn, idx) {
+            if (!showNotesStore.length) return;
+            const text = showNotesText(idx);
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                window.prompt('Copy the show notes:', text);
+                return;
+            }
+            const label = btn.textContent;
+            btn.textContent = '✅ Copied';
+            setTimeout(() => { btn.textContent = label; }, 1500);
         }
 
         // --- TAB 3: UNIFIED MANAGERS ---

@@ -166,7 +166,8 @@
                     <button onclick="switchTab('matchups')" id="nav-matchups" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
                     <button onclick="switchTab('playoffs')" id="nav-playoffs" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
                     <button onclick="switchTab('synergy')" id="nav-synergy" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
-                    <button onclick="switchTab('leagues')" id="nav-leagues" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
+                    <!-- Raw Sheets is a data-checking view: kept out of the menu, opened from the footer link or ?tab=leagues -->
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="hidden whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
                 </nav>
             </div>
         </header>
@@ -691,6 +692,7 @@
     <!-- Footer -->
     <footer class="bg-cardbg border-t border-slate-800 py-4 text-center text-xs text-slate-500">
         Multi-League Fantasy Command Center &bull; Powered by Sleeper & Fleaflicker
+        &bull; <a href="?tab=leagues" onclick="if (Object.keys(globalMasterData).length) { event.preventDefault(); switchTab('leagues'); window.scrollTo(0, 0); }" class="underline hover:text-slate-300">Raw data sheets</a>
     </footer>
 
     <!-- JavaScript Engine -->

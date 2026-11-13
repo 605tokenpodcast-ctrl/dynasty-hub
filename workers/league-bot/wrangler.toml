@@ -6,7 +6,8 @@ compatibility_flags = ["nodejs_compat"]
 
 [triggers]
 # One 15-minute cron; src/index.js picks the job by Central time (so daylight saving is handled):
-# recap Tue 10am CT, Gazette Tue 10:30am CT, previews Thu 6pm CT, trade alerts the rest of the time.
+# recap Tue 10am CT, Gazette Tue 10:30am CT (retries Tue 1pm/5pm, Wed 9am/noon), previews Thu 6pm CT,
+# trade alerts the rest of the time.
 # (Cloudflare counts weekdays from Sunday = 1, so numbered weekdays here would land a day early.)
 crons = ["*/15 * * * *"]
 

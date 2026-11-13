@@ -8,12 +8,16 @@
 //                       for the site's Season Review tab and posted to the chat. It runs in its own
 //                       slots (10:30, 10:45, 11:00, 11:15) so each run stays under the free plan's
 //                       50 outbound requests; a run that runs low leaves the rest for the next slot.
+//                       A league still without its article gets retried Tuesday 1pm and 5pm and
+//                       Wednesday 9am and noon CT. How each league stands is kept for GET /gazette-status,
+//                       which the "Gazette Check" GitHub workflow reads to open an issue when one is missing.
 // Each chat message goes out about 30 seconds after the one before, so a busy run doesn't arrive
 // as one wall of text.
 //   - Thursday 6pm CT:  MATCHUP PREVIEWS with season averages and win odds
 //
 // HTTP routes (CORS-enabled for the site):
 //   GET /gazette?league=<name>&season=<yyyy>  -> [{ week, text }] for the Season Review tab
+//   GET /gazette-status  -> how each league's Gazette stands this week (ok, week, note), for the Gazette Check workflow
 //   GET /run?job=alerts|recap|gazette|previews[&dry=1] with header X-Admin-Key: <ADMIN_KEY>  -> run a job by hand
 //       job=gazette&week=<n>[&league=<name>] writes a missed week's article (one that already exists is left alone)
 //       (?key=<ADMIN_KEY> also works, but the key then shows up in Cloudflare's request logs)
@@ -29,7 +33,8 @@ export default {
   async scheduled(event, env) {
     // Awaited rather than waitUntil: the spacing between chat posts keeps a run going for minutes,
     // which Cron Triggers allow (15 minutes of wall time; waiting doesn't count as CPU time)
-    await runJob(jobAt(event.scheduledTime), env, false);
+    const slot = slotAt(event.scheduledTime);
+    await runJob(WEEKLY[slot] || 'alerts', env, false, { slot });
   },
 
   async fetch(request, env) {
@@ -40,6 +45,10 @@ export default {
       const season = url.searchParams.get('season') || '';
       const list = (await env.BOT_KV.get(gazetteKey(league, season), 'json')) || [];
       return new Response(JSON.stringify(list), { headers: { ...cors, 'Cache-Control': 'public, max-age=300' } });
+    }
+    if (url.pathname === '/gazette-status') {
+      const status = await env.BOT_KV.get(STATUS_KEY, 'json');
+      return new Response(JSON.stringify(status || { updated: null, leagues: {} }, null, 2), { headers: { ...cors, 'Cache-Control': 'no-store' } });
     }
     if (url.pathname === '/run') {
       // The X-Admin-Key header keeps the key out of Cloudflare's request logs; ?key= still works from a browser
@@ -60,17 +69,22 @@ export default {
 // Weekly jobs by Central time (Cron Triggers only know UTC). A weekly job takes the place of that
 // quarter hour's trade alerts, which keeps each run under the free plan's request limit.
 // The Gazette gets four slots: each run writes and posts what fits in its request budget, and
-// leagues already posted this week cost nothing in the later slots.
+// leagues already posted this week cost nothing in the later slots. The retry slots after them catch a
+// league whose scores were late or whose article Claude didn't return; GAZETTE_LAST_SLOT is the last try
+// before the week counts as missed (the Gazette Check workflow looks right after it).
+const GAZETTE_LAST_SLOT = 'Wed 12:00';
 const WEEKLY = {
   'Tue 10:00': 'recap',
   'Tue 10:30': 'gazette', 'Tue 10:45': 'gazette', 'Tue 11:00': 'gazette', 'Tue 11:15': 'gazette',
+  'Tue 13:00': 'gazette', 'Tue 17:00': 'gazette', 'Wed 09:00': 'gazette', [GAZETTE_LAST_SLOT]: 'gazette',
   'Thu 18:00': 'previews',
 };
-function jobAt(time) {
+// "Tue 10:30" style label for a cron time, in Central time
+function slotAt(time) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Chicago', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   }).formatToParts(new Date(time)).map(p => [p.type, p.value]));
-  return WEEKLY[`${parts.weekday} ${parts.hour}:${parts.minute}`] || 'alerts';
+  return `${parts.weekday} ${parts.hour}:${parts.minute}`;
 }
 
 // Per-run caches: Workers on the free plan get 50 outbound requests per run, so nothing is fetched twice
@@ -97,6 +111,7 @@ async function runJob(job, env, dry, opts = {}) {
   const messages = [];
   const notes = [];
   const say = text => messages.push(text);
+  const statuses = {};
   for (const lg of leagues) {
     if (opts.only && lg.name !== opts.only) continue;
     try {
@@ -104,13 +119,19 @@ async function runJob(job, env, dry, opts = {}) {
       if (job === 'recap') await weeklyRecap(lg, season, Number(state.week), env, say);
       if (job === 'gazette' && opts.week) {
         notes.push(`${lg.name}: ${env.ANTHROPIC_API_KEY ? await backfillGazette(lg, leagues, season, Number(state.week), env, say, dry, opts.week) : 'skipped, no ANTHROPIC_API_KEY'}`);
-      } else if (job === 'gazette') notes.push(`${lg.name}: ${await weeklyGazette(lg, leagues, season, Number(state.week), env, say, dry)}`);
+      } else if (job === 'gazette') {
+        const g = await weeklyGazette(lg, leagues, season, Number(state.week), env, say, dry);
+        notes.push(`${lg.name}: ${g.note}`);
+        if (g.status) statuses[lg.name] = g.status;
+      }
       if (job === 'previews' && state.season_type === 'regular') await previews(lg, season, Number(state.week), say);
     } catch (e) {
       console.log(`${job} ${lg.name}: ${e.stack || e}`);
       notes.push(`${lg.name}: error: ${e.message || e}`);
+      if (job === 'gazette' && !opts.week) statuses[lg.name] = { ok: false, note: `error: ${e.message || e}` };
     }
   }
+  if (job === 'gazette' && !dry) await saveGazetteStatus(env, leagues, season, Number(state.week), statuses, opts).catch(e => console.log(`gazette status: ${e.stack || e}`));
   // One chat message per league (or per trade), spaced out by post(). The Gazette posts its own
   // articles as it writes them, so it isn't collected here.
   if (!dry && job !== 'gazette') {
@@ -274,9 +295,19 @@ function gazetteKey(league, season) {
 // A week counts as played when every game has points on at least one side: a manager who leaves an
 // empty lineup scores 0, and that must not hold up the whole league's recap and Gazette.
 async function weeklyFacts(lg, season, stateWeek, exactWeek) {
-  let week = exactWeek || stateWeek, games = await weekGames(lg, season, week);
+  const { week, games, final } = await latestWeek(lg, season, stateWeek, exactWeek);
+  return final ? factsFor(week, games) : null;
+}
+
+// The week the Gazette is due for, its games, and whether every game is final. No games means nothing is
+// due (the offseason, a bye, or a league whose season has ended).
+async function latestWeek(lg, season, stateWeek, exactWeek) {
+  let week = exactWeek || stateWeek, games = week > 0 ? await weekGames(lg, season, week) : [];
   if (!exactWeek && !games.some(g => g.as > 0 || g.bs > 0) && week > 1) { week--; games = await weekGames(lg, season, week); }
-  if (!games.length || !games.every(g => g.as > 0 || g.bs > 0)) return null;
+  return { week, games, final: games.length > 0 && games.every(g => g.as > 0 || g.bs > 0) };
+}
+
+function factsFor(week, games) {
 
   const sides = games.flatMap(g => [{ t: g.a, s: g.as, o: g.b, os: g.bs }, { t: g.b, s: g.bs, o: g.a, os: g.as }]).sort((x, y) => y.s - x.s);
   const margins = games.map(g => ({ w: g.as >= g.bs ? g.a : g.b, l: g.as >= g.bs ? g.b : g.a, ws: Math.max(g.as, g.bs), ls: Math.min(g.as, g.bs) }))
@@ -306,27 +337,76 @@ const GAZETTE_REQUESTS = 9;
 const BACKFILL_REQUESTS = 7;
 // How far back a missed week still gets its article
 const BACKFILL_WEEKS = 3;
+// Returns { note, status }: the note is shown by /run, the status (ok, week, note) goes to /gazette-status.
+// status is left out when this run learned nothing new about the league (it keeps its last one).
 async function weeklyGazette(lg, leagues, season, stateWeek, env, say, dry) {
-  if (!env.ANTHROPIC_API_KEY) return 'skipped, no ANTHROPIC_API_KEY';
+  if (!env.ANTHROPIC_API_KEY) return { note: 'skipped, no ANTHROPIC_API_KEY', status: { ok: false, note: 'no ANTHROPIC_API_KEY secret' } };
   const current = await currentGazette(lg, leagues, season, stateWeek, env, say, dry);
   const missed = await backfillGazette(lg, leagues, season, stateWeek, env, say, dry);
-  return missed ? `${current}; ${missed}` : current;
+  return { note: missed ? `${current.note}; ${missed}` : current.note, status: current.status };
 }
 
 async function currentGazette(lg, leagues, season, stateWeek, env, say, dry) {
-  // Marks a league as posted (or being written) for this week, so later slots and overlapping runs skip it
+  // Marks a league as posted (or being written) for this week, so later slots and overlapping runs skip it.
+  // The NFL week can roll over between Tuesday's and Wednesday's slots, so the finished week is marked too.
   const postedKey = `gazette-posted:${lg.name}:${season}:${stateWeek}`;
-  if (!dry && await env.BOT_KV.get(postedKey)) return 'already posted this week';
-  if (used + GAZETTE_REQUESTS > REQUEST_LIMIT) return 'left for the next run (request limit)';
-  const r = await weeklyFacts(lg, season, stateWeek);
-  if (!r) return 'scores not final yet';
-  if (!dry) await env.BOT_KV.put(postedKey, 'writing', { expirationTtl: 1800 });
-  const result = await writeAndPost(lg, leagues, season, r, env, say, dry);
-  if (!dry) {
-    if (result.startsWith('Claude')) await env.BOT_KV.delete(postedKey);
-    else await env.BOT_KV.put(postedKey, 'posted', { expirationTtl: 8 * 24 * 3600 });
+  if (!dry && await env.BOT_KV.get(postedKey)) return { note: 'already posted this week' };
+  if (used + GAZETTE_REQUESTS > REQUEST_LIMIT) return { note: 'left for the next run (request limit)', status: { ok: false, note: 'waiting for room in a later run (request limit)' } };
+  const { week, games, final } = await latestWeek(lg, season, stateWeek);
+  if (!games.length) return { note: 'no games this week', status: { ok: true, week: null, note: 'no games, nothing due' } };
+  if (!final) return { note: 'scores not final yet', status: { ok: false, week, note: `week ${week} scores not final (a game shows 0-0)` } };
+  const weekKey = `gazette-posted:${lg.name}:${season}:w${week}`;
+  if (!dry && await env.BOT_KV.get(weekKey) === 'posted') {
+    await env.BOT_KV.put(postedKey, 'posted', { expirationTtl: 8 * 24 * 3600 });
+    return { note: `week ${week} already posted`, status: { ok: true, week, note: 'written' } };
   }
-  return result;
+  if (!dry) await env.BOT_KV.put(postedKey, 'writing', { expirationTtl: 1800 });
+  const result = await writeAndPost(lg, leagues, season, factsFor(week, games), env, say, dry);
+  const failed = result.startsWith('Claude');
+  if (!dry) {
+    if (failed) await env.BOT_KV.delete(postedKey);
+    else {
+      await env.BOT_KV.put(postedKey, 'posted', { expirationTtl: 8 * 24 * 3600 });
+      // Kept for good (a few keys a season) so a finished week is never posted twice, even in the offseason
+      await env.BOT_KV.put(weekKey, 'posted');
+    }
+  }
+  return { note: result, status: failed ? { ok: false, week, note: `week ${week}: Claude returned no article` } : { ok: true, week, note: 'written' } };
+}
+
+// ---------- gazette status (read by the Gazette Check workflow) ----------
+const STATUS_KEY = 'gazette-status';
+// One record for every league: { updated, season, stateWeek, lastSlot, leagues: { name: { ok, week, note, holes, at } } }.
+// lastSlot is true once GAZETTE_LAST_SLOT has run for the week, so anything still not ok is really missing.
+// holes are earlier weeks with no article, looking back HOLE_WEEKS from the league's newest one.
+async function saveGazetteStatus(env, leagues, season, stateWeek, statuses, opts) {
+  const prev = (await env.BOT_KV.get(STATUS_KEY, 'json')) || {};
+  const sameSeason = prev.season === season;
+  const out = { updated: new Date().toISOString(), season, stateWeek, lastSlot: false, leagues: {} };
+  // A Tuesday slot starts a new week; a run by hand keeps whatever the last scheduled run said
+  const slot = opts.slot || '';
+  out.lastSlot = slot === GAZETTE_LAST_SLOT ? true : slot.startsWith('Tue') ? false : sameSeason && !!prev.lastSlot;
+  for (const lg of leagues) {
+    const old = (sameSeason && prev.leagues && prev.leagues[lg.name]) || {};
+    const fresh = statuses[lg.name];
+    const entry = fresh ? { ...fresh, at: out.updated } : { ok: old.ok ?? true, week: old.week ?? null, note: old.note || 'not checked yet', at: old.at || null };
+    const list = (await env.BOT_KV.get(gazetteKey(lg.name, season), 'json')) || [];
+    entry.holes = gazetteHoles(list, entry.ok && entry.week ? entry.week : null);
+    out.leagues[lg.name] = entry;
+  }
+  await env.BOT_KV.put(STATUS_KEY, JSON.stringify(out));
+}
+
+// Weeks with no article in the HOLE_WEEKS before the newest one (or upToWeek), never before the
+// league's first article this season. Older gaps are old news and would nag every week.
+const HOLE_WEEKS = 4;
+function gazetteHoles(list, upToWeek) {
+  const have = new Set(list.map(a => a.week));
+  if (!have.size) return [];
+  const top = Math.max(upToWeek || 0, ...have);
+  const holes = [];
+  for (let w = Math.max(Math.min(...have) + 1, top - HOLE_WEEKS); w < top; w++) if (!have.has(w)) holes.push(w);
+  return holes;
 }
 
 // A week can be skipped (scores not ready in every slot, Claude down all morning). A hole between the

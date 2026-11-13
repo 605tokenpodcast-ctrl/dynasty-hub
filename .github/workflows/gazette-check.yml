@@ -1,0 +1,89 @@
+name: Gazette Check
+
+# Opens a GitHub issue when a league gets no Dynasty Gazette for the week, so you hear about it even
+# with GroupMe posting off. The league bot retries a missing article Tuesday 10:30-11:15am, 1pm and 5pm
+# and Wednesday 9am and noon (Central); this check runs after the last try and reads the bot's
+# /gazette-status page. GitHub notifies you of the new issue (email and the GitHub app).
+# The issue gets a comment while a problem lasts and is closed by the next check that finds every
+# league OK. "Run workflow" checks right away.
+
+on:
+  schedule:
+    - cron: '30 19 * * 3'   # Wednesday 1:30pm CST / 2:30pm CDT, after the bot's last retry at noon
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v8
+        env:
+          STATUS_URL: https://dynasty-league-bot.605tokenpodcast.workers.dev/gazette-status
+          BOT_URL: https://dynasty-league-bot.605tokenpodcast.workers.dev
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        with:
+          script: |
+            const TITLE = '📰 Gazette missing';
+            const problems = [];
+            let status = null;
+            try {
+              const r = await fetch(process.env.STATUS_URL, { headers: { 'Cache-Control': 'no-cache' } });
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              status = await r.json();
+            } catch (e) {
+              problems.push(`Couldn't reach the league bot's status page (${e.message}). The worker may be down or not deployed.`);
+            }
+            const fixLinks = [];
+            if (status) {
+              const ageHours = status.updated ? (Date.now() - Date.parse(status.updated)) / 3600e3 : Infinity;
+              if (ageHours > 30) {
+                problems.push(status.updated
+                  ? `The bot hasn't run a Gazette check since ${new Date(status.updated).toLocaleString('en-US', { timeZone: 'America/Chicago' })} CT. Its scheduled runs may be failing (Cloudflare dashboard → Workers → dynasty-league-bot → Logs).`
+                  : `The bot has no Gazette status yet. It fills in after its next Tuesday run once this change is deployed.`);
+              }
+              for (const [name, s] of Object.entries(status.leagues || {})) {
+                if (!s.ok) problems.push(`**${name}**: ${s.note}${s.week && !String(s.note).includes(`week ${s.week}`) ? ` (week ${s.week})` : ''}`);
+                const weeks = [...(s.holes || [])];
+                if (!s.ok && s.week && /Claude|request limit|error/.test(s.note || '')) weeks.push(s.week);
+                if ((s.holes || []).length) problems.push(`**${name}**: no Gazette for week ${s.holes.join(', ')}`);
+                for (const w of weeks) fixLinks.push(`- ${name} week ${w}: ${process.env.BOT_URL}/run?job=gazette&week=${w}&league=${encodeURIComponent(name)}&key=YOUR_ADMIN_KEY`);
+              }
+            }
+
+            // Before Wednesday's last retry a manual run only reports; the bot is still working on it
+            const final = !status || status.lastSlot || problems.some(p => !p.startsWith('**')) || process.env.MANUAL !== 'true';
+            const summary = problems.length ? problems.map(p => `- ${p}`).join('\n') : 'Every league has its Gazette. ✅';
+            await core.summary.addHeading('Gazette Check').addRaw(summary + (final ? '' : '\n\n_The bot is still retrying (last try Wednesday noon CT), so no issue was opened._')).write();
+
+            const { owner, repo } = context.repo;
+            const open = (await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 }))
+              .find(i => !i.pull_request && i.title.startsWith(TITLE));
+
+            if (!problems.length) {
+              if (open) {
+                await github.rest.issues.createComment({ owner, repo, issue_number: open.number, body: 'Every league has its Gazette now. Closing. ✅' });
+                await github.rest.issues.update({ owner, repo, issue_number: open.number, state: 'closed', state_reason: 'completed' });
+              }
+              return;
+            }
+            if (!final) return;
+
+            const body = [
+              `The league bot tried through Wednesday noon CT and these are still missing:`,
+              '',
+              summary,
+              '',
+              '**What to do**',
+              '- *Scores not final (a game shows 0-0)*: a matchup has no points on either side. Once the score is fixed on Sleeper/Fleaflicker, next Tuesday\'s run writes the missed article on its own.',
+              '- *Claude returned no article* or *request limit*: the next Tuesday run tries again on its own. To write it now, open the link below in your phone browser after swapping in your BOT_ADMIN_KEY password (add `&dry=1` first to preview without saving).',
+              ...(fixLinks.length ? ['', ...fixLinks] : []),
+              '',
+              `Status page: ${process.env.STATUS_URL}`,
+              '',
+              '_This issue closes itself once a check finds every league OK._',
+            ].join('\n');
+            if (open) await github.rest.issues.createComment({ owner, repo, issue_number: open.number, body });
+            else await github.rest.issues.create({ owner, repo, title: `${TITLE} (season ${status ? status.season : '?'}, NFL week ${status ? status.stateWeek : '?'})`, body });

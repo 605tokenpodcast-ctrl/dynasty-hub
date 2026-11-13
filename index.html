@@ -6358,10 +6358,13 @@
                 raw.forEach(g => {
                     if (g.week > LAST_PLAYOFF_WEEK) return; // no league uses week 18
                     const st = weekStats[`${g.season}|${g.week}`];
-                    // Played = a later week already has scores, or every team in the week has scored.
-                    // The latest week can be half-played (e.g. only Thursday night), so it needs all teams.
+                    // Played = the sync's Open Week is already past it (Sleeper has closed the week), a later
+                    // week already has scores, or every team in the week has scored. The latest week can be
+                    // half-played (e.g. only Thursday night), so without the Open Week it needs all teams;
+                    // a team that really scored 0 (empty lineup) would otherwise hold the week open forever.
                     const later = g.week < (lastScored[g.season] || 0);
-                    g.played = (later ? st.scored / st.teams >= 0.75 : st.scored === st.teams) && !isOpenWeek(g.season, g.week);
+                    const closed = openWeek(g.season) > g.week && (g.s1 > 0 || g.s2 > 0 || st.scored > 0);
+                    g.played = (closed || (later ? st.scored / st.teams >= 0.75 : st.scored === st.teams)) && !isOpenWeek(g.season, g.week);
                     // Playoff-week pairings exist before the bracket is set; they only become real once the
                     // regular season is over, so hide unplayed ones until the week before has scores
                     if (!g.played && g.week >= playoffStartWeek(league, g.season) && g.week > (lastScored[g.season] || 0) + 1) return;

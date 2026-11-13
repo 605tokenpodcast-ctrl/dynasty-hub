@@ -69,6 +69,20 @@ try {
     return (document.getElementById('review-gazette') || {}).innerText || '';
   });
   if (!/Headline/.test(gazette)) failures.push('Gazette did not render without the Markdown scripts');
+  // Podcast show notes: a section per league plus the cross-league one, SFB16 left out, Gazette lead added
+  const notes = await page.evaluate(async () => {
+    window.fetchGazette = async () => [{ week: Number(document.getElementById('notes-week')?.value || 0), text: '# Big Week Headline\n\nBody' }];
+    openShowNotes();
+    await new Promise(r => setTimeout(r, 300));
+    const text = showNotesText();
+    const offseason = podcastLeagues().map(offseasonShowNotes).flat().length;
+    closeShowNotes();
+    return { sections: showNotesStore.length, text, offseason };
+  });
+  if (notes.sections < 2) failures.push(`show notes has ${notes.sections} sections`);
+  if (/sfb16|mario kart/i.test(notes.text)) failures.push('show notes include SFB16');
+  if (!/Big Week Headline/.test(notes.text)) failures.push('show notes are missing the Gazette headline');
+  if (!notes.offseason) failures.push('offseason show notes are empty');
   // The home-screen manifest and its icons exist
   const manifest = await page.evaluate(async () => {
     const r = await fetch('manifest.json');

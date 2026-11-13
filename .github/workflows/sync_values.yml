@@ -23,6 +23,7 @@ on:
 permissions:
   contents: write
   actions: write   # lets the run start the worker deploy when a league renews
+  issues: write    # the score check opens (and later closes) an issue when saved scores differ from Sleeper
 
 concurrency:
   group: dynasty-hub-sync
@@ -122,6 +123,38 @@ jobs:
           if [ -n "$leagues_changed" ]; then
             echo "League IDs changed; redeploying the workers with the new IDs"
             gh workflow run deploy-workers.yml --ref "${GITHUB_REF_NAME}"
+          fi
+
+      # Re-reads this season's finished weeks from Sleeper and compares them with what was just saved.
+      # A difference opens an issue (or adds the new report to the open one); a clean check closes it.
+      # It doesn't turn the run red: the data is already saved, and most differences are stat
+      # corrections the next sync picks up. Skipped when the Sleeper sync itself failed (the run is red then).
+      - name: Check saved scores against Sleeper
+        id: scorecheck
+        if: steps.leagues.outcome == 'success'
+        run: |
+          set +e
+          python scripts/check_scores.py
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Open or close the score check issue
+        if: steps.scorecheck.outputs.code == '0' || steps.scorecheck.outputs.code == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE: ${{ steps.scorecheck.outputs.code }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create score-check --color D93F0B --description "Saved scores differ from Sleeper" --force >/dev/null 2>&1 || true
+          issue=$(gh issue list --label score-check --state open --json number --jq '.[0].number // empty')
+          printf '\n[Run log](%s)\n' "$RUN_URL" >> score_check_report.md
+          if [ "$CODE" = "1" ]; then
+            if [ -n "$issue" ]; then
+              gh issue comment "$issue" --body-file score_check_report.md
+            else
+              gh issue create --title "Score check: saved scores differ from Sleeper" --label score-check --body-file score_check_report.md
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue close "$issue" --comment "The latest Auto-Sync's scores all match Sleeper again, so this is fixed. $RUN_URL"
           fi
 
       - name: Fail run if a sync step failed

@@ -546,7 +546,10 @@ async function previews(lg, season, week, say) {
     const [labels, rosters] = await Promise.all([sleeperLabels(lg.id), sleeperRosters(lg.id)]);
     rosters.forEach(r => {
       const s = r.settings || {};
-      const gp = (s.wins || 0) + (s.losses || 0) + (s.ties || 0);
+      // A league that also plays the weekly median has two results per week, so its record counts
+      // twice the games actually played (more results than weeks so far gives it away)
+      const results = (s.wins || 0) + (s.losses || 0) + (s.ties || 0);
+      const gp = results > week - 1 ? results / 2 : results;
       if (gp) avg[labels[r.roster_id]] = ((s.fpts || 0) + (s.fpts_decimal || 0) / 100) / gp;
     });
   }

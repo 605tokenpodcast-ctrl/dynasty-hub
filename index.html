@@ -1650,8 +1650,10 @@
             });
             const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
             const recentFrom = weeks[Math.max(0, weeks.length - POWER_RECENT_WEEKS)];
+            const median = hasMedianGame(league, season);
             weeks.forEach(w => {
                 const scores = byWeek[w];
+                if (median) medianResults(scores).forEach(([o, res]) => { if (t[o]) t[o][res]++; });
                 scores.forEach(([o, pts]) => {
                     const r = t[o];
                     if (!r) return;
@@ -1668,7 +1670,7 @@
                 r.allPlay = r.apG ? r.apW / r.apG : 0;
                 r.recent = r.recG ? r.recW / r.recG : 0;
                 r.ppg = r.pf / r.games;
-                r.winPct = (r.w + r.t / 2) / r.games;
+                r.winPct = (r.w + r.t / 2) / (r.w + r.l + r.t);
                 r.value = valueByOwner[r.owner] || 0;
                 const last = r.results[r.results.length - 1];
                 let n = 0;
@@ -2568,6 +2570,27 @@
             return !!leagueRules(leagueName).no_bench;
         }
 
+        // Leagues that also play the league median every regular-season week (Sleeper's "league median"
+        // setting): the top half in points gets a second win, the bottom half a second loss. Marked
+        // median_game in leagues.json (true, or the first season it applied); the Sleeper sync also notes
+        // the setting in the League Profile for the current season.
+        function hasMedianGame(leagueName, season) {
+            const m = leagueRules(leagueName).median_game;
+            if (m === true) return true;
+            if (m && (parseInt(season, 10) || 0) >= (parseInt(m, 10) || 0)) return true;
+            const prof = leagueProfile(leagueName);
+            return String(prof['Current Season'] || '') === String(season) && /^yes$/i.test(String(prof['League Median'] || ''));
+        }
+
+        // One week's scores as [[who, points], ...] -> [[who, 'w' | 'l' | 't'], ...] against the week's median
+        function medianResults(list) {
+            const sorted = list.map(x => x[1]).sort((a, b) => a - b);
+            const n = sorted.length;
+            if (n < 2) return [];
+            const med = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+            return list.map(([who, pts]) => [who, pts > med ? 'w' : pts < med ? 'l' : 't']);
+        }
+
         // "League Profile" key/value rows, e.g. League ID, Current Season, Playoff Start Week (written by the syncs)
         const leagueProfileCache = {};
         function leagueProfile(leagueName) {
@@ -3285,6 +3308,15 @@
                     if (pf > pa) t.w++; else if (pf < pa) t.l++; else t.t++;
                 });
             });
+            // Median-game leagues: a second result every regular-season week, so records and seeds match the league's
+            const medWeeks = {};
+            games.forEach(g => {
+                if (g.weekNum >= playoffStartWeek(g.league, g.season) || !hasMedianGame(g.league, g.season)) return;
+                const k = `${key(g.league, g.season)}||${g.weekNum}`;
+                const mw = medWeeks[k] = medWeeks[k] || { st: seasons[key(g.league, g.season)], list: [] };
+                mw.list.push([g.t1, g.s1], [g.t2, g.s2]);
+            });
+            Object.values(medWeeks).forEach(({ st, list }) => medianResults(list).forEach(([o, res]) => { st.teams[o][res]++; }));
             standings.forEach(s => {
                 const st = seasons[key(s.league, s.season)] = seasons[key(s.league, s.season)] || { league: s.league, season: s.season, teams: {} };
                 const t = st.teams[s.owner] = st.teams[s.owner] || { owner: s.owner, w: s.w, l: s.l, t: s.t, pf: s.pf, pa: 0, scores: [] };
@@ -6443,6 +6475,12 @@
                         t.results.push(res);
                     });
                 });
+            if (hasMedianGame(league, season)) {
+                const regularEnd = playoffStartWeek(league, season), byWeek = {};
+                matchupGames.filter(g => g.league === league && g.season === season && isFinal(g) && g.week < regularEnd)
+                    .forEach(g => { (byWeek[g.week] = byWeek[g.week] || []).push([g.o1, g.s1], [g.o2, g.s2]); });
+                Object.values(byWeek).forEach(list => medianResults(list).forEach(([o, res]) => { table[o][res]++; }));
+            }
             const ranked = Object.values(table).sort((a, b) => (b.w + b.t / 2) - (a.w + a.t / 2) || b.pf - a.pf);
             ranked.forEach((t, i) => { t.rank = i + 1; });
             return { table, size: ranked.length, allScores };
@@ -7029,7 +7067,14 @@
             // Next week's games get an index so the scenarios below can ask "and if that game goes this way"
             const nextGames = remaining.filter(g => g.week === nextWeek).map(g => [idx[g.o1], idx[g.o2]]);
             let nextJ = 0;
-            const games = remaining.map(g => [idx[g.o1], idx[g.o2], g.week, g.week === nextWeek ? nextJ++ : -1]);
+            const games = remaining.map(g => [idx[g.o1], idx[g.o2], g.week, g.week === nextWeek ? nextJ++ : -1]).sort((a, b) => a[2] - b[2]);
+            // Median-game leagues: each simulated week also hands out a win or loss against that week's median score
+            const median = hasMedianGame(league, season);
+            const wkTeams = [], wkScore = new Float64Array(n);
+            const medianWeek = () => {
+                medianResults(wkTeams.map(i => [i, wkScore[i]])).forEach(([i, res]) => { wins[i] += res === 'w' ? 1 : res === 't' ? 0.5 : 0; });
+                wkTeams.length = 0;
+            };
             const G = nextGames.length;
             // [team][next-week game][own result L/W][which side of that game won] -> sims, sims in the playoffs
             const scenN = new Float64Array(n * G * 4), scenIn = new Float64Array(n * G * 4);
@@ -7060,12 +7105,18 @@
                     // Each simulated season draws the team's true average, so a few games of data aren't treated as certain
                     strength[i] = teams[i].model.mean + teams[i].model.se * gaussian();
                 }
+                let simWeek = -1;
                 for (const [a, b, week, j] of games) {
                     const sa = strength[a] + teams[a].model.sd * gaussian(), sb = strength[b] + teams[b].model.sd * gaussian();
                     pf[a] += sa; pf[b] += sb;
+                    if (median) {
+                        if (week !== simWeek) { if (wkTeams.length) medianWeek(); simWeek = week; }
+                        wkScore[a] = sa; wkScore[b] = sb; wkTeams.push(a, b);
+                    }
                     if (sa > sb) wins[a]++; else if (sb > sa) wins[b]++; else { wins[a] += 0.5; wins[b] += 0.5; }
                     if (week === nextWeek) { nextRes[a] = sa > sb ? 1 : -1; nextRes[b] = sb > sa ? 1 : -1; nextWin[j] = sa > sb ? 0 : sb > sa ? 1 : -1; }
                 }
+                if (median && wkTeams.length) medianWeek();
                 // Sleeper's default tiebreak: record, then points for
                 order.sort((x, y) => wins[y] - wins[x] || pf[y] - pf[x]);
                 for (let seed = 0; seed < n; seed++) {

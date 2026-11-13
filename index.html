@@ -438,6 +438,11 @@
                         <p class="text-[11px] text-slate-500 px-5 pb-3">Points scored over the best possible lineup from the same roster each week.</p>
                         <div id="lineup-iq" class="overflow-x-auto"></div>
                     </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-5 space-y-2">
+                        <h3 class="font-bold text-white">🎱 Best-Ball What If</h3>
+                        <p class="text-[11px] text-slate-500">The standings if every team had started its best possible lineup every week. Shows who lost wins to lineup calls, and who got away with them.</p>
+                        <div id="best-ball"></div>
+                    </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden">
                         <h3 class="font-bold text-white p-5 pb-1">🎣 Waiver Wire & FAAB Report</h3>
                         <p class="text-[11px] text-slate-500 px-5 pb-3">Starting points from players each team picked up, what they spent, and how active they were.</p>
@@ -537,6 +542,16 @@
                         </div>
                         <div id="drafts-skill" class="space-y-4"></div>
                     </div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-200">🎯 Rookie Pick Hit Rates</h3>
+                                <p class="text-slate-400 text-xs">How often each part of your rookie drafts turned into a real starter, from your own leagues' drafts and lineups.</p>
+                            </div>
+                            <select id="drafts-hit-league" onchange="renderDraftHitRates()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                        </div>
+                        <div id="drafts-hit-rates" class="space-y-4"></div>
+                    </div>
                     <details class="bg-cardbg border border-slate-700 rounded-xl p-4 text-xs text-slate-400">
                         <summary class="cursor-pointer font-semibold text-slate-200">How draft grades work</summary>
                         <div class="mt-3 space-y-2">
@@ -609,6 +624,13 @@
                             </div>
                         </div>
                         <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-4"></div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-6 shadow-sm space-y-3">
+                        <div>
+                            <h3 class="font-bold text-white">📊 Career Comparison</h3>
+                            <p class="text-[11px] text-slate-500">Everything each manager has done in every league, side by side. The better number in each row is green.</p>
+                        </div>
+                        <div id="h2h-career-box"></div>
                     </div>
                 </div>
 
@@ -1191,7 +1213,9 @@
         }
 
         function initApp() {
+            applyScoreCorrections();
             hubCache = null;
+            hitRateCache = null;
             draftGradeCache = null;
             Object.keys(marketTopCache).forEach(k => delete marketTopCache[k]);
             document.getElementById('upload-screen').classList.add('hidden');
@@ -2560,6 +2584,26 @@
             });
         }
 
+        // Commissioner score changes Sleeper keeps out of its matchup feed (e.g. an illegal-lineup penalty):
+        // leagues.json lists them per league as score_corrections [{ season, week, team, points, note }],
+        // and the saved game scores are replaced once, right after the data loads, so every tab agrees
+        // with the league's standings.
+        function applyScoreCorrections() {
+            Object.keys(globalMasterData).forEach(league => {
+                const fixes = leagueRules(league).score_corrections;
+                if (!Array.isArray(globalMasterData[league]) || !Array.isArray(fixes) || !fixes.length) return;
+                sectionRows(league, 'matchups').forEach(r => {
+                    if (r.length < 7) return;
+                    fixes.forEach(f => {
+                        if (String(r[0]).trim() !== String(f.season) || weekNumber(r[1]) !== Number(f.week) || !(Number(f.points) >= 0)) return;
+                        const who = getMasterOwner(f.team);
+                        if (getMasterOwner(r[3]) === who) r[4] = Number(f.points).toFixed(2);
+                        else if (getMasterOwner(r[5]) === who) r[6] = Number(f.points).toFixed(2);
+                    });
+                });
+            });
+        }
+
         function leagueRules(leagueName) {
             return leagueRulesByName[String(leagueName || '').trim().toLowerCase()] || DEFAULT_LEAGUE_RULES;
         }
@@ -3555,6 +3599,7 @@
             renderConsistency(league, season);
             renderContenderMap(league);
             renderLineupIQ(league, season);
+            renderBestBall(league, season);
             renderPickupReport(league, season);
         }
 
@@ -3792,6 +3837,92 @@
                         </tr>`).join('')}
                     </tbody>
                 </table>` : '<p class="text-xs text-slate-500 p-4">Lineup data arrives with the next data sync.</p>';
+        }
+
+        // --- ANALYTICS: BEST-BALL WHAT IF ---
+        // One league-season replayed with every team's best possible lineup each week (the "optimal" score the
+        // syncs save with each lineup). Same schedule, same median game where the league plays one.
+        // Returns null when the season has no lineup history.
+        function bestBallTable(league, season) {
+            const games = regularSeasonGames(league, season);
+            const optimal = {};
+            let any = false;
+            buildHubData().lineups.forEach(l => {
+                if (l.league !== league || String(l.season) !== String(season)) return;
+                optimal[`${l.owner}||${l.weekNum}`] = l.optimal;
+                any = true;
+            });
+            if (!games.length || !any) return null;
+            const t = {};
+            const T = o => t[o] = t[o] || { owner: o, w: 0, l: 0, t: 0, pf: 0, bw: 0, bl: 0, bt: 0, bpf: 0 };
+            const median = hasMedianGame(league, season);
+            const weeks = {};
+            games.forEach(g => {
+                // A team with no saved lineup that week (it scored 0) keeps its real score
+                const b1 = Math.max(g.s1, optimal[`${g.t1}||${g.weekNum}`] || 0), b2 = Math.max(g.s2, optimal[`${g.t2}||${g.weekNum}`] || 0);
+                [[g.t1, g.s1, g.s2, b1, b2], [g.t2, g.s2, g.s1, b2, b1]].forEach(([o, my, opp, bMy, bOpp]) => {
+                    const r = T(o);
+                    r.pf += my; r.bpf += bMy;
+                    if (my > opp) r.w++; else if (my < opp) r.l++; else r.t++;
+                    if (bMy > bOpp) r.bw++; else if (bMy < bOpp) r.bl++; else r.bt++;
+                });
+                if (median) {
+                    const wk = weeks[g.weekNum] = weeks[g.weekNum] || { real: [], best: [] };
+                    wk.real.push([g.t1, g.s1], [g.t2, g.s2]);
+                    wk.best.push([g.t1, b1], [g.t2, b2]);
+                }
+            });
+            Object.values(weeks).forEach(wk => {
+                medianResults(wk.real).forEach(([o, res]) => { t[o][res]++; });
+                medianResults(wk.best).forEach(([o, res]) => { t[o]['b' + res]++; });
+            });
+            const rows = Object.values(t);
+            const rank = (wins, pf, key) => [...rows].sort((a, b) => wins(b) - wins(a) || pf(b) - pf(a)).forEach((r, i) => { r[key] = i + 1; });
+            rank(r => r.w + r.t / 2, r => r.pf, 'rank');
+            rank(r => r.bw + r.bt / 2, r => r.bpf, 'bRank');
+            rows.forEach(r => { r.swing = (r.bw + r.bt / 2) - (r.w + r.t / 2); r.left = r.bpf - r.pf; });
+            return rows.sort((a, b) => a.bRank - b.bRank);
+        }
+
+        function renderBestBall(league, season) {
+            const box = document.getElementById('best-ball');
+            if (!box) return;
+            if (season === 'ALL') { box.innerHTML = '<p class="text-xs text-slate-500">Pick a season to see the best-ball standings.</p>'; return; }
+            const leagues = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]) && !isAwardExcluded(k))
+                .filter(l => league === 'ALL' || l === league);
+            const noBench = leagues.filter(hasNoBench);
+            const tables = leagues.filter(l => !hasNoBench(l)).map(l => ({ league: l, rows: bestBallTable(l, season) })).filter(x => x.rows);
+            const swingTxt = v => v > 0 ? `+${v}` : v < 0 ? `\u2212${-v}` : '0';
+            const cards = tables.map(({ league: lg, rows }) => {
+                const robbed = [...rows].sort((a, b) => b.swing - a.swing || b.left - a.left)[0];
+                const lucky = [...rows].sort((a, b) => a.swing - b.swing)[0];
+                const lines = [];
+                if (robbed && robbed.swing > 0) lines.push(`Hurt most by lineup calls: <span class="text-slate-200 font-semibold">${escHtml(robbed.owner)}</span> (${swingTxt(robbed.swing)} wins in best ball).`);
+                if (lucky && lucky.swing < 0) lines.push(`Got away with the most: <span class="text-slate-200 font-semibold">${escHtml(lucky.owner)}</span> (${swingTxt(lucky.swing)}).`);
+                const list = rows.map(r => {
+                    const move = r.rank - r.bRank;
+                    const arrow = move > 0 ? `<span class="text-emerald-400">▲${move}</span>` : move < 0 ? `<span class="text-rose-400">▼${-move}</span>` : '<span class="text-slate-500">•</span>';
+                    const cls = r.swing > 0 ? 'text-emerald-400' : r.swing < 0 ? 'text-rose-400' : 'text-slate-400';
+                    return `
+                        <div class="flex items-center gap-2 py-2 border-b border-slate-800 last:border-0">
+                            <span class="w-6 text-center font-extrabold text-slate-300">${r.bRank}</span>
+                            <span class="w-8 text-center text-xs font-bold">${arrow}</span>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-bold text-white truncate">${escHtml(r.owner)}</p>
+                                <p class="text-[11px] text-slate-400 leading-snug">Best ball <span class="text-slate-200 font-semibold">${r.bw}-${r.bl}${r.bt ? '-' + r.bt : ''}</span> · actual ${fmtRecord(r)} (#${r.rank}) · ${r.left.toFixed(1)} pts left on bench</p>
+                            </div>
+                            <span class="shrink-0 text-sm font-extrabold ${cls}">${swingTxt(r.swing)} W</span>
+                        </div>`;
+                }).join('');
+                return `
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 sm:p-4">
+                        <h4 class="font-bold text-accent truncate">${escHtml(lg)} <span class="text-slate-500 font-normal text-xs">${escHtml(String(season))}</span></h4>
+                        ${lines.length ? `<p class="text-[11px] text-slate-400 mt-1">${lines.join(' ')}</p>` : ''}
+                        <div class="mt-1">${list}</div>
+                    </div>`;
+            });
+            const note = `<p class="text-[11px] text-slate-500">Regular season only. Ranked by best-ball record, then best-ball points; arrows show the move from the real standings.${noBench.length ? ` ${noBench.map(escHtml).join(', ')} has no bench, so every lineup is already its best.` : ''}</p>`;
+            box.innerHTML = (cards.length ? `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${cards.join('')}</div>` : '<p class="text-xs text-slate-500">No lineup history for this season.</p>') + note;
         }
 
         function renderPickupReport(league, season) {
@@ -6010,6 +6141,7 @@
             if (owners.includes('Smokers Haven')) ownerSel.value = 'Smokers Haven';
             renderDraftHistory();
             renderDraftSkill();
+            initDraftHitRates();
         }
 
         function setDraftMode(mode) {
@@ -6165,6 +6297,197 @@
                 </div>`;
         }
 
+        // --- DRAFT HISTORY: ROOKIE PICK HIT RATES ---
+        // A rookie pick is a hit when the player started 8+ games in one season in that league (for any team)
+        // within his first 3 seasons, and a miss when he never started more than 3 in any of them. Only classes
+        // whose rookie season is finished and has lineup history count.
+        const HIT_STARTS = 8, MISS_STARTS = 3;
+        const HIT_BUCKETS = [
+            { label: 'Picks 1.01-1.03', test: p => p.round === 1 && p.inRound <= 3 },
+            { label: 'Picks 1.04-1.06', test: p => p.round === 1 && p.inRound >= 4 && p.inRound <= 6 },
+            { label: 'Picks 1.07-1.09', test: p => p.round === 1 && p.inRound >= 7 && p.inRound <= 9 },
+            { label: 'Picks 1.10 and later', test: p => p.round === 1 && p.inRound >= 10 },
+            { label: 'Round 2', test: p => p.round === 2 },
+            { label: 'Round 3', test: p => p.round === 3 },
+            { label: 'Round 4 and later', test: p => p.round >= 4 }
+        ];
+        let hitRateCache = null;
+        function rookieHitPicks() {
+            if (hitRateCache) return hitRateCache;
+            const latest = parseInt(latestSeason(), 10) || new Date().getFullYear();
+            const startsByLeague = {};
+            const leagueStarts = league => {
+                if (startsByLeague[league]) return startsByLeague[league];
+                const starts = {}, seasons = new Set();
+                sectionRows(league, 'lineups').forEach(r => {
+                    const season = parseInt(r[0], 10);
+                    if (!season || (parseFloat(r[3]) || 0) <= 0) return;
+                    seasons.add(season);
+                    parseLineupList(r[5]).forEach(p => {
+                        const by = starts[normalizePlayerName(p.name)] = starts[normalizePlayerName(p.name)] || {};
+                        by[season] = (by[season] || 0) + 1;
+                    });
+                });
+                return (startsByLeague[league] = { starts, seasons });
+            };
+            const picks = [];
+            buildDraftGrades().filter(d => d.base === 'Rookie' && !d.reason).forEach(d => {
+                const idx = leagueStarts(d.league);
+                const done = d.season < latest || !!(seasonOf(d.league, d.season) || {}).complete;
+                if (!done || !idx.seasons.has(d.season)) return;
+                d.picks.filter(p => !p.keeper && p.name && !DRAFT_UNGRADED_POS.test(p.pos)).forEach(p => {
+                    const by = idx.starts[normalizePlayerName(p.name)] || {};
+                    const years = Array.from({ length: DRAFT_GRADE_YEARS }, (_, i) => by[d.season + i] || 0);
+                    const best = Math.max(...years);
+                    picks.push({ ...p, starts: years.reduce((a, b) => a + b, 0), bestYear: best, hit: best >= HIT_STARTS, miss: best <= MISS_STARTS });
+                });
+            });
+            return (hitRateCache = picks);
+        }
+
+        function initDraftHitRates() {
+            const sel = document.getElementById('drafts-hit-league');
+            if (!sel) return;
+            const leagues = [...new Set(rookieHitPicks().map(p => p.league))].sort((a, b) => a.localeCompare(b));
+            const prev = sel.value;
+            sel.innerHTML = '<option value="ALL">All leagues</option>' + leagues.map(l => `<option value="${escHtml(l)}">${escHtml(l)}</option>`).join('');
+            if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+            renderDraftHitRates();
+        }
+
+        function renderDraftHitRates() {
+            const box = document.getElementById('drafts-hit-rates');
+            if (!box) return;
+            const league = document.getElementById('drafts-hit-league').value;
+            const picks = rookieHitPicks().filter(p => league === 'ALL' || p.league === league);
+            if (!picks.length) { box.innerHTML = '<p class="text-slate-400 text-sm">No finished rookie classes with lineup history yet.</p>'; return; }
+            const classes = [...new Set(picks.map(p => p.season))].sort((a, b) => a - b);
+            const pctTxt = (n, d) => d ? `${Math.round(n / d * 100)}%` : '—';
+            const bar = (n, d, color) => `<div class="mt-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full ${color}" style="width:${d ? (n / d * 100).toFixed(1) : 0}%"></div></div>`;
+            const row = (label, list) => {
+                if (!list.length) return '';
+                const hits = list.filter(p => p.hit).length, misses = list.filter(p => p.miss).length;
+                const best = list.reduce((a, p) => (!a || p.starts > a.starts ? p : a), null);
+                return `
+                    <div class="py-2.5 border-b border-slate-800 last:border-0">
+                        <div class="flex items-baseline justify-between gap-3">
+                            <p class="font-bold text-white">${escHtml(label)} <span class="text-slate-500 font-normal text-xs">${list.length} pick${list.length === 1 ? '' : 's'}</span></p>
+                            <p class="shrink-0 text-sm"><span class="font-extrabold text-emerald-400">${pctTxt(hits, list.length)}</span> <span class="text-slate-500 text-xs">hit</span> <span class="font-bold text-rose-300 ml-2">${pctTxt(misses, list.length)}</span> <span class="text-slate-500 text-xs">miss</span></p>
+                        </div>
+                        ${bar(hits, list.length, 'bg-emerald-500')}
+                        <p class="text-[11px] text-slate-400 mt-1">${(list.reduce((a, p) => a + p.starts, 0) / list.length).toFixed(1)} starts per pick${best && best.starts ? ` · most starts: <span class="text-slate-200">${escHtml(best.name)}</span> (${best.season} ${draftPickLabel(best)}, ${escHtml(best.owner)}), ${best.starts}` : ''}</p>
+                    </div>`;
+            };
+            const bySlot = HIT_BUCKETS.map(b => row(b.label, picks.filter(b.test))).join('');
+            const early = picks.filter(p => p.round <= 2);
+            const byPos = ['QB', 'RB', 'WR', 'TE'].map(pos => row(pos, early.filter(p => p.pos === pos))).join('');
+            box.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4"><h4 class="font-bold text-slate-200 text-sm">By draft slot</h4>${bySlot}</div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4"><h4 class="font-bold text-slate-200 text-sm">By position <span class="text-slate-500 font-normal text-xs">(rounds 1 and 2)</span></h4>${byPos || '<p class="text-xs text-slate-500 mt-2">No picks yet.</p>'}</div>
+                </div>
+                <p class="text-[11px] text-slate-500">Hit = started ${HIT_STARTS}+ games in one season in that league, for any team, within the first ${DRAFT_GRADE_YEARS} seasons. Miss = never started more than ${MISS_STARTS} games in any of them. Starts are counted over those ${DRAFT_GRADE_YEARS} seasons. ${picks.length} picks from the ${classes[0]}${classes.length > 1 ? `-${classes[classes.length - 1]}` : ''} rookie classes; newer classes can still turn misses into hits, and this season's class joins once the season is over. Kickers and defenses are left out.</p>`;
+        }
+
+        // --- H2H TAB: CAREER COMPARISON ---
+        // One manager's career across every league, from finished games, standings, trades and the Title Belt
+        function careerStats(owner) {
+            const hub = buildHubData();
+            const c = { seasons: 0, leagues: new Set(), titles: 0, runners: 0, thirds: 0, playoffs: 0, done: 0, sackos: 0, topSeeds: 0,
+                w: 0, l: 0, t: 0, pf: 0, games: 0, poW: 0, poL: 0, high: 0, trades: 0, value: 0 };
+            Object.values(hub.seasons).forEach(st => {
+                const t = st.teams[owner];
+                if (!t) return;
+                c.seasons++; c.leagues.add(st.league);
+                c.w += t.w; c.l += t.l; c.t += t.t; c.pf += t.pf; c.games += t.scores.length;
+                if (!st.complete) return;
+                c.done++;
+                if (t.madePlayoffs) c.playoffs++;
+                if (st.champ === owner) c.titles++;
+                if (st.runner === owner) c.runners++;
+                if (st.third === owner) c.thirds++;
+                if (st.sacko === owner) c.sackos++;
+                if (t.seed === 1) c.topSeeds++;
+            });
+            hub.games.forEach(g => {
+                const is1 = g.t1 === owner;
+                if (!is1 && g.t2 !== owner) return;
+                const my = is1 ? g.s1 : g.s2, opp = is1 ? g.s2 : g.s1;
+                c.high = Math.max(c.high, my);
+                if (g.playoffCounts) { if (my > opp) c.poW++; else if (my < opp) c.poL++; }
+            });
+            hub.trades.forEach(t => { if (t.sides.some(sd => sd.owner === owner)) c.trades++; });
+            const elo = hub.elo.table.find(r => r.owner === owner);
+            c.elo = elo ? elo.rating : 0;
+            c.peak = elo && elo.peak ? elo.peak.rating : 0;
+            c.belts = 0; c.defenses = 0;
+            Object.values(computeTitleBelts()).forEach(b => b.owners.forEach(o => { if (o.owner === owner) { c.belts += o.reigns; c.defenses += o.defenses; } }));
+            c.badges = (computeManagerBadges()[owner] || []).length;
+            collectValueTeams('ALL').forEach(v => { if (v.owner === owner) c.value += v.totalValue || 0; });
+            c.winPct = c.w + c.l + c.t ? (c.w + c.t / 2) / (c.w + c.l + c.t) : 0;
+            c.ppg = c.games ? c.pf / c.games : 0;
+            return c;
+        }
+
+        function renderCareerCompare(m1, m2) {
+            const box = document.getElementById('h2h-career-box');
+            if (!box) return;
+            const hub = buildHubData();
+            const a = careerStats(m1), b = careerStats(m2);
+            // Seasons they shared a league: who finished the regular season with the better seed
+            let ahead1 = 0, ahead2 = 0, shared = 0;
+            Object.values(hub.seasons).forEach(st => {
+                const t1 = st.teams[m1], t2 = st.teams[m2];
+                if (!st.complete || !t1 || !t2 || !t1.seed || !t2.seed) return;
+                shared++;
+                if (t1.seed < t2.seed) ahead1++; else if (t2.seed < t1.seed) ahead2++;
+            });
+            const rec = c => `${c.w}-${c.l}${c.t ? '-' + c.t : ''}`;
+            const num = (v, d = 0) => v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+            // [label, value A, value B, text A, text B, lower is better]
+            const rows = [
+                ['Championships', a.titles, b.titles],
+                ['Runner-up finishes', a.runners, b.runners],
+                ['Third-place finishes', a.thirds, b.thirds],
+                ['Playoff trips', a.playoffs, b.playoffs, `${a.playoffs} of ${a.done}`, `${b.playoffs} of ${b.done}`],
+                ['#1 seeds', a.topSeeds, b.topSeeds],
+                ['Last-place finishes', a.sackos, b.sackos, null, null, true],
+                ['Regular-season record', a.winPct, b.winPct, `${rec(a)} (${pct1(a.winPct)})`, `${rec(b)} (${pct1(b.winPct)})`],
+                ['Playoff record', a.poW - a.poL, b.poW - b.poL, `${a.poW}-${a.poL}`, `${b.poW}-${b.poL}`],
+                ['Points per game', a.ppg, b.ppg, num(a.ppg, 1), num(b.ppg, 1)],
+                ['Highest score', a.high, b.high, num(a.high, 2), num(b.high, 2)],
+                ['Elo rating', a.elo, b.elo, num(a.elo), num(b.elo)],
+                ['Peak Elo', a.peak, b.peak, num(a.peak), num(b.peak)],
+                ['Title Belt', a.defenses, b.defenses, `${a.belts} reign${a.belts === 1 ? '' : 's'}, ${a.defenses} def.`, `${b.belts} reign${b.belts === 1 ? '' : 's'}, ${b.defenses} def.`],
+                ['Badges', a.badges, b.badges],
+                ['Trades made', a.trades, b.trades],
+                ['League-seasons played', a.seasons, b.seasons, `${a.seasons} in ${a.leagues.size} league${a.leagues.size === 1 ? '' : 's'}`, `${b.seasons} in ${b.leagues.size} league${b.leagues.size === 1 ? '' : 's'}`],
+                ['Roster value today', a.value, b.value, `${Math.round(a.value / 1000)}k`, `${Math.round(b.value / 1000)}k`]
+            ];
+            if (shared) rows.splice(6, 0, [`Finished higher (${shared} shared season${shared === 1 ? '' : 's'})`, ahead1, ahead2]);
+            let won1 = 0, won2 = 0;
+            const html = rows.map(([label, v1, v2, t1, t2, lowBetter]) => {
+                const better = v1 === v2 ? 0 : (v1 > v2) !== !!lowBetter ? 1 : 2;
+                if (better === 1) won1++; else if (better === 2) won2++;
+                const cls = side => better === side ? 'text-emerald-400 font-extrabold' : 'text-slate-200 font-semibold';
+                return `
+                    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-2 border-b border-slate-800 last:border-0">
+                        <span class="text-right text-sm ${cls(1)}">${escHtml(String(t1 ?? v1))}</span>
+                        <span class="w-28 sm:w-44 text-center text-[11px] text-slate-400 leading-tight">${escHtml(label)}</span>
+                        <span class="text-left text-sm ${cls(2)}">${escHtml(String(t2 ?? v2))}</span>
+                    </div>`;
+            }).join('');
+            const lead = won1 === won2 ? 'Dead even' : `${escHtml(won1 > won2 ? m1 : m2)} leads`;
+            box.innerHTML = `
+                <div class="grid grid-cols-[1fr_auto_1fr] items-end gap-2 pb-2 border-b border-slate-700">
+                    <p class="text-right font-bold text-accent break-words">${escHtml(m1)}<br><span class="text-2xl font-extrabold text-white">${won1}</span></p>
+                    <p class="w-28 sm:w-44 text-center text-[11px] text-slate-500 pb-1">categories won<br>${lead}</p>
+                    <p class="text-left font-bold text-accent break-words">${escHtml(m2)}<br><span class="text-2xl font-extrabold text-white">${won2}</span></p>
+                </div>
+                ${html}
+                <p class="text-[11px] text-slate-500 pt-2">Records and points are regular season, all leagues (leagues left out of the records are left out here too). Playoff record skips consolation games. Roster value is today's dynasty value of every roster and pick they hold.</p>`;
+        }
+
         // --- TAB 9: H2H RECORDS ---
         function initH2HDropdowns() {
             const managers = new Set();
@@ -6216,8 +6539,10 @@
 
             if (m1 === m2) {
                 box.innerHTML = `<p class="text-amber-400 font-semibold text-sm">Please select two different managers to compare.</p>`;
+                document.getElementById('h2h-career-box').innerHTML = '';
                 return;
             }
+            renderCareerCompare(m1, m2);
 
             let m1Wins = 0, m2Wins = 0, ties = 0, m1TotalPts = 0, m2TotalPts = 0;
             const matchupHistory = [];

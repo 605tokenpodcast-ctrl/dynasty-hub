@@ -100,6 +100,41 @@ try {
   });
   if (!median.seasons) failures.push('no finished median-game season was checked');
   if (median.off.length) failures.push(`median-game records differ from the standings: ${median.off.slice(0, 3).join('; ')}`);
+  // Commissioner score corrections from leagues.json replace the saved score of that game
+  const fixes = await page.evaluate(async () => {
+    const cfg = await (await fetch('leagues.json')).json();
+    const bad = [];
+    let n = 0;
+    (cfg.leagues || []).forEach(lg => (lg.score_corrections || []).forEach(f => {
+      n++;
+      const who = getMasterOwner(f.team);
+      const row = sectionRows(lg.name, 'matchups').find(r => String(r[0]) === String(f.season) && weekNumber(r[1]) === f.week
+        && (getMasterOwner(r[3]) === who || getMasterOwner(r[5]) === who));
+      const got = row ? parseFloat(getMasterOwner(row[3]) === who ? row[4] : row[6]) : NaN;
+      if (got !== f.points) bad.push(`${lg.name} ${f.season} week ${f.week} ${f.team}: ${got} not ${f.points}`);
+    }));
+    return { n, bad };
+  });
+  if (fixes.bad.length) failures.push(`score corrections not applied: ${fixes.bad.join('; ')}`);
+  // Career comparison (H2H tab), best-ball standings (Analytics) and rookie pick hit rates (Draft History)
+  const extras = await page.evaluate(async () => {
+    const wait = () => new Promise(r => setTimeout(r, 300));
+    switchTab('h2h'); await wait();
+    const career = document.querySelectorAll('#h2h-career-box > div').length;
+    switchTab('analytics'); await wait();
+    const bestBall = document.querySelectorAll('#best-ball h4').length;
+    const table = bestBallTable(Object.keys(globalMasterData).find(k => Array.isArray(globalMasterData[k]) && !hasNoBench(k) && !isAwardExcluded(k)),
+      document.getElementById('analytics-season').value) || [];
+    // Every game has one winner in both versions, so wins and losses balance across the league
+    const balanced = table.reduce((a, r) => a + r.bw - r.bl, 0) === 0 && table.every(r => r.bpf >= r.pf - 0.001);
+    switchTab('drafts'); await wait();
+    const picks = rookieHitPicks();
+    return { career, bestBall, balanced, hitRows: document.querySelectorAll('#drafts-hit-rates .border-b').length,
+      hitsOk: picks.length > 0 && picks.every(p => !(p.hit && p.miss)) };
+  });
+  if (extras.career < 15) failures.push(`career comparison shows ${extras.career} rows`);
+  if (!extras.bestBall || !extras.balanced) failures.push(`best-ball standings: ${extras.bestBall} leagues, balanced ${extras.balanced}`);
+  if (extras.hitRows < 5 || !extras.hitsOk) failures.push(`rookie hit rates: ${extras.hitRows} rows, consistent ${extras.hitsOk}`);
   // The home-screen manifest and its icons exist
   const manifest = await page.evaluate(async () => {
     const r = await fetch('manifest.json');

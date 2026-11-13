@@ -1,4 +1,5 @@
 """Unit tests for the sync scripts' pure logic. Run with: python -m unittest discover tests"""
+import json
 import os
 import sys
 import unittest
@@ -420,7 +421,27 @@ class SleeperDraftHistory(unittest.TestCase):
         self.assertEqual(sync_leagues.draft_kind(15, True), "Redraft")
 
 
-class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
+class DraftCacheIsolated(unittest.TestCase):
+    """Each test gets its own empty fleaflicker_drafts.json in a temp folder."""
+    def setUp(self):
+        import tempfile
+        self._tmp = tempfile.TemporaryDirectory()
+        self._file = mock.patch.object(sync_fleaflicker, "DRAFT_CACHE_FILE", os.path.join(self._tmp.name, "drafts.json"))
+        self._file.start()
+        sync_fleaflicker.reset_draft_cache()
+
+    def tearDown(self):
+        self._file.stop()
+        sync_fleaflicker.reset_draft_cache()
+        self._tmp.cleanup()
+
+    def new_run(self):
+        """End this run (save the file) and start the next one."""
+        sync_fleaflicker.save_draft_cache()
+        sync_fleaflicker.reset_draft_cache()
+
+
+class FleaflickerPicksUsedOnSleeper(DraftCacheIsolated):
     def test_pick_traded_on_fleaflicker_gets_sleeper_draft_result(self):
         target = next(lg for lg in sync_fleaflicker.league_config.leagues("sleeper") if lg["name"] == "Hail Mary Jane Congregation")
         S = "https://api.sleeper.app/v1"
@@ -454,6 +475,14 @@ class FleaflickerPicksUsedOnSleeper(unittest.TestCase):
         self.assertEqual(out, {(2022, 1, "7"): "Rook Ie (WR)", (2022, 1, "8"): "Other Guy (RB)"})
         self.assertEqual(pickers, {(2022, 1, "7"): "8", (2022, 1, "8"): "8"})
         self.assertEqual(failed, set())
+
+        # The finished 2022 draft is saved: the next run doesn't ask Sleeper again
+        self.new_run()
+        with mock.patch.object(sync_leagues, 'fetch_json', side_effect=AssertionError("Sleeper re-read")), \
+                mock.patch.object(sync_fleaflicker, 'api', return_value=standings):
+            out2, failed2, pickers2, _ = sync_fleaflicker.sleeper_draft_results(
+                {"id": "181202", "merge_into": "Hail Mary Jane Congregation"}, trades, 2020, history)
+        self.assertEqual((out2, failed2, pickers2), (out, failed, pickers))
 
 
 class FleaflickerProfileMarkers(unittest.TestCase):
@@ -506,7 +535,7 @@ def fake_fleaflicker(endpoint, **p):
     return None
 
 
-class FleaflickerMergedLeagueHistory(unittest.TestCase):
+class FleaflickerMergedLeagueHistory(DraftCacheIsolated):
     """A league's Fleaflicker years (merge_into) get lineups and waiver moves in the Sleeper block."""
     LEAGUE = {"name": "Old (Fleaflicker era)", "platform": "fleaflicker", "id": "9", "type": "dynasty",
               "start_season": 2019, "end_season": 2020, "merge_into": "Main"}
@@ -565,6 +594,48 @@ class FleaflickerMergedLeagueHistory(unittest.TestCase):
             data = sync_fleaflicker.collect_league(self.LEAGUE, None, merged)
         again = sync_fleaflicker.merge_into_existing(merged, data, 2019, data["last"])
         self.assertEqual(sync_fleaflicker.existing_section_rows(again, "DRAFT HISTORY"), drafts)
+
+    def test_finished_boards_are_read_from_the_saved_file(self):
+        calls = []
+
+        def counting(endpoint, **p):
+            if endpoint == "FetchLeagueDraftBoard":
+                calls.append(p["season"])
+            return fake_fleaflicker(endpoint, **p)
+        trades = [{"approvedOn": 1, "teams": [{"team": {"id": 2}, "picksObtained": [{"season": 2019, "slot": {"round": 2}, "originalOwner": {"id": 1}}]},
+                                              {"team": {"id": 1}}]}]
+        run = lambda: sync_fleaflicker.fetch_draft_results("9", trades, 2019, 2026)  # noqa: E731
+        with mock.patch.object(sync_fleaflicker, "api", side_effect=counting), \
+                mock.patch.object(sync_fleaflicker, "current_season", return_value=2026):
+            first = run()
+            self.assertEqual(calls, [2019])
+            self.new_run()
+            self.assertEqual(run(), first)          # same picks, read from the file
+            self.assertEqual(calls, [2019])
+            self.new_run()
+            with mock.patch.object(sync_fleaflicker, "FULL_REFRESH", True):
+                self.assertEqual(run(), first)      # full refresh reads Fleaflicker again
+            self.assertEqual(calls, [2019, 2019])
+
+    def test_this_seasons_board_is_saved_only_after_kickoff(self):
+        with mock.patch.object(sync_fleaflicker, "api", return_value={}), \
+                mock.patch.object(sync_fleaflicker, "current_season", return_value=2026):
+            self.assertFalse(sync_fleaflicker.draft_finished(2026, sync_fleaflicker.date(2026, 6, 1)))
+            self.assertTrue(sync_fleaflicker.draft_finished(2026, sync_fleaflicker.date(2026, 9, 11)))
+            self.assertTrue(sync_fleaflicker.draft_finished(2025, sync_fleaflicker.date(2026, 6, 1)))
+            with mock.patch.object(sync_fleaflicker, "draft_finished", side_effect=lambda y: y < 2026):
+                sync_fleaflicker.draft_board("9", 2026)
+                sync_fleaflicker.draft_board("9", 2018)   # no board that year: saved as empty
+            self.assertEqual(sync_fleaflicker.draft_cache()["boards"], {"9:2018": {}})
+
+    def test_trimmed_board_parses_the_same(self):
+        board = fake_fleaflicker("FetchLeagueDraftBoard", season=2019)
+        board["orderedSelections"][0]["player"]["proPlayer"]["headshotUrl"] = "x"   # dropped when saved
+        board["orderedSelections"][0]["team"].update(name="T1", owners=[{"displayName": "o1", "id": 5}], logoUrl="y")
+        trimmed = sync_fleaflicker.trim_board(board)
+        self.assertEqual(sync_fleaflicker.parse_draft_board(trimmed, 2019), sync_fleaflicker.parse_draft_board(board, 2019))
+        self.assertEqual(sync_fleaflicker.draft_board_rows(trimmed, 2019, {}), sync_fleaflicker.draft_board_rows(board, 2019, {}))
+        self.assertNotIn("headshotUrl", json.dumps(trimmed))
 
     def test_season_with_a_missing_box_score_is_retried(self):
         def flaky(endpoint, **p):

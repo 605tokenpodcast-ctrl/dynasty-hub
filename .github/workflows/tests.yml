@@ -12,6 +12,7 @@ on:
       - 'player_meta.json'
       - 'trade_values.json'
       - 'value_history.json'
+      - 'fleaflicker_drafts.json'
       - 'styles.css'
 
 jobs:

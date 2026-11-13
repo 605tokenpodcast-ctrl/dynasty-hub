@@ -16,6 +16,11 @@ Fleaflicker league like any other league:
   --- DRAFT HISTORY (ALL SEASONS) ---                    (every pick of every draft board, each
       past season read once)
 
+Finished draft boards (past seasons, and this season's once the NFL season kicks off) are saved in
+fleaflicker_drafts.json and read from there instead of asking Fleaflicker again on every run. The
+same goes for the Sleeper drafts a merge_into league's traded picks were used in. Run the workflow
+with "full refresh" ticked (FLEA_FULL_REFRESH=1) to read everything from Fleaflicker again.
+
 A merge_into league (Fleaflicker years of a league that moved to Sleeper) gets the same
 history, spliced into the Sleeper league's block for its Fleaflicker seasons.
 
@@ -51,7 +56,8 @@ FUTURE_PICK_SEASONS = 3       # how many upcoming draft classes to list per team
 LINEUP_BACKFILL_PER_RUN = 5  # older seasons of lineups fetched per run (one boxscore call per game)
 MAX_TRANSACTION_PAGES = 3000  # FetchLeagueTransactions pages read per run (newest first, all seasons)
 DEBUG = os.environ.get("FLEA_DEBUG") == "1"
-FULL_REFRESH = os.environ.get("FLEA_FULL_REFRESH") == "1"  # re-fetch finished seasons too
+FULL_REFRESH = os.environ.get("FLEA_FULL_REFRESH") == "1"  # re-fetch finished seasons and drafts too
+DRAFT_CACHE_FILE = "fleaflicker_drafts.json"   # finished draft boards, so they're read only once
 DEBUG_DIR = "fleaflicker_debug"
 
 # If the automatic champion / runner-up / 3rd-place detection ever gets a season
@@ -134,6 +140,107 @@ def api(endpoint, **params):
             json.dump(data, f, indent=1)
             f.write("\n")
     return data
+
+
+# --------------------------------------------------------------------------- #
+# finished drafts, saved once
+# --------------------------------------------------------------------------- #
+_draft_cache = None      # {"boards": {"league:season": trimmed board}, "sleeper": {...}}
+_draft_cache_dirty = False
+_boards_this_run = {}    # (league id, season) -> board, so one board is never read twice in a run
+
+
+def reset_draft_cache():
+    """Forget what was loaded or read this run (the next call reads fleaflicker_drafts.json again)."""
+    global _draft_cache, _draft_cache_dirty
+    _draft_cache, _draft_cache_dirty = None, False
+    _boards_this_run.clear()
+
+
+def draft_cache():
+    global _draft_cache
+    if _draft_cache is None:
+        _draft_cache = {"boards": {}, "sleeper": {}}
+        try:
+            with open(DRAFT_CACHE_FILE, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+            for k in _draft_cache:
+                if isinstance(saved.get(k), dict):
+                    _draft_cache[k] = saved[k]
+        except (OSError, ValueError):
+            pass
+    return _draft_cache
+
+
+def save_draft_cache():
+    if not _draft_cache_dirty:
+        return
+    out = {"_about": "Finished draft boards saved by scripts/sync_fleaflicker.py so each is read once. "
+                     "Delete an entry (or run Auto-Sync with full refresh) to read it again.",
+           **draft_cache()}
+    with open(DRAFT_CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(out, f, separators=(",", ":"), sort_keys=True)
+        f.write("\n")
+
+
+def draft_finished(season, today=None):
+    """A season's rookie draft is over once the NFL season kicks off (past seasons always are)."""
+    today = today or date.today()
+    cur = current_season()
+    return season < cur or (season == cur and today >= nfl_kickoff(cur))
+
+
+def _trim_team(t):
+    if not isinstance(t, dict):
+        return t
+    owners = [{"displayName": (o or {}).get("displayName")} for o in (t.get("owners") or [])[:1]]
+    return {k: v for k, v in (("id", t.get("id")), ("name", t.get("name")), ("owners", owners)) if v}
+
+
+def _trim_cell(c):
+    if not c:
+        return c   # empty cells keep their place: the column index is the draft slot
+    out = {k: c[k] for k in ("slot", "fromOtherTeam", "descending") if k in c}
+    if "team" in c:
+        out["team"] = _trim_team(c["team"])
+    if c.get("player"):
+        pro = unwrap_player(c["player"])
+        out["player"] = {"proPlayer": {k: pro[k] for k in ("nameFull", "nameFirst", "nameLast", "position") if pro.get(k)}}
+    return out
+
+
+def trim_board(data):
+    """Only the parts of a FetchLeagueDraftBoard response the parsers read (keeps the file small)."""
+    data = data or {}
+    out = {}
+    if data.get("draftOrder"):
+        out["draftOrder"] = [_trim_team(t) for t in data["draftOrder"]]
+    if data.get("rows"):
+        out["rows"] = [{**({"round": r["round"]} if "round" in r else {}),
+                        "cells": [_trim_cell(c) for c in r.get("cells") or []]} for r in data["rows"]]
+    if data.get("orderedSelections"):
+        out["orderedSelections"] = [_trim_cell(c) for c in data["orderedSelections"]]
+    return out
+
+
+def draft_board(league_id, season):
+    """One season's draft board: from fleaflicker_drafts.json when that draft is finished and saved,
+    otherwise from Fleaflicker (and saved once the draft is finished). FLEA_FULL_REFRESH reads anew."""
+    global _draft_cache_dirty
+    key = (str(league_id), int(season))
+    if key in _boards_this_run:
+        return _boards_this_run[key]
+    boards = draft_cache()["boards"]
+    ckey = f"{key[0]}:{key[1]}"
+    if not FULL_REFRESH and ckey in boards:
+        board = boards[ckey]
+    else:
+        board = trim_board(api("FetchLeagueDraftBoard", league_id=league_id, season=season))
+        if draft_finished(key[1]):
+            boards[ckey] = board   # empty too: a season with no board (or drafted elsewhere) stays empty
+            _draft_cache_dirty = True
+    _boards_this_run[key] = board
+    return board
 
 
 def team_label(team):
@@ -726,15 +833,21 @@ def fetch_draft_results(league_id, trades, first, last):
                 if all(key):
                     traded[key] = team_id_of(side.get("team"))
     out, failed, pickers = {}, set(), {}
+    saved = {k for k in draft_cache()["boards"] if not FULL_REFRESH}
+    from_file = [y for y in sorted(seasons) if f"{league_id}:{y}" in saved]
+    if from_file:
+        print(f"  draft boards {from_file} read from {DRAFT_CACHE_FILE}")
     for season in sorted(seasons):
         try:
-            data = api("FetchLeagueDraftBoard", league_id=league_id, season=season)
+            data = draft_board(league_id, season)
             got = parse_draft_board(data, season, traded, pickers)
         except FleaError as e:
             print(f"  draft {season} skipped: {e}")
             failed.add(season)
             continue
         out.update(got)
+        if season in from_file:
+            continue
         print(f"  draft {season}: {len(got)} picks made")
         if not got and season < current_season():
             # Unexpected response shape: log enough to fix the parser from the run log
@@ -795,7 +908,7 @@ def fetch_draft_history(league, seasons, labels_by_season, trades):
     rows, done = [], set()
     for season in sorted(seasons):
         try:
-            data = api("FetchLeagueDraftBoard", league_id=league["id"], season=season)
+            data = draft_board(league["id"], season)
             labels = labels_by_season.get(season) or {str(r["id"]): r["label"]
                                                        for r in fetch_standings(league["id"], season) if r["id"] is not None}
         except FleaError as e:
@@ -841,6 +954,33 @@ def sleeper_era_moves(rows, team_of, manager, last):
     return moves
 
 
+def saved_sleeper_drafts(target_name, years, picked):
+    """(drafted, done) like sync_leagues.draft_results, from fleaflicker_drafts.json, when every one
+    of `years` is saved there (else None). Fills `picked` with who made each pick."""
+    saved = draft_cache()["sleeper"].get(target_name.strip().lower()) or {}
+    if FULL_REFRESH or not years or any(str(y) not in saved for y in years):
+        return None
+    drafted = {}
+    for y in years:
+        for rnd, owner, player, by in saved[str(y)]:
+            drafted[(str(y), int(rnd), owner)] = player
+            if by:
+                picked[(str(y), int(rnd), owner)] = by
+    return drafted, {str(y) for y in years}
+
+
+def save_sleeper_drafts(target_name, drafted, done, picked):
+    """Save the finished seasons of a sync_leagues.draft_results read (startup drafts as no picks)."""
+    global _draft_cache_dirty
+    saved = draft_cache()["sleeper"].setdefault(target_name.strip().lower(), {})
+    for season in done:
+        if not draft_finished(int(season)):
+            continue
+        saved[str(season)] = sorted([rnd, owner, player, picked.get((s_, rnd, owner), "")]
+                                    for (s_, rnd, owner), player in drafted.items() if s_ == str(season))
+        _draft_cache_dirty = True
+
+
 def sleeper_draft_results(league, trades, last, history_rows=None):
     """Draft results for picks of drafts held after a merge_into league moved to Sleeper (e.g.
     HMJC's 2021-2023 picks traded on Fleaflicker, used in Sleeper drafts), keyed like
@@ -855,14 +995,19 @@ def sleeper_draft_results(league, trades, last, history_rows=None):
                    if lg["name"].strip().lower() == str(league.get("merge_into") or "").strip().lower()), None)
     if not years or not target:
         return {}, set(), {}, []
-    import sync_leagues   # only needed here; it reads the Sleeper league list on import
     picked = {}
-    info = sync_leagues.optional_fetches(lambda: sync_leagues.fetch_league(target["id"]))
-    got = info and sync_leagues.optional_fetches(
-        lambda: sync_leagues.draft_results(info, {str(y) for y in years}, {}, rookie_only=True, pickers=picked))
-    if not got:
-        print(f"  Sleeper drafts {sorted(years)} could not be read; stored results kept")
-        return {}, years, {}, []
+    got = saved_sleeper_drafts(target["name"], years, picked)
+    if got:
+        print(f"  Sleeper drafts {sorted(years)} read from {DRAFT_CACHE_FILE}")
+    else:
+        import sync_leagues   # only needed here; it reads the Sleeper league list on import
+        info = sync_leagues.optional_fetches(lambda: sync_leagues.fetch_league(target["id"]))
+        got = info and sync_leagues.optional_fetches(
+            lambda: sync_leagues.draft_results(info, {str(y) for y in years}, {}, rookie_only=True, pickers=picked))
+        if not got:
+            print(f"  Sleeper drafts {sorted(years)} could not be read; stored results kept")
+            return {}, years, {}, []
+        save_sleeper_drafts(target["name"], got[0], got[1], picked)
     drafted, done = got
     aliases = league_config.manager_aliases()
     manager = lambda user: league_config.master_owner(user, aliases).lower()  # noqa: E731
@@ -1438,7 +1583,7 @@ def collect_league(league, existing_rows=None, cache_rows=None):
             print(f"  moves skipped: {e}")
         print(f"  {len(move_rows)} moves")
     # Every draft board: past seasons once (the profile row lists those read), this season on every run
-    draft_seasons = [y for y in range(first, min(last, cur) + 1) if y not in checked[DRAFTS_CHECKED]]
+    draft_seasons = [y for y in range(first, min(last, cur) + 1) if FULL_REFRESH or y not in checked[DRAFTS_CHECKED]]
     draft_rows, drafts_done = [], set()
     if draft_seasons:
         print(f"- draft boards {draft_seasons}")
@@ -1447,8 +1592,9 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     fresh_draft_seasons = {r[0] for r in draft_rows}
     draft_rows += [r for r in old_drafts if str(r[0]) not in fresh_draft_seasons]
     draft_rows.sort(key=lambda r: (-int(num(r[0], 0)), str(r[1]), int(num(r[3], 0))))
-    # This season's board is read again every run (a slow draft can take weeks); it's done once the season rolls over
-    drafts_done -= {cur}
+    # This season's board is read again every run until the NFL season kicks off (a slow draft can take weeks)
+    if not draft_finished(cur):
+        drafts_done -= {cur}
     move_rows.sort(key=lambda r: (-int(r[0]), -trade_date([r[0], r[2]]).timestamp()))
     lineup_rows.sort(key=lambda r: (-int(r[0]), int(r[1].split()[-1])))
     fresh_lineup_seasons = {r[0] for r in lineup_rows}
@@ -1592,6 +1738,7 @@ def sync_fleaflicker():
     if ok:
         with open(MASTER_FILE, "w", encoding="utf-8") as f:
             json.dump(master, f, separators=(",", ":"))
+    save_draft_cache()
     if failures:
         print(f"Fleaflicker sync INCOMPLETE - not updated: {failures}. Re-run the workflow in a few minutes.")
         sys.exit(1)

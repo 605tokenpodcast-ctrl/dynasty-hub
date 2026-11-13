@@ -860,6 +860,9 @@ def build_master_data():
             set_profile(profile_rows, "Playoff Start Week", str(league_settings['playoff_week_start']))
         if league_settings.get('playoff_teams'):
             set_profile(profile_rows, "Playoff Teams", str(league_settings['playoff_teams']))
+        # Sleeper's "league median" setting: every week each team also plays the median score. The site
+        # adds that second result to records, seeds and playoff odds.
+        set_profile(profile_rows, "League Median", "Yes" if league_settings.get('league_average_match') else "No")
         # The NFL week still being played (empty outside the season). The site counts that week's
         # games as unfinished, so a sync on Monday morning doesn't record Sunday-only scores as final.
         if nfl_state is not None:

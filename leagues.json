@@ -7,6 +7,7 @@
     "playoff_teams: teams that make the playoffs. third_place_game: false when the league plays no 3rd-place game.",
     "exclude_from_records: true leaves the league out of Hall of Records, Playoff Odds and award tabs.",
     "no_bench: true for a league with no bench (every rostered player starts): it is left out of Coach of the Year and the other lineup awards.",
+    "median_game: true (or the first season it applied) for a league that also plays the league median every regular-season week, so records, seeds and playoff odds count that second result.",
     "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league).",
     "ungraded_drafts: season -> reason, for a draft the Draft History tab shows but doesn't grade (e.g. a roster re-entry).",
     "rookie_draft_order (dynasty leagues, for the projected draft order on the Draft Picks tab): playoff_finish (default) = reverse regular-season standings, then the 3rd place team, runner-up and champion pick last; finals = only the runner-up and champion move to the end; standings = reverse standings for everyone."
@@ -80,6 +81,7 @@
       "id": "1329118060811927552",
       "type": "redraft",
       "no_bench": true,
+      "median_game": true,
       "playoff_start_week": {
         "2015": 15
       },

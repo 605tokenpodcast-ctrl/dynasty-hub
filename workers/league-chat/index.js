@@ -172,7 +172,7 @@ async function executeTool(name, input, env) {
       grudges.push({
         manager: input.manager,
         note: input.note,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }), // yyyy-mm-dd in the leagues' time zone, not UTC
       });
       while (grudges.length > 40) grudges.shift();
       await env.LEAGUE_MEMORY.put('grudges', JSON.stringify(grudges));

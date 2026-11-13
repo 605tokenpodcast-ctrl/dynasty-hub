@@ -86,6 +86,20 @@ try {
   if (/sfb16|mario kart/i.test(notes.text)) failures.push('show notes include SFB16');
   if (!/Big Week Headline/.test(notes.text)) failures.push('show notes are missing the Gazette headline');
   if (!notes.offseason) failures.push('offseason show notes are empty');
+  // Median-game leagues (All Flex Zone): records built from the games, plus the weekly game against the
+  // league median, match the final standings of every finished season
+  const median = await page.evaluate(() => {
+    const hub = buildHubData();
+    const seasons = Object.values(hub.seasons).filter(st => st.complete && hasMedianGame(st.league, st.season));
+    const off = [];
+    seasons.forEach(st => hub.standings.filter(s => s.league === st.league && s.season === st.season).forEach(s => {
+      const t = st.teams[s.owner];
+      if (t && (t.w !== s.w || t.l !== s.l || t.t !== s.t)) off.push(`${st.league} ${st.season} ${s.owner}: ${t.w}-${t.l}-${t.t} vs ${s.w}-${s.l}-${s.t}`);
+    }));
+    return { seasons: seasons.length, off };
+  });
+  if (!median.seasons) failures.push('no finished median-game season was checked');
+  if (median.off.length) failures.push(`median-game records differ from the standings: ${median.off.slice(0, 3).join('; ')}`);
   // The home-screen manifest and its icons exist
   const manifest = await page.evaluate(async () => {
     const r = await fetch('manifest.json');

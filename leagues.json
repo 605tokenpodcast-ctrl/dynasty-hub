@@ -7,6 +7,7 @@
     "playoff_teams: teams that make the playoffs. third_place_game: false when the league plays no 3rd-place game.",
     "exclude_from_records: true leaves the league out of Hall of Records, Playoff Odds and award tabs.",
     "no_bench: true for a league with no bench (every rostered player starts): it is left out of Coach of the Year and the other lineup awards.",
+    "score_corrections: commissioner score changes that Sleeper's game scores don't show (e.g. an illegal lineup penalty), as { season, week, team (manager username), points, note }. The site uses these points for that game everywhere.",
     "median_game: true (or the first season it applied) for a league that also plays the league median every regular-season week, so records, seeds and playoff odds count that second result.",
     "Fleaflicker-only fields: start_season, end_season (league moved away), merge_into (splice history into that league).",
     "ungraded_drafts: season -> reason, for a draft the Draft History tab shows but doesn't grade (e.g. a roster re-entry).",
@@ -82,6 +83,10 @@
       "type": "redraft",
       "no_bench": true,
       "median_game": true,
+      "score_corrections": [
+        { "season": 2026, "week": 6, "team": "KillerCards", "points": 111.68, "note": "illegal lineup penalty" },
+        { "season": 2026, "week": 7, "team": "KillerCards", "points": 105.22, "note": "illegal lineup penalty" }
+      ],
       "playoff_start_week": {
         "2015": 15
       },

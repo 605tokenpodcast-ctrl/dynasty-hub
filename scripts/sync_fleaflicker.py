@@ -1185,11 +1185,13 @@ def fetch_team_picks_raw(league_id, team_id, season):
     return out
 
 
-def resolve_pick_strings(raw_by_team, trade_owner):
+def resolve_pick_strings(raw_by_team, trade_owner, labels=None, acquired_out=None):
     """
     Keep each pick only on the team that actually holds it now.
     Order of evidence: an explicit owner field on the pick, then the newest trade
     involving that pick, then 'listed by two teams -> the original owner traded it away'.
+    With acquired_out (a dict), also fills team id -> "2027 Round 1 from <original team> | ..."
+    for the picks a team got from someone else (labels: team id -> team label).
     """
     listed = {}
     for tid, picks in raw_by_team.items():
@@ -1214,6 +1216,10 @@ def resolve_pick_strings(raw_by_team, trade_owner):
                 dropped += 1
         ordered = sorted(kept.values())
         result[tid] = ", ".join(f"{y} Mid Round {r}" for y, r in ordered) if ordered else "None"
+        if acquired_out is not None:
+            acquired_out[tid] = " | ".join(
+                f"{y} Round {r} from {(labels or {}).get(o, f'Team {o}')}"
+                for y, r, o in sorted(kept) if o != tid)
     print(f"  picks: dropped {dropped} listing(s) of picks the team no longer holds")
     return result
 
@@ -1564,13 +1570,15 @@ def collect_league(league, existing_rows=None, cache_rows=None):
     if current_rows:
         print("- current rosters & picks")
         raw_picks = {str(r["id"]): fetch_team_picks_raw(league_id, r["id"], cur) for r in current_rows}
-        pick_strs = resolve_pick_strings(raw_picks, latest_pick_owners(trades))
+        acquired = {}
+        pick_strs = resolve_pick_strings(raw_picks, latest_pick_owners(trades),
+                                         {str(r["id"]): r["label"] for r in current_rows}, acquired)
         for r in current_rows:
             roster_rows.append([
                 r["label"], league_config.record_str(r['wins'], r['losses'], r['ties']), f"{r['pf']:.2f}",
                 fetch_roster_str(league_id, r["id"], cur),
                 pick_strs.get(str(r["id"]), "None"),
-                "", "",
+                acquired.get(str(r["id"]), ""), "",
             ])
     move_rows, moves_done = [], set()
     move_seasons = set(moves_backfill) | ({cur} if current_rows else set())
@@ -1625,7 +1633,7 @@ def build_standalone_block(league, data):
     ] + data["standings"] + [
         BLANK,
         ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
-        ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""],
+        ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "Acquired Picks (from)", ""],
     ] + data["rosters"] + [
         BLANK,
         ["--- TRADE HISTORY (ALL-TIME & ALL SEASONS) ---", "", "", "", "", "", ""],

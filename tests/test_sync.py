@@ -750,3 +750,18 @@ class CentralDatesAndTies(unittest.TestCase):
         far = sync_trade_values.moved_entry(sync_trade_values.frozen_by_trade(frozen), "L", r,
                                             dt.date(2024, 11, 1), dt.date(2027, 11, 1))
         self.assertEqual(far, {})
+
+
+class FleaflickerAcquiredPicks(unittest.TestCase):
+    def test_acquired_picks_name_the_original_team(self):
+        raw = {
+            "1": [{"yr": 2027, "rnd": 1, "orig": None, "owner": None},
+                  {"yr": 2027, "rnd": 1, "orig": "2", "owner": "1"}],
+            "2": [{"yr": 2027, "rnd": 2, "orig": None, "owner": None}],
+        }
+        acquired = {}
+        picks = sync_fleaflicker.resolve_pick_strings(raw, {}, {"1": "A (a)", "2": "B (b)"}, acquired)
+        self.assertEqual(picks["1"], "2027 Mid Round 1, 2027 Mid Round 1")
+        self.assertEqual(acquired, {"1": "2027 Round 1 from B (b)", "2": ""})
+        # Old callers that pass no labels still get the same pick strings
+        self.assertEqual(sync_fleaflicker.resolve_pick_strings(raw, {}), picks)

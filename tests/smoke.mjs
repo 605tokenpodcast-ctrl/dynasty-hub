@@ -52,6 +52,9 @@ try {
     const len = await page.evaluate(t => document.getElementById(`tab-${t}`).innerText.trim().length, tab);
     if (len < 50) failures.push(`tab "${tab}" is empty`);
   }
+  // Projected rookie draft order: one row per team in round 1, and a tank watch while the season is on
+  const draftOrder = await page.evaluate(() => { switchTab('picks'); return document.querySelectorAll('#draft-order-list > div').length; });
+  if (draftOrder < 8) failures.push(`projected draft order shows ${draftOrder} picks`);
   // Trade Partners pair modal shows a grade for every trade, like the Trade Log
   await page.evaluate(() => { switchTab('synergy'); openTradeModal(0); });
   const modal = await page.evaluate(() => {

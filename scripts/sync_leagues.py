@@ -669,7 +669,7 @@ def build_master_data():
         else:
             new_roster_rows = [
                 ["--- CURRENT ROSTERS & DRAFT PICKS ---", "", "", "", "", "", ""],
-                ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "", ""]
+                ["Team / Manager", "Record", "Points For (PF)", "Current Roster (Name Pos Team)", "Future Draft Picks", "Acquired Picks (from)", ""]
             ]
             
         live_standings = []
@@ -698,13 +698,17 @@ def build_master_data():
                 ])
             else:
                 owned_picks = []
+                acquired = []  # picks that started as another team's, so the site can project where they land
                 for (yr, rnd, orig_rid), owner_rid in sorted(pick_ownership.items()):
                     if owner_rid == rid:
                         owned_picks.append(f"{yr} Mid Round {rnd}")
+                        if orig_rid != rid:
+                            acquired.append(f"{yr} Round {rnd} from {roster_to_manager.get(orig_rid, f'Team {orig_rid}')}")
 
                 picks_str = ", ".join(owned_picks) if owned_picks else "None"
                 new_roster_rows.append([
-                    mgr_label, league_config.record_str(wins, losses, ties), f"{fpts:.2f}", ", ".join(player_strs), picks_str, "", ""
+                    mgr_label, league_config.record_str(wins, losses, ties), f"{fpts:.2f}", ", ".join(player_strs), picks_str,
+                    " | ".join(acquired), ""
                 ])
 
         # Final placements, once the championship game is decided

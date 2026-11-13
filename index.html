@@ -458,6 +458,26 @@
                         <h2 class="text-2xl font-bold">🎯 Future Draft Pick Inventory Matrix</h2>
                         <p class="text-slate-400 text-sm">Live inventory of future draft picks held by each manager across all leagues, weighted by KeepTradeCut pick values.</p>
                     </div>
+                    <div id="draft-order-section" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+                            <div>
+                                <h3 id="draft-order-title" class="text-xl font-bold">🔮 Projected Rookie Draft Order</h3>
+                                <p class="text-slate-400 text-sm">Where every first-round pick is headed if the season plays out as projected, who holds it after trades, and who is racing for the top pick.</p>
+                            </div>
+                            <div class="space-y-1 w-full sm:w-auto">
+                                <label for="draft-order-league" class="text-xs text-slate-400 font-semibold">League</label>
+                                <select id="draft-order-league" onchange="renderDraftOrder()" class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                        </div>
+                        <div id="tank-watch"></div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                            <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-700 text-xs uppercase tracking-wider text-slate-400 font-semibold">Round 1</div>
+                            <div id="draft-order-list"></div>
+                        </div>
+                        <div id="draft-order-holders"></div>
+                        <p id="draft-order-footnote" class="text-xs text-slate-500"></p>
+                    </div>
+                    <h3 class="text-xl font-bold pt-2">🎯 Pick Inventory by Manager</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
                 </div>
 
@@ -1210,7 +1230,7 @@
             awards: () => renderWeeklyAwards(),
             records: () => renderRecords(),
             luck: () => renderLuckIndex(),
-            picks: () => renderDraftPicksMatrix(),
+            picks: () => { initDraftOrderSection(); renderDraftPicksMatrix(); },
             drafts: () => initDraftHistoryTab(),
             trades: () => renderTrades(),
             synergy: () => renderTradeSynergy(),
@@ -4504,6 +4524,313 @@
             });
         }
 
+        // --- PROJECTED ROOKIE DRAFT ORDER & TANK WATCH (Draft Picks tab) ---
+        // Who picks where in the next rookie draft: the playoff odds simulation (simulateLeague) also plays
+        // out the bracket and applies each league's rookie_draft_order rule, so every team gets odds for
+        // every draft slot. Traded picks are followed to whoever holds them now.
+
+        // "2027 Mid Round 1" -> { yr: 2027, rd: 1 }
+        function parsePickSlot(s) {
+            const m = String(s || '').match(/\b(20\d\d)\s+(?:(?:Early|Mid|Late)\s+)?Round\s+(\d+)/i);
+            return m ? { yr: +m[1], rd: +m[2] } : null;
+        }
+
+        // Dynasty leagues that list future picks: [{ league, rows: [{ owner, team, picks: [{yr, rd}], from: "..." }] }]
+        function draftOrderLeagues() {
+            return Object.keys(globalMasterData).filter(lg => Array.isArray(globalMasterData[lg]) && leagueRules(lg).type !== 'redraft')
+                .map(lg => ({
+                    league: lg,
+                    rows: sectionRows(lg, 'rosters').map(r => ({
+                        owner: getMasterOwner(r[0]), team: String(r[0]).trim(),
+                        picks: String(r[4] || '').split(',').map(parsePickSlot).filter(Boolean),
+                        from: String(r[5] || '')
+                    }))
+                }))
+                .filter(x => x.rows.some(r => r.picks.length));
+        }
+
+        // Who holds each original team's pick in each round of `year`.
+        // Uses the sync's "Acquired Picks" column when present, otherwise replays the trade log
+        // ("2027 Round 1st Pick (originally from X)"). Either way the result is checked against the pick
+        // counts each team lists, and any pick the lineage can't place is moved to the team that
+        // has one too few (marked unsure).
+        // -> { rounds, holder: { "owner|round": { holder, unsure } }, source, unsure }
+        function rookiePickHolders(league, rows, year) {
+            const owners = rows.map(r => r.owner);
+            const have = {};
+            let rounds = 0;
+            rows.forEach(r => r.picks.forEach(p => {
+                if (p.yr !== year) return;
+                rounds = Math.max(rounds, p.rd);
+                have[`${r.owner}|${p.rd}`] = (have[`${r.owner}|${p.rd}`] || 0) + 1;
+            }));
+            const holder = {};
+            owners.forEach(o => { for (let rd = 1; rd <= rounds; rd++) holder[`${o}|${rd}`] = { holder: o, unsure: false }; });
+            const move = (origLabel, rd, to) => {
+                const k = `${getMasterOwner(origLabel)}|${rd}`;
+                if (holder[k] && to) holder[k].holder = to;
+            };
+
+            const synced = rows.some(r => / from /.test(r.from));
+            if (synced) {
+                rows.forEach(r => r.from.split(' | ').forEach(entry => {
+                    const m = entry.trim().match(/^(\d{4}) Round (\d+) from (.+)$/);
+                    if (m && +m[1] === year) move(m[3], +m[2], r.owner);
+                }));
+            } else {
+                sectionRows(league, 'trades').filter(r => r[4]).sort((a, b) => tradeTimestamp(a) - tradeTimestamp(b)).forEach(r => {
+                    String(r[4]).split(' <---> ').forEach(side => {
+                        const m = side.match(/^(.*?) received: \[(.*)\]$/);
+                        if (!m) return;
+                        const to = getMasterOwner(m[1]);
+                        m[2].split(/,\s*(?![^()]*\))/).forEach(item => {
+                            const p = item.trim().match(/^(\d{4}) Round (\d+)\w* Pick \(originally from ((?:[^()]|\([^()]*\))*)\)/);
+                            if (p && +p[1] === year) move(p[3], +p[2], to);
+                        });
+                    });
+                });
+            }
+
+            // Reconcile with the pick counts each team actually lists
+            let unsure = 0;
+            for (let rd = 1; rd <= rounds; rd++) {
+                const count = {};
+                owners.forEach(o => { const h = holder[`${o}|${rd}`].holder; count[h] = (count[h] || 0) + 1; });
+                const short = [];
+                owners.forEach(o => { for (let i = (count[o] || 0); i < (have[`${o}|${rd}`] || 0); i++) short.push(o); });
+                if (!short.length) continue;
+                // Surplus picks: a team credited with more than it lists. Its own pick goes first.
+                owners.forEach(h => {
+                    let extra = (count[h] || 0) - (have[`${h}|${rd}`] || 0);
+                    const mine = owners.filter(o => holder[`${o}|${rd}`].holder === h).sort((a, b) => (b === h) - (a === h));
+                    while (extra-- > 0 && short.length && mine.length) {
+                        const slot = holder[`${mine.shift()}|${rd}`];
+                        slot.holder = short.shift();
+                        slot.unsure = true;
+                        unsure++;
+                    }
+                });
+            }
+            return { rounds, holder, source: synced ? 'sync' : 'trades', unsure };
+        }
+
+        // Final regular-season standings + podium for a finished season (no simulation needed).
+        // -> { rows: [{ owner, team, rec, pf, draft: [p per slot], champ }], podiumKnown }
+        function finalDraftOrder(league, season, rule) {
+            const start = playoffStartWeek(league, season);
+            const table = {};
+            matchupGames.filter(g => g.league === league && g.season === season && g.week < start && isFinal(g)).forEach(g => {
+                [[g.o1, g.team1, g.s1, g.s2], [g.o2, g.team2, g.s2, g.s1]].forEach(([o, team, pf, pa]) => {
+                    const t = table[o] = table[o] || { owner: o, team, w: 0, l: 0, t: 0, pf: 0 };
+                    t.team = team; t.pf += pf;
+                    if (pf > pa) t.w++; else if (pf < pa) t.l++; else t.t++;
+                });
+            });
+            const order = Object.values(table).sort((a, b) => (b.w + b.t / 2) - (a.w + a.t / 2) || b.pf - a.pf);
+            if (!order.length) return null;
+            const fin = {};
+            sectionRows(league, 'standings').filter(r => String(r[0]).trim() === String(season)).forEach(r => {
+                const o = getMasterOwner(r[1]);
+                const i = order.findIndex(t => t.owner === o);
+                const p = String(r[4] || '');
+                if (i < 0) return;
+                if (/🏆|champion/i.test(p)) fin.champ = i;
+                else if (/🥈|runner/i.test(p)) fin.ru = i;
+                else if (/🥉|3rd/i.test(p)) fin.third = i;
+            });
+            const draft = rookieDraftOrder(order.map((_, i) => i), fin, rule);
+            const n = order.length;
+            return {
+                podiumKnown: fin.champ !== undefined,
+                rows: order.map((t, i) => {
+                    const slots = new Array(n).fill(0);
+                    slots[draft.indexOf(i)] = 1;
+                    return { owner: t.owner, team: t.team, rec: fmtRecord(t), pf: t.pf, draft: slots, champ: fin.champ === i ? 1 : 0, playoff: null };
+                })
+            };
+        }
+
+        const DRAFT_RULE_TEXT = {
+            playoff_finish: 'non-podium teams in reverse regular-season standings (worse record first, lower points for breaks ties), then the 3rd place team, runner-up and champion',
+            finals: 'every team in reverse regular-season standings (worse record first, lower points for breaks ties), except the runner-up and champion, who pick last',
+            standings: 'reverse regular-season standings for every team (worse record first, lower points for breaks ties)'
+        };
+
+        function initDraftOrderSection() {
+            const sel = document.getElementById('draft-order-league');
+            if (!sel) return;
+            if (!matchupGames) buildMatchupGames();
+            const leagues = draftOrderLeagues().map(x => x.league);
+            const prev = sel.value || chatStore('draftOrderLeague');
+            sel.innerHTML = '';
+            leagues.forEach(lg => sel.appendChild(new Option(lg, lg)));
+            if (prev && leagues.includes(prev)) sel.value = prev;
+            document.getElementById('draft-order-section').classList.toggle('hidden', !leagues.length);
+            if (leagues.length) renderDraftOrder();
+        }
+
+        function renderDraftOrder() {
+            const league = document.getElementById('draft-order-league').value;
+            if (!league) return;
+            chatStore('draftOrderLeague', league);
+            const info = draftOrderLeagues().find(x => x.league === league);
+            const title = document.getElementById('draft-order-title');
+            const tankBox = document.getElementById('tank-watch');
+            const box = document.getElementById('draft-order-list');
+            const holdBox = document.getElementById('draft-order-holders');
+            const note = document.getElementById('draft-order-footnote');
+            const years = info.rows.flatMap(r => r.picks.map(p => p.yr));
+            const year = Math.min(...years);
+            const basis = String(year - 1);
+            title.textContent = `🔮 Projected ${year} Rookie Draft Order`;
+            const rule = rookieDraftRule(league);
+
+            // Live projection while the basis season's regular season is still going, else final standings
+            let sim = basis === matchupCurrentSeason() ? simulateLeague(league) : null;
+            let rows, live = !!sim, podiumKnown = true;
+            if (sim) rows = sim.rows;
+            else {
+                const fin = finalDraftOrder(league, basis, rule);
+                if (!fin) {
+                    tankBox.innerHTML = '';
+                    holdBox.innerHTML = '';
+                    box.innerHTML = `<p class="p-6 text-sm text-slate-400">No ${basis} results for ${escHtml(league)} yet, so there's nothing to base a draft order on.</p>`;
+                    note.innerText = '';
+                    return;
+                }
+                rows = fin.rows;
+                podiumKnown = fin.podiumKnown;
+            }
+            const n = rows.length;
+            const picks = rookiePickHolders(league, info.rows, year);
+
+            // Each original team: expected slot, likely range (10th-90th percentile), odds of the top pick
+            const teams = rows.map(r => {
+                const exp = r.draft.reduce((a, p, s) => a + p * s, 0);
+                let cum = 0, lo = null, hi = null;
+                r.draft.forEach((p, s) => {
+                    cum += p;
+                    if (lo === null && cum >= 0.1 - 1e-9) lo = s;
+                    if (hi === null && cum >= 0.9 - 1e-9) hi = s;
+                });
+                const top3 = r.draft.slice(0, 3).reduce((a, b) => a + b, 0);
+                return { ...r, exp, lo: lo ?? 0, hi: hi ?? n - 1, first: r.draft[0] || 0, top3 };
+            }).sort((a, b) => a.exp - b.exp || b.first - a.first);
+            const slotLabel = (rd, i) => `${rd}.${String(i + 1).padStart(2, '0')}`;
+            const holderOf = (owner, rd) => picks.holder[`${owner}|${rd}`] || { holder: owner, unsure: false };
+
+            // --- Tank watch: who is racing for the top pick ---
+            const winsOf = rec => { const m = String(rec).match(/^(\d+)-(\d+)(?:-(\d+))?/); return m ? +m[1] + (+m[3] || 0) / 2 : 0; };
+            const worstWins = Math.min(...teams.map(t => winsOf(t.rec)));
+            const racers = teams.filter(t => t.top3 >= 0.05).sort((a, b) => b.first - a.first || a.exp - b.exp).slice(0, 5);
+            const racerSet = new Set(racers.map(t => t.owner));
+            const nextWeek = sim ? sim.nextWeek : null;
+            const nextOpp = owner => {
+                if (!nextWeek) return null;
+                const g = matchupGames.find(g => g.league === league && g.season === basis && g.week === nextWeek && (g.o1 === owner || g.o2 === owner));
+                return g ? (g.o1 === owner ? g.o2 : g.o1) : null;
+            };
+            if (racers.length) {
+                const bowls = new Set();
+                const cards = racers.map(t => {
+                    const h = holderOf(t.owner, 1);
+                    const gb = winsOf(t.rec) - worstWins;
+                    const opp = nextOpp(t.owner);
+                    const bowl = opp && racerSet.has(opp);
+                    if (bowl) bowls.add([t.owner, opp].sort().join(' vs '));
+                    const status = !live ? (t.first >= 0.9995 ? 'Locked into the 1st pick' : `Pick ${slotLabel(1, t.draft.indexOf(1))}`)
+                        : gb === 0 ? 'Worst record right now' : `${gb % 1 ? gb.toFixed(1) : gb} win${gb === 1 ? '' : 's'} "ahead" of the worst record`;
+                    return `
+                        <div class="bg-slate-900 border ${t === racers[0] ? 'border-rose-500/50' : 'border-slate-800'} rounded-xl p-4 space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="min-w-0">
+                                    <p class="font-bold text-white truncate">${escHtml(t.owner)}</p>
+                                    <p class="text-xs text-slate-400 truncate">${escHtml(t.team)} · ${escHtml(t.rec)}</p>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <p class="text-xl font-black text-rose-300 leading-none">${pct(t.first)}</p>
+                                    <p class="text-[10px] uppercase tracking-wider text-slate-500 mt-1">1st pick</p>
+                                </div>
+                            </div>
+                            <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full bg-rose-500/70" style="width:${Math.round(t.top3 * 100)}%"></div></div>
+                            <p class="text-xs text-slate-300">${pct(t.top3)} top-3 pick · ${escHtml(status)}</p>
+                            ${opp ? `<p class="text-xs text-slate-400">Week ${nextWeek}: vs ${escHtml(opp)}${bowl ? ' <span class="text-amber-300 font-semibold">🚽 Tank Bowl</span>' : ''}</p>` : ''}
+                            ${h.holder !== t.owner ? `<p class="text-xs text-amber-200">💰 Their 1st belongs to <strong>${escHtml(h.holder)}</strong>${h.unsure ? '*' : ''}, who is rooting for losses.</p>` : ''}
+                        </div>`;
+                }).join('');
+                tankBox.innerHTML = `
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-5 space-y-3">
+                        <div class="flex flex-wrap justify-between items-baseline gap-2">
+                            <h3 class="text-lg font-bold">🚽 Tank Watch</h3>
+                            <p class="text-xs text-slate-400">${live ? `Racing for the ${slotLabel(1, 0)} · odds from ${PLAYOFF_SIMS.toLocaleString()} simulated seasons` : `Final ${basis} standings`}</p>
+                        </div>
+                        ${bowls.size ? `<p class="text-sm text-amber-200">🚽 Tank Bowl in week ${nextWeek}: ${[...bowls].map(escHtml).join(', ')}. The loser takes a big step toward the top pick.</p>` : ''}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 ${['lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:grid-cols-4', 'lg:grid-cols-5'][Math.min(racers.length, 5) - 1]} gap-3">${cards}</div>
+                    </div>`;
+            } else tankBox.innerHTML = '';
+
+            // --- Round 1 projected order ---
+            box.innerHTML = teams.map((t, i) => {
+                const h = holderOf(t.owner, 1);
+                const traded = h.holder !== t.owner;
+                const range = t.lo === t.hi ? `Pick ${t.lo + 1}` : `Picks ${t.lo + 1}-${t.hi + 1}`;
+                const podium = live && t.champ >= 0.005 && i >= n - 3 ? ` · ${pct(t.champ)} title odds` : '';
+                return `
+                    <div class="flex items-center gap-3 px-4 py-3 ${i < n - 1 ? 'border-b border-slate-800' : ''}">
+                        <span class="font-mono font-black text-lg w-12 shrink-0 ${i < 3 ? 'text-amber-300' : 'text-slate-400'}">${slotLabel(1, i)}</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-white truncate">${escHtml(traded ? h.holder : t.owner)}${traded ? `<span class="font-normal text-slate-400 text-xs"> via ${escHtml(t.owner)}${h.unsure ? '*' : ''}</span>` : ''}</p>
+                            <p class="text-xs text-slate-400 truncate">${escHtml(t.owner)}: ${escHtml(t.rec)}${t.playoff !== null && t.playoff !== undefined && live ? ` · ${pct(t.playoff)} playoffs` : ''}${podium}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xs font-semibold text-slate-200">${live ? escHtml(range) : 'Final'}</p>
+                            ${live && t.first >= 0.005 ? `<p class="text-[11px] text-rose-300">${pct(t.first)} for #1</p>` : ''}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            // --- Every pick by holder ---
+            const byHolder = {};
+            for (let rd = 1; rd <= picks.rounds; rd++) {
+                teams.forEach((t, i) => {
+                    const h = holderOf(t.owner, rd);
+                    (byHolder[h.holder] = byHolder[h.holder] || []).push({ rd, i, label: slotLabel(rd, i), via: h.holder !== t.owner ? t.owner : '', unsure: h.unsure });
+                });
+            }
+            const holders = Object.keys(byHolder).sort((a, b) => {
+                const x = byHolder[a], y = byHolder[b];
+                for (let k = 0; k < Math.max(x.length, y.length); k++) {
+                    if (!x[k]) return 1;
+                    if (!y[k]) return -1;
+                    const d = (x[k].rd * n + x[k].i) - (y[k].rd * n + y[k].i);
+                    if (d) return d;
+                }
+                return 0;
+            });
+            holdBox.innerHTML = picks.rounds ? `
+                <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-5 space-y-3">
+                    <h3 class="text-lg font-bold">📦 Every ${year} pick, projected</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        ${holders.map(h => `
+                            <div class="bg-slate-900 border border-slate-800 rounded-lg p-3">
+                                <div class="flex justify-between text-xs mb-1.5"><span class="font-bold text-accent">${escHtml(h)}</span><span class="text-slate-400">${byHolder[h].length} pick${byHolder[h].length === 1 ? '' : 's'}</span></div>
+                                <div class="flex flex-wrap gap-1.5">${byHolder[h].map(p => `<span class="text-xs px-2 py-0.5 rounded border ${p.rd === 1 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'bg-slate-800 text-slate-300 border-slate-700'}" title="${p.via ? `Originally ${escHtml(p.via)}'s` : 'Own pick'}">${p.label}${p.via ? ` <span class="font-normal opacity-75">via ${escHtml(p.via)}${p.unsure ? '*' : ''}</span>` : ''}</span>`).join('')}</div>
+                            </div>`).join('')}
+                    </div>
+                </div>` : '';
+
+            const parts = [];
+            parts.push(live
+                ? `Projection from ${PLAYOFF_SIMS.toLocaleString()} simulated finishes to the ${basis} season (same model as Playoff Odds, with the playoff bracket played out too). Order shown is each team's average projected slot; the range covers 80% of simulations.`
+                : `Order from the final ${basis} regular-season standings${podiumKnown ? ' and playoff finish' : '; the playoffs aren\'t finished, so teams still alive are placed by their seed for now'}.`);
+            parts.push(`Draft order rule for ${league}: ${DRAFT_RULE_TEXT[rule]}. Same order every round (linear draft), as in past drafts.`);
+            parts.push(picks.source === 'sync'
+                ? 'Traded picks come from the league\'s pick list at the last sync.'
+                : 'Traded picks are followed through the trade log.');
+            if (picks.unsure) parts.push(`*${picks.unsure} traded pick${picks.unsure === 1 ? '' : 's'} couldn't be traced to its original team (usually a team that changed managers), so it was matched to the team whose pick count was one short.`);
+            note.innerText = parts.join(' ');
+        }
+
         // --- TAB 8: STRICT TRADE LOG & DRAFT PICK LINEAGE ---
         // "2027 Round 3rd Pick (originally from Team (user)) -> Resulted in drafting: X (WR)" or "George Kittle (TE)" -> one list item
         function formatTradeItem(item) {
@@ -6013,6 +6340,12 @@
             const order = owners.map((_, i) => i);
             const seedOf = new Int32Array(n);
             const strength = new Float64Array(n);
+            // Projected rookie draft: the bracket is played out too, so the podium order rules can apply
+            const draftRule = rookieDraftRule(league);
+            const thirdGame = leagueRules(league).third_place_game !== false;
+            const draftCounts = owners.map(() => new Float64Array(n));
+            const champ = new Float64Array(n);
+            const playGame = (a, b) => (strength[a] + teams[a].model.sd * gaussian()) >= (strength[b] + teams[b].model.sd * gaussian()) ? [a, b] : [b, a];
 
             for (let s = 0; s < PLAYOFF_SIMS; s++) {
                 for (let i = 0; i < n; i++) {
@@ -6037,6 +6370,9 @@
                 }
                 top[order[0]]++;
                 last[order[n - 1]]++;
+                const fin = simulateBracket(order.slice(0, playoffTeams), playGame, thirdGame);
+                if (fin.champ !== undefined) champ[fin.champ]++;
+                rookieDraftOrder(order, fin, draftRule).forEach((t, slot) => { draftCounts[t][slot]++; });
                 for (let i = 0; i < n; i++) {
                     winsSum[i] += wins[i];
                     const inPlayoffs = seedOf[i] < playoffTeams ? 1 : 0;
@@ -6103,13 +6439,61 @@
                     sos: opp.length ? opp.reduce((a, b) => a + b, 0) / opp.length : null,
                     left: opp.length,
                     seeds: Array.from(seedCounts[i], c => c / N),
+                    draft: Array.from(draftCounts[i], c => c / N),
+                    champ: champ[i] / N,
                     scenario: playoffScenario(i, made[i] / N, ifWn[i] ? ifW[i] / ifWn[i] : null, ifLn[i] ? ifL[i] / ifLn[i] : null)
                 };
             }).sort((a, b) => b.playoff - a.playoff || b.projWins - a.projWins);
 
-            const result = { cacheKey, league, season, cfg, playoffTeams, byes, nextWeek, rows, n };
+            const result = { cacheKey, league, season, cfg, playoffTeams, byes, nextWeek, rows, n, draftRule };
             playoffSimCache[league] = result;
             return result;
+        }
+
+        // Plays out a playoff field (team indexes in seed order). Each round the top seeds take any byes
+        // and the rest pair best vs worst, reseeded every round. play(a, b) -> [winner, loser].
+        // Returns { champ, ru, third } (undefined when the field is too small).
+        function simulateBracket(field, play, thirdGame) {
+            let alive = field.slice();
+            let semis = [], ru;
+            const seedIdx = t => field.indexOf(t);
+            while (alive.length > 1) {
+                let size = 1;
+                while (size < alive.length) size *= 2;
+                const byes = size - alive.length;
+                const next = alive.slice(0, byes), rest = alive.slice(byes), losers = [];
+                for (let i = 0; i < rest.length / 2; i++) {
+                    const [w, l] = play(rest[i], rest[rest.length - 1 - i]);
+                    next.push(w); losers.push(l);
+                }
+                next.sort((a, b) => seedIdx(a) - seedIdx(b));
+                if (next.length === 1) ru = losers[0];
+                else if (next.length === 2) semis = losers.slice().sort((a, b) => seedIdx(a) - seedIdx(b));
+                alive = next;
+            }
+            let third;
+            if (semis.length === 2) third = thirdGame ? play(semis[0], semis[1])[0] : semis[0];
+            else if (semis.length === 1) third = semis[0];
+            return { champ: alive[0], ru, third };
+        }
+
+        // Rookie draft order rule from leagues.json (rookie_draft_order), checked against past drafts:
+        //   playoff_finish (default): everyone in reverse regular-season standings, except the 3rd place
+        //     team, runner-up and champion, who pick last in that order
+        //   finals: same, but only the runner-up and champion move to the end
+        //   standings: reverse regular-season standings for every team
+        function rookieDraftRule(league) {
+            const r = String(leagueRules(league).rookie_draft_order || '').toLowerCase();
+            return ['finals', 'standings'].includes(r) ? r : 'playoff_finish';
+        }
+
+        // order: teams in regular-season standings order (best first); fin: { champ, ru, third }.
+        // Returns teams in draft order (first pick first). Podium teams that aren't known yet are skipped.
+        function rookieDraftOrder(order, fin, rule) {
+            const podium = (rule === 'standings' ? [] : rule === 'finals' ? [fin.ru, fin.champ] : [fin.third, fin.ru, fin.champ])
+                .filter(t => t !== undefined && t !== null);
+            const rest = order.filter(t => !podium.includes(t)).reverse();
+            return rest.concat(podium);
         }
 
         function pct(p) {

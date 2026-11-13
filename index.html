@@ -515,7 +515,7 @@
                             <button onclick="toggleLineageOnly()" id="lineage-filter-btn" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">
                                 🌱 Show Drafted Pick Lineage Only
                             </button>
-                            <input type="text" id="trade-search" placeholder="Search player, manager, or pick..." onkeyup="filterTrades()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-64 focus:outline-none focus:border-accent">
+                            <input type="text" id="trade-search" placeholder="Search player, manager, or pick..." oninput="filterTradesSoon()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-64 focus:outline-none focus:border-accent">
                         </div>
                     </div>
                     <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
@@ -532,6 +532,13 @@
                                 </thead>
                                 <tbody id="trades-table-body" class="divide-y divide-slate-800"></tbody>
                             </table>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700 bg-slate-900/60 p-4">
+                            <p id="trades-count" class="text-xs text-slate-400"></p>
+                            <div class="flex flex-wrap gap-2">
+                                <button id="trades-more-btn" onclick="showMoreTrades()" class="hidden bg-accent/20 border border-accent/30 hover:border-accent text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Show more</button>
+                                <button id="trades-all-btn" onclick="showAllTrades()" class="hidden bg-slate-900 border border-slate-700 hover:border-accent text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition">Show all</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4552,11 +4559,39 @@
             return yr ? new Date(yr, 0, 1).getTime() : 0;
         }
 
-        function renderTrades() {
-            const tbody = document.getElementById('trades-table-body');
-            tbody.innerHTML = '';
-            const trades = [];
+        // Trades are built into rows only a page at a time: grading every trade at once took seconds on phones
+        const TRADES_PAGE_SIZE = 25;
+        let allTrades = [];        // every trade, newest first: { r, leagueName, ts, hasLineage, search, html }
+        let filteredTrades = [];   // the ones matching the search box and lineage toggle
+        let tradesShown = 0;
 
+        function tradeRowHtml(t) {
+            if (t.html) return t.html;
+            const { r, leagueName, ts } = t;
+            return (t.html = `<tr data-has-lineage="${t.hasLineage ? '1' : '0'}" class="hover:bg-slate-800/50 transition">
+                    <td class="p-4 font-medium whitespace-nowrap">${escHtml(r[0])} &bull; ${escHtml(r[2])}<br><span class="text-xs text-slate-400">${escHtml(r[1])}</span></td>
+                    <td class="p-4 text-accent font-semibold">${escHtml(leagueName)}</td>
+                    <td class="p-4 font-medium text-white">${escHtml(r[3])}</td>
+                    <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
+                    <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${tradeGradeCell(r, leagueName, ts)}</td>
+                </tr>`);
+        }
+
+        // Text the search box matches: date, league, teams, every asset, and the managers' names as the page shows them
+        function tradeSearchText(r, leagueName) {
+            const owners = String(r[4] || '').split(' <---> ').map(side => {
+                const m = side.match(/^(.*?) received: \[/);
+                return m ? getMasterOwner(m[1].trim()) || '' : '';
+            });
+            const drafted = String(r[4] || '').split(/,\s*(?![^()]*\))/).map(i => {
+                const m = i.match(/\(originally from ((?:[^()]|\([^()]*\))*)\)/);
+                return m ? getMasterOwner(m[1]) || '' : '';
+            });
+            return [r[0], r[1], r[2], leagueName, r[3], r[4], ...owners, ...drafted].join(' ').toLowerCase();
+        }
+
+        function renderTrades() {
+            allTrades = [];
             Object.keys(globalMasterData).forEach(leagueName => {
                 const rows = globalMasterData[leagueName] || [];
                 let section = '';
@@ -4566,21 +4601,48 @@
                     const newSec = getSectionType(col0);
                     if (newSec) { section = newSec; return; }
                     if (section !== 'trades' || isColumnHeaderRow(col0) || !col0 || !r[3] || !r[4]) return;
-                    trades.push({ r, leagueName, ts: tradeTimestamp(r) });
+                    allTrades.push({
+                        r, leagueName, ts: tradeTimestamp(r),
+                        hasLineage: String(r[4]).includes('Resulted in drafting:'),
+                        search: tradeSearchText(r, leagueName)
+                    });
                 });
             });
+            // Newest first across all leagues
+            allTrades.sort((a, b) => b.ts - a.ts);
+            filterTrades();
+        }
 
-            // Newest first across all leagues, written to the page in one go
-            tbody.innerHTML = trades.sort((a, b) => b.ts - a.ts).map(({ r, leagueName, ts }) => {
-                const hasLineage = String(r[4]).includes('Resulted in drafting:');
-                return `<tr data-has-lineage="${hasLineage ? '1' : '0'}" class="hover:bg-slate-800/50 transition">
-                    <td class="p-4 font-medium whitespace-nowrap">${escHtml(r[0])} &bull; ${escHtml(r[2])}<br><span class="text-xs text-slate-400">${escHtml(r[1])}</span></td>
-                    <td class="p-4 text-accent font-semibold">${escHtml(leagueName)}</td>
-                    <td class="p-4 font-medium text-white">${escHtml(r[3])}</td>
-                    <td class="p-4 text-slate-300 text-xs leading-relaxed">${formatTradeBreakdown(r[4])}</td>
-                    <td class="p-4 text-xs leading-relaxed whitespace-nowrap">${tradeGradeCell(r, leagueName, ts)}</td>
-                </tr>`;
-            }).join('');
+        // Adds the next page of rows under the ones already on screen
+        function showMoreTrades() {
+            const tbody = document.getElementById('trades-table-body');
+            const next = filteredTrades.slice(tradesShown, tradesShown + TRADES_PAGE_SIZE);
+            tbody.insertAdjacentHTML('beforeend', next.map(tradeRowHtml).join(''));
+            tradesShown += next.length;
+            updateTradesPager();
+        }
+
+        function updateTradesPager() {
+            const total = filteredTrades.length, left = total - tradesShown;
+            const count = document.getElementById('trades-count');
+            const btn = document.getElementById('trades-more-btn');
+            const allBtn = document.getElementById('trades-all-btn');
+            if (count) count.textContent = total ? `Showing ${tradesShown.toLocaleString()} of ${total.toLocaleString()} trades` : 'No trades match';
+            if (btn) {
+                btn.classList.toggle('hidden', left <= 0);
+                btn.textContent = `Show ${Math.min(left, TRADES_PAGE_SIZE)} more`;
+            }
+            if (allBtn) {
+                allBtn.classList.toggle('hidden', left <= TRADES_PAGE_SIZE);
+                allBtn.textContent = `Show all ${left.toLocaleString()} left`;
+            }
+        }
+
+        function showAllTrades() {
+            const tbody = document.getElementById('trades-table-body');
+            tbody.insertAdjacentHTML('beforeend', filteredTrades.slice(tradesShown).map(tradeRowHtml).join(''));
+            tradesShown = filteredTrades.length;
+            updateTradesPager();
         }
 
         function hindsightCell(breakdown, leagueName) {
@@ -4758,14 +4820,19 @@
                 + g.sides.map(sd => `<p class="text-slate-400" title="${escHtml(tip(sd))}"><span class="inline-block w-7 text-center border rounded font-bold mr-1 ${gradeColor(sd.grade)}">${sd.grade}</span>${escHtml(sd.owner)}: <span class="font-mono text-slate-200">${Math.round(sd.pts).toLocaleString()} pts</span>${g.pointsOnly ? '' : ` <span class="text-slate-500">·</span> <span class="font-mono text-slate-200">${Math.round(sd.value).toLocaleString()}</span> value${atTrade && sd.owner in atTrade ? ` <span class="text-slate-500">(${Math.round(atTrade[sd.owner]).toLocaleString()} at trade)</span>` : ''}`}</p>`).join('');
         }
 
+        // Filters the whole trade list (not just the rows on screen), then starts again from the first page
+        let tradeSearchTimer = null;
+        function filterTradesSoon() {
+            clearTimeout(tradeSearchTimer);
+            tradeSearchTimer = setTimeout(filterTrades, 200);
+        }
+
         function filterTrades() {
-            const query = (document.getElementById('trade-search')?.value || '').toLowerCase();
-            const rows = document.getElementById('trades-table-body').getElementsByTagName('tr');
-            for (let row of rows) {
-                const matchesText = row.textContent.toLowerCase().includes(query);
-                const matchesLineage = !lineageOnlyMode || row.dataset.hasLineage === '1';
-                row.style.display = (matchesText && matchesLineage) ? '' : 'none';
-            }
+            const words = (document.getElementById('trade-search')?.value || '').toLowerCase().trim();
+            filteredTrades = allTrades.filter(t => (!lineageOnlyMode || t.hasLineage) && (!words || t.search.includes(words)));
+            document.getElementById('trades-table-body').innerHTML = '';
+            tradesShown = 0;
+            showMoreTrades();
         }
 
         // --- DRAFT HISTORY & GRADES ---

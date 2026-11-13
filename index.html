@@ -198,6 +198,21 @@
                     </div>
                     <div id="trophy-room-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                     <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <h3 class="text-lg font-bold text-amber-300">🥊 The Title Belt</h3>
+                        <p class="text-slate-400 text-xs">One belt per league, passed down since the league's first game. Beat the holder head to head and it's yours.</p>
+                        <details class="bg-cardbg border border-slate-700 rounded-xl p-3 text-xs text-slate-400">
+                            <summary class="cursor-pointer font-semibold text-slate-300">How the belt works</summary>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li>It starts with the top scorer of Week 1 in the league's first season.</li>
+                                <li>The holder defends it in every head-to-head game: regular season, playoffs and consolation games.</li>
+                                <li>Lose and the winner takes it. A win or a tie keeps it, and a bye week leaves it alone.</li>
+                                <li>It carries over to next season. If the holder leaves the league, it goes to the defending champion (or the top Week 1 scorer if they're gone too).</li>
+                                <li>This week's games count once they're final.</li>
+                            </ul>
+                        </details>
+                        <div id="title-belt-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
                         <h3 class="text-lg font-bold text-rose-300">💩 The Sacko Hall of Shame</h3>
                         <p class="text-slate-400 text-xs">Last place in the regular season of a finished league season.</p>
                         <div id="sacko-wall" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
@@ -235,6 +250,11 @@
                         <h2 class="text-2xl font-bold">👔 Unified Owner Profiles & Empire Valuation</h2>
                         <p class="text-slate-400 text-sm">Aggregating all-time records, podium finishes, roster KTC value, and future draft pick capital.</p>
                     </div>
+                    <details class="bg-cardbg border border-slate-700 rounded-xl p-4 text-xs text-slate-400">
+                        <summary class="cursor-pointer font-semibold text-slate-300">🎖️ How badges are earned (and who has them)</summary>
+                        <p class="mt-2">Badges come from finished games and final standings in every league, plus trades and the Title Belt. Gold badges are the big ones, red ones are the shame badges.</p>
+                        <ul id="badge-legend-list" class="mt-2"></ul>
+                    </details>
                     <div id="owners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
 
@@ -1201,9 +1221,10 @@
                 renderTrophyRoom(names);
                 renderDashboardLeagues(names);
                 renderSackoWall();
+                renderTitleBelt();
             },
             power: () => renderPowerRankings(),
-            owners: () => renderOwners(),
+            owners: () => { renderOwners(); renderBadgeLegend(); },
             exposure: () => renderPlayerExposure(),
             journey: () => initPlayerJourney(),
             wrapped: () => initWrapped(),
@@ -1808,6 +1829,7 @@
                         <div class="text-xs text-slate-400">
                             Leagues (${data.leagues.size}): <span class="text-slate-200 font-semibold">${escHtml(Array.from(data.leagues).join(', '))}</span>
                         </div>
+                        ${managerBadgesHtml(masterName)}
                     </div>
                     <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800 text-sm">
                         <div>
@@ -3865,6 +3887,249 @@
                 </div>`).join('') : '<p class="text-xs text-slate-500">No finished seasons yet.</p>';
         }
 
+
+        // --- TROPHY ROOM: THE TITLE BELT (one lineal belt per league) ---
+        // Rules (also shown on the page):
+        //  1. The belt starts with the top scorer of Week 1 in the league's first season.
+        //  2. The holder defends it in every scheduled head-to-head game: regular season, playoffs and consolation.
+        //  3. A loss passes the belt to the winner. A win or a tie keeps it. A bye week leaves it alone.
+        //  4. It carries over from season to season. If the holder leaves the league, the belt goes to the
+        //     defending champion (or, if they're gone too, the top scorer of Week 1 in the new season).
+        //  5. Games still being played this week don't count until they're final.
+        let beltCache = null;
+        function computeTitleBelts() {
+            const hub = buildHubData();
+            if (beltCache && beltCache.hub === hub) return beltCache.belts;
+            const byLeague = {};
+            hub.games.forEach(g => { (byLeague[g.league] = byLeague[g.league] || []).push(g); });
+            const belts = {};
+            Object.keys(byLeague).forEach(league => {
+                const games = byLeague[league].sort((a, b) => (a.season - b.season) || (a.weekNum - b.weekNum));
+                const seasons = [...new Set(games.map(g => g.season))];
+                const reigns = [];
+                let cur = null;
+                const crown = (owner, season, weekNum, how) => {
+                    if (cur) cur.end = cur.end || { season, weekNum, how: 'vacated' };
+                    cur = { owner, league, start: { season, weekNum, how }, defenses: 0, games: 0, end: null };
+                    reigns.push(cur);
+                };
+                const week1Leader = season => {
+                    const sGames = games.filter(g => g.season === season);
+                    const firstWeek = Math.min(...sGames.map(g => g.weekNum));
+                    let best = null;
+                    sGames.filter(g => g.weekNum === firstWeek).forEach(g => {
+                        [[g.t1, g.s1], [g.t2, g.s2]].forEach(([o, s]) => { if (!best || s > best.s) best = { o, s, weekNum: firstWeek }; });
+                    });
+                    return best;
+                };
+                seasons.forEach(season => {
+                    const sGames = games.filter(g => g.season === season);
+                    const playing = new Set(sGames.flatMap(g => [g.t1, g.t2]));
+                    if (!cur) {
+                        const w1 = week1Leader(season);
+                        crown(w1.o, season, w1.weekNum, `first holder: top Week ${w1.weekNum} score (${w1.s.toFixed(2)})`);
+                    } else if (!playing.has(cur.owner)) {
+                        const prev = hub.seasons[`${league}||${season - 1}`] || hub.seasons[`${league}||${seasons[seasons.indexOf(season) - 1]}`];
+                        if (prev && prev.champ && playing.has(prev.champ)) {
+                            crown(prev.champ, season, 1, `awarded to the defending champion after ${cur.owner} left the league`);
+                        } else {
+                            const w1 = week1Leader(season);
+                            crown(w1.o, season, w1.weekNum, `awarded to the top Week ${w1.weekNum} scorer after ${cur.owner} left the league`);
+                        }
+                    }
+                    sGames.forEach(g => {
+                        const holderIs1 = g.t1 === cur.owner, holderIs2 = g.t2 === cur.owner;
+                        if (!holderIs1 && !holderIs2) return;
+                        const [my, opp, oppName] = holderIs1 ? [g.s1, g.s2, g.t2] : [g.s2, g.s1, g.t1];
+                        cur.games++;
+                        if (my >= opp) { cur.defenses++; return; }
+                        cur.end = { season, weekNum: g.weekNum, how: `lost to ${oppName} ${opp.toFixed(2)}-${my.toFixed(2)}` };
+                        crown(oppName, season, g.weekNum, `beat ${cur.owner} ${opp.toFixed(2)}-${my.toFixed(2)}`);
+                    });
+                });
+                if (!cur) return;
+                // Per-manager totals for this league
+                const owners = {};
+                reigns.forEach(r => {
+                    const o = owners[r.owner] = owners[r.owner] || { owner: r.owner, reigns: 0, defenses: 0, best: 0 };
+                    o.reigns++; o.defenses += r.defenses; o.best = Math.max(o.best, r.defenses);
+                });
+                const last = games[games.length - 1];
+                belts[league] = {
+                    league, reigns, holder: cur, owners: Object.values(owners).sort((a, b) => b.defenses - a.defenses || b.reigns - a.reigns),
+                    longest: reigns.reduce((a, b) => (b.defenses > a.defenses ? b : a), reigns[0]),
+                    nextGame: beltNextGame(league, cur.owner, last)
+                };
+            });
+            beltCache = { hub, belts };
+            return belts;
+        }
+
+        // The holder's next scheduled game: the first unplayed week of the current season (from the synced schedule)
+        function beltNextGame(league, owner, lastGame) {
+            if (!lastGame) return null;
+            let next = null;
+            sectionRows(league, 'matchups').forEach(r => {
+                if ((parseInt(r[0], 10) || 0) !== lastGame.season || String(r[2]).trim() === '0') return;
+                const wk = weekNumber(r[1]);
+                if (wk <= lastGame.weekNum || (next && wk >= next.weekNum)) return;
+                const t1 = getMasterOwner(r[3]), t2 = getMasterOwner(r[5]);
+                if (t1 === owner && t2) next = { weekNum: wk, opp: t2 };
+                else if (t2 === owner && t1) next = { weekNum: wk, opp: t1 };
+            });
+            // The championship bracket isn't set yet, so don't guess a playoff opponent
+            return next && next.weekNum < playoffStartWeek(league, lastGame.season) ? next : null;
+        }
+
+        function beltWhen(p) {
+            return p.weekNum ? `${p.season} Wk ${p.weekNum}` : String(p.season);
+        }
+
+        function renderTitleBelt() {
+            const box = document.getElementById('title-belt-grid');
+            if (!box) return;
+            const belts = Object.values(computeTitleBelts()).sort((a, b) => a.league.localeCompare(b.league));
+            if (!belts.length) { box.innerHTML = '<p class="text-xs text-slate-500">No finished games yet.</p>'; return; }
+            box.innerHTML = belts.map(b => {
+                const h = b.holder;
+                const lineage = [...b.reigns].reverse().map(r => `
+                    <li class="flex justify-between gap-3 py-1.5 border-b border-slate-800 last:border-0">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-slate-200">${escHtml(r.owner)}</p>
+                            <p class="text-slate-500">${escHtml(beltWhen(r.start))}: ${escHtml(r.start.how)}</p>
+                        </div>
+                        <span class="whitespace-nowrap text-amber-300 font-bold">${r.defenses} def.</span>
+                    </li>`).join('');
+                const leaders = b.owners.slice(0, 5).map((o, i) => `
+                    <li class="flex justify-between gap-3"><span class="truncate">${i + 1}. ${escHtml(o.owner)}</span>
+                    <span class="whitespace-nowrap text-slate-400">${o.defenses} def. &bull; ${o.reigns} reign${o.reigns === 1 ? '' : 's'}</span></li>`).join('');
+                return `
+                <div class="bg-cardbg border border-amber-500/30 rounded-xl p-4 space-y-3">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0">
+                            <p class="text-xs text-slate-400 truncate">${escHtml(b.league)}</p>
+                            <h4 class="text-lg font-bold text-amber-300 break-words">🥊 ${escHtml(h.owner)}</h4>
+                        </div>
+                        <span class="bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-xs font-bold whitespace-nowrap">${h.defenses} defense${h.defenses === 1 ? '' : 's'}</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Holder since ${escHtml(beltWhen(h.start))} (${escHtml(h.start.how)}).</p>
+                    ${b.nextGame ? `<p class="text-xs text-slate-300">Next defense: <span class="font-semibold">Week ${b.nextGame.weekNum} vs ${escHtml(b.nextGame.opp)}</span></p>` : ''}
+                    <p class="text-xs text-slate-400">Longest reign: <span class="text-slate-200 font-semibold">${escHtml(b.longest.owner)}</span>, ${b.longest.defenses} straight defenses from ${escHtml(beltWhen(b.longest.start))}. The belt has changed hands ${b.reigns.length - 1} times.</p>
+                    <details class="text-xs">
+                        <summary class="cursor-pointer text-accent font-semibold">Belt leaders</summary>
+                        <ol class="mt-2 space-y-1 text-slate-300">${leaders}</ol>
+                    </details>
+                    <details class="text-xs">
+                        <summary class="cursor-pointer text-accent font-semibold">Full lineage (${b.reigns.length} reigns)</summary>
+                        <ul class="mt-2 max-h-72 overflow-y-auto pr-1">${lineage}</ul>
+                    </details>
+                </div>`;
+            }).join('');
+        }
+
+        // --- MANAGERS TAB: ACHIEVEMENT BADGES ---
+        // Each badge: id, icon, name, kind (good / shame), rule text, and a test that returns a count (0 = not earned)
+        // or a short detail string. Built from finished games, final standings, trades and the Title Belt.
+        const BADGE_RULES = [
+            { icon: '🏆', name: 'Champion', kind: 'gold', rule: 'Won a league title.', test: m => m.titles },
+            { icon: '🔁', name: 'Back-to-Back', kind: 'gold', rule: 'Won the same league two seasons in a row.', test: m => m.repeats },
+            { icon: '🥈', name: 'Bridesmaid', kind: 'good', rule: 'Finished runner-up two or more times.', test: m => m.runners >= 2 ? m.runners : 0 },
+            { icon: '🎟️', name: 'Playoff Regular', kind: 'good', rule: 'Made the playoffs in five or more finished seasons.', test: m => m.playoffs >= 5 ? m.playoffs : 0 },
+            { icon: '📈', name: 'Points Machine', kind: 'good', rule: 'Led a league in regular-season points for a finished season.', test: m => m.pfTitles },
+            { icon: '💥', name: 'Record Setter', kind: 'gold', rule: "Owns a league's highest single-game score of all time.", test: m => m.highGame },
+            { icon: '🔥', name: 'Heater', kind: 'good', rule: 'Won eight or more games in a row in one league (streaks carry across seasons).', test: m => m.winStreak >= 8 ? m.winStreak : 0, count: v => `${v} straight` },
+            { icon: '💯', name: 'Winning Machine', kind: 'good', rule: 'Career winning percentage of .600 or better over 50+ games.', test: m => (m.games >= 50 && m.winPct >= 0.6) ? m.winPct : 0, count: v => v.toFixed(3).replace(/^0/, '') },
+            { icon: '🥊', name: 'Belt Holder', kind: 'good', rule: 'Has held a Title Belt (count = reigns).', test: m => m.beltReigns },
+            { icon: '🛡️', name: 'Belt Legend', kind: 'gold', rule: 'Ten or more Title Belt defenses in one reign.', test: m => m.beltBest >= 10 ? m.beltBest : 0, count: v => `${v} def.` },
+            { icon: '🤝', name: 'Wheeler-Dealer', kind: 'good', rule: 'Made 25 or more trades.', test: m => m.trades >= 25 ? m.trades : 0 },
+            { icon: '🎖️', name: 'Veteran', kind: 'good', rule: 'Played ten or more league-seasons.', test: m => m.seasons >= 10 ? m.seasons : 0 },
+            { icon: '🌎', name: 'Globetrotter', kind: 'good', rule: 'Played in four or more of these leagues.', test: m => m.leagues >= 4 ? m.leagues : 0 },
+            { icon: '💔', name: 'Heartbreak Kid', kind: 'shame', rule: 'Lost five or more games by less than two points.', test: m => m.heartbreaks >= 5 ? m.heartbreaks : 0 },
+            { icon: '🥶', name: 'Ice Cold', kind: 'shame', rule: 'Lost ten or more games in a row in one league (streaks carry across seasons).', test: m => m.lossStreak >= 10 ? m.lossStreak : 0, count: v => `${v} straight` },
+            { icon: '💩', name: 'Sacko', kind: 'shame', rule: 'Finished last in the regular season of a finished league season.', test: m => m.sackos }
+        ];
+        const BADGE_STYLES = {
+            gold: 'bg-amber-500/15 border-amber-500/40 text-amber-200',
+            good: 'bg-blue-500/15 border-blue-500/30 text-blue-200',
+            shame: 'bg-rose-500/15 border-rose-500/30 text-rose-200'
+        };
+
+        let badgeCache = null;
+        function computeManagerBadges() {
+            const hub = buildHubData();
+            if (badgeCache && badgeCache.hub === hub) return badgeCache.byOwner;
+            const stats = {};
+            const S = o => stats[o] = stats[o] || { titles: 0, repeats: 0, runners: 0, playoffs: 0, pfTitles: 0, highGame: 0, winStreak: 0, lossStreak: 0,
+                games: 0, wins: 0, winPct: 0, beltReigns: 0, beltBest: 0, trades: 0, seasons: 0, leagueSet: new Set(), leagues: 0, heartbreaks: 0, sackos: 0 };
+
+            Object.values(hub.seasons).forEach(st => {
+                Object.keys(st.teams).forEach(o => { S(o).seasons++; S(o).leagueSet.add(st.league); if (st.complete && st.teams[o].madePlayoffs) S(o).playoffs++; });
+                if (!st.complete) return;
+                if (st.champ) {
+                    S(st.champ).titles++;
+                    const prev = hub.seasons[`${st.league}||${st.season - 1}`];
+                    if (prev && prev.champ === st.champ) S(st.champ).repeats++;
+                }
+                if (st.runner) S(st.runner).runners++;
+                if (st.sacko) S(st.sacko).sackos++;
+                const pfTop = Object.values(st.teams).reduce((a, b) => (b.pf > (a ? a.pf : -1) ? b : a), null);
+                if (pfTop && pfTop.pf > 0) S(pfTop.owner).pfTitles++;
+            });
+
+            const high = {};
+            hub.games.forEach(g => {
+                [[g.t1, g.s1, g.s2], [g.t2, g.s2, g.s1]].forEach(([o, my, opp]) => {
+                    const s = S(o);
+                    s.games++;
+                    if (my > opp) s.wins++; else if (my === opp) s.wins += 0.5;
+                    if (my < opp && opp - my < 2) s.heartbreaks++;
+                    if (!high[g.league] || my > high[g.league].score) high[g.league] = { owner: o, score: my };
+                });
+            });
+            Object.values(high).forEach(h => { S(h.owner).highGame++; });
+            Object.values(stats).forEach(s => { s.winPct = s.games ? s.wins / s.games : 0; s.leagues = s.leagueSet.size; });
+            findStreaks(hub.games, 'W').forEach(x => { S(x.owner).winStreak = Math.max(S(x.owner).winStreak, x.len); });
+            findStreaks(hub.games, 'L').forEach(x => { S(x.owner).lossStreak = Math.max(S(x.owner).lossStreak, x.len); });
+            hub.trades.forEach(t => { new Set(t.sides.map(sd => sd.owner)).forEach(o => { if (o) S(o).trades++; }); });
+            Object.values(computeTitleBelts()).forEach(b => b.owners.forEach(o => {
+                S(o.owner).beltReigns += o.reigns;
+                S(o.owner).beltBest = Math.max(S(o.owner).beltBest, o.best);
+            }));
+
+            const byOwner = {};
+            Object.keys(stats).forEach(o => {
+                byOwner[o] = BADGE_RULES.map(b => {
+                    const v = b.test(stats[o]);
+                    return v ? { ...b, value: v, label: b.count ? b.count(v) : (v > 1 ? `×${v}` : '') } : null;
+                }).filter(Boolean);
+            });
+            badgeCache = { hub, byOwner };
+            return byOwner;
+        }
+
+        function managerBadgesHtml(owner) {
+            const badges = computeManagerBadges()[owner] || [];
+            if (!badges.length) return '';
+            return `<div class="flex flex-wrap gap-1.5">${badges.map(b => `
+                <span title="${escHtml(b.rule)}" class="border ${BADGE_STYLES[b.kind]} px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">${b.icon} ${escHtml(b.name)}${b.label ? ` <span class="opacity-75">${escHtml(b.label)}</span>` : ''}</span>`).join('')}</div>`;
+        }
+
+        // "How badges are earned" list at the top of the Managers tab, with who holds each one
+        function renderBadgeLegend() {
+            const box = document.getElementById('badge-legend-list');
+            if (!box) return;
+            const byOwner = computeManagerBadges();
+            box.innerHTML = BADGE_RULES.map(rule => {
+                const holders = Object.keys(byOwner).filter(o => byOwner[o].some(b => b.name === rule.name))
+                    .sort((a, b) => (byOwner[b].find(x => x.name === rule.name).value - byOwner[a].find(x => x.name === rule.name).value) || a.localeCompare(b));
+                return `
+                <li class="py-2 border-b border-slate-800 last:border-0">
+                    <p><span class="border ${BADGE_STYLES[rule.kind]} px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">${rule.icon} ${escHtml(rule.name)}</span>
+                    <span class="text-slate-300 ml-1">${escHtml(rule.rule)}</span></p>
+                    <p class="text-slate-500 mt-1">${holders.length ? escHtml(holders.join(', ')) : 'Nobody yet.'}</p>
+                </li>`;
+            }).join('');
+        }
         // --- MANAGERS TAB: CAREER TIMELINE ---
         function managerTimelineHtml(owner) {
             const items = Object.values(buildHubData().seasons).filter(st => st.teams[owner])

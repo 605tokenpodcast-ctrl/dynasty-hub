@@ -49,5 +49,16 @@ Each one is optional: left empty, the site works exactly as before for that piec
 ## Changing things
 
 - **Leagues:** the league list lives in `leagues.json` at the repo root. The deploy workflow copies it into each worker's `wrangler.toml` before deploying. When a Sleeper league renews for a new season, the data sync finds the new ID, saves it to `leagues.json` and starts this deploy on its own.
-- **Schedule:** the bot's cron times are in `league-bot/wrangler.toml` (UTC).
+- **Schedule:** the bot runs every 15 minutes (`league-bot/wrangler.toml`), and the `WEEKLY` table in `league-bot/src/index.js` picks the recap, Gazette and preview slots by Central time, so daylight saving is handled.
 - **First trade-alert run:** the bot remembers the trades that already exist without announcing them, so the chat doesn't get flooded with old trades.
+
+## Changing the Anthropic API key
+
+Two workers call Claude, and their keys live in different places:
+
+| Worker | Where its key lives | How to change it |
+|---|---|---|
+| League bot (Gazette) | GitHub secret `ANTHROPIC_API_KEY`, copied into the worker on every deploy | Update the GitHub secret (**Settings → Secrets and variables → Actions**), then run **Actions → Deploy Cloudflare Workers**. Changing it only in Cloudflare doesn't stick: the next deploy copies the GitHub secret back over it. |
+| League chat (Trash Talk Bot) | Cloudflare only (`league-chat` worker → **Settings → Variables and Secrets**) | Edit `ANTHROPIC_API_KEY` there and deploy. Deploys never touch it. |
+
+Create the new key at platform.claude.com (**API keys → Create key**), update both places, check the chat answers and the Gazette status, then delete the old key there. A rejected key shows up as a clear message in the chat and in `/gazette-status` (and the Gazette Check issue).

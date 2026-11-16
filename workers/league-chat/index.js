@@ -240,14 +240,17 @@ export default {
     // 3. Build System Prompt
     const system = [
       { type: 'text', text: BASE_PERSONA + '\n\n' + moodInstruction },
-      { type: 'text', text: 'LEAGUE DATA\n' + context + liveApiData, cache_control: { type: 'ephemeral' } },
+      // The big league context is cached; live transactions go after the cache point so a new waiver
+      // move doesn't throw away the cached league data
+      { type: 'text', text: 'LEAGUE DATA\n' + context, cache_control: { type: 'ephemeral' } },
+      ...(liveApiData ? [{ type: 'text', text: liveApiData.trim() }] : []),
       { type: 'text', text: `PERSISTENT GRUDGE BOOK (Past blunders & complaints to bring up):\n${grudgesText}` },
       { type: 'text', text: who ? `The person chatting with you is the manager "${who}".` : 'You do not know which manager is chatting.' },
     ];
 
     const tools = [...CUSTOM_TOOLS];
     if (env.ENABLE_WEB_SEARCH === '1') {
-      tools.push({ type: 'web_search_20250305', name: 'web_search', max_uses: 3 });
+      tools.push({ type: 'web_search_20260209', name: 'web_search', max_uses: 3 });
     }
 
     let currentMessages = [...messages];
@@ -259,6 +262,8 @@ export default {
         model: env.MODEL || 'claude-sonnet-5-5',
         max_tokens: 4000,
         output_config: { effort: 'medium' },
+        // If the model declines (the bot's humor is dark), the API retries on a fallback model it picks
+        fallbacks: 'default',
         system,
         messages: currentMessages,
         tools,
@@ -267,22 +272,34 @@ export default {
       if (step === 2) payload.tool_choice = { type: 'none' };
 
       let res;
-      try {
-        res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': env.ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify(payload),
-        });
-        finalData = await res.json();
-      } catch (e) {
-        return json({ error: 'Could not reach the Claude API' }, 502, cors);
+      // One retry after a short wait when Claude is busy (429, 500, 529 overloaded) or unreachable
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt) await new Promise((r) => setTimeout(r, 2000));
+        try {
+          res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': env.ANTHROPIC_API_KEY,
+              'anthropic-version': '2023-06-01',
+              'anthropic-beta': 'server-side-fallback-2026-07-01',
+            },
+            body: JSON.stringify(payload),
+          });
+          finalData = await res.json().catch(() => null);
+        } catch (e) {
+          res = null;
+          finalData = null;
+        }
+        if (res && (res.ok || ![408, 429, 500, 502, 503, 504, 529].includes(res.status))) break;
       }
 
-      if (!res.ok) {
+      if (!res) return json({ error: 'Could not reach the Claude API' }, 502, cors);
+      if (res.status === 401 || res.status === 403) {
+        console.log(`Claude API ${res.status}: ${JSON.stringify(finalData)}`);
+        return json({ error: 'The chat\'s Anthropic API key was rejected. Update ANTHROPIC_API_KEY on the league-chat worker in Cloudflare.' }, 502, cors);
+      }
+      if (!res.ok || !finalData) {
         return json({ error: (finalData && finalData.error && finalData.error.message) || 'Claude API error' }, 502, cors);
       }
 

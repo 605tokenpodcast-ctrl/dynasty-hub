@@ -371,7 +371,7 @@ async function currentGazette(lg, leagues, season, stateWeek, env, say, dry) {
       await env.BOT_KV.put(weekKey, 'posted');
     }
   }
-  return { note: result, status: failed ? { ok: false, week, note: `week ${week}: Claude returned no article` } : { ok: true, week, note: 'written' } };
+  return { note: result, status: failed ? { ok: false, week, note: `week ${week}: ${result.startsWith('Claude rejected') ? result : 'Claude returned no article'}` } : { ok: true, week, note: 'written' } };
 }
 
 // ---------- gazette status (read by the Gazette Check workflow) ----------
@@ -440,10 +440,14 @@ async function writeAndPost(lg, leagues, season, r, env, say, dry) {
   if (!saved) {
     const angle = GAZETTE_ANGLES[(leagues.indexOf(lg) + r.week) % GAZETTE_ANGLES.length];
     const earlier = await recentGazettes(env, leagues, lg, season, r.week, list);
+    let keyRejected = false;
     const article = await writeGazette(env, lg.name, season, r.week, r.facts, r.scoreboard, angle, earlier).catch(e => {
       console.log(`gazette ${lg.name}: ${e.stack || e}`);
+      // A wrong, deleted or out-of-credit key: say so, so the Gazette Check issue points at the key
+      if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) keyRejected = true;
       return null;
     });
+    if (keyRejected) return 'Claude rejected the ANTHROPIC_API_KEY (update the GitHub secret, then run Deploy Cloudflare Workers)';
     if (!article) return 'Claude returned no article, will retry next run';
     if (dry) { say(`📰 ${lg.name} Week ${r.week} Gazette (dry run, not saved):\n${article}`); return 'written (dry run)'; }
     saved = { week: r.week, text: article, at: Date.now(), board };

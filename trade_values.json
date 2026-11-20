@@ -1214,6 +1214,24 @@
     }
    }
   },
+  "Andys league||2026||11/17/2026||Smokers Haven (SmokersHaven) received: [C.J. Stroud (QB)] <---> Let Go Team (rprichards1973) received: [2029 Round 1st Pick (originally from Smokers Haven (SmokersHaven))]": {
+   "trade_day": {
+    "as_of": "2026-11-20",
+    "values": {
+     "C.J. Stroud (QB)": 2012,
+     "2029 Round 1st Pick (originally from Smokers Haven (SmokersHaven))": 1642
+    }
+   }
+  },
+  "Andys league||2026||11/17/2026||Smokers Haven (SmokersHaven) received: [Dak Prescott (QB)] <---> Princess VanEps (DerrickFish) received: [2027 Round 1st Pick (originally from Smokers Haven (SmokersHaven))]": {
+   "trade_day": {
+    "as_of": "2026-11-20",
+    "values": {
+     "Dak Prescott (QB)": 1625,
+     "2027 Round 1st Pick (originally from Smokers Haven (SmokersHaven))": 2372
+    }
+   }
+  },
   "Andys league||2026||8/15/2026||Team Tacos (tokenwhiteguy) received: [2026 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jonah Coleman (RB), 2026 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Ty Simpson (QB), 2027 Round 2nd Pick (originally from Honolulu Blues (pboger))] <---> Honolulu Blues (pboger) received: [2026 Round 1st Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Fernando Mendoza (QB), 2026 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Cyrus Allen (WR), 2027 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy))]": {
    "trade_day": {
     "as_of": "2026-08-14",

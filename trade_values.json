@@ -1232,6 +1232,16 @@
     }
    }
   },
+  "Andys league||2026||11/20/2026||FloridaBills received: [Bhayshul Tuten (RB)] <---> Let Go Team (rprichards1973) received: [2027 Round 2nd Pick (originally from FloridaBills), 2028 Round 1st Pick (originally from FloridaBills)]": {
+   "trade_day": {
+    "as_of": "2026-11-21",
+    "values": {
+     "Bhayshul Tuten (RB)": 3243,
+     "2027 Round 2nd Pick (originally from FloridaBills)": 276,
+     "2028 Round 1st Pick (originally from FloridaBills)": 1642
+    }
+   }
+  },
   "Andys league||2026||8/15/2026||Team Tacos (tokenwhiteguy) received: [2026 Round 1st Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Jonah Coleman (RB), 2026 Round 2nd Pick (originally from Honolulu Blues (pboger)) -> Resulted in drafting: Ty Simpson (QB), 2027 Round 2nd Pick (originally from Honolulu Blues (pboger))] <---> Honolulu Blues (pboger) received: [2026 Round 1st Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Fernando Mendoza (QB), 2026 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy)) -> Resulted in drafting: Cyrus Allen (WR), 2027 Round 3rd Pick (originally from Team Tacos (tokenwhiteguy))]": {
    "trade_day": {
     "as_of": "2026-08-14",

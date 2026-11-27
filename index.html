@@ -1,1 +1,175 @@
-PLACEHOLDER_FOR_FULL_HTML
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-League Dynasty Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <!-- Built from styles/tailwind.css by `npm run build:css` (the build-css workflow keeps it current) -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Markdown for the Gazette and chat replies; deferred so they never hold up the page (chatFormat has a fallback) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <style>
+        body.broadcast-mode header,
+        body.broadcast-mode footer,
+        body.broadcast-mode .hide-on-broadcast {
+            display: none !important;
+        }
+        body.broadcast-mode main {
+            max-width: 1600px !important;
+            padding-top: 1.5rem !important;
+        }
+        /* Phones: tab menu behind a button, wide tables as stacked cards */
+        @media (max-width: 639px) {
+            #main-nav { display: none; }
+            #main-nav.open {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            #main-nav.open button { white-space: normal; text-align: left; padding: 0.6rem; font-size: 0.8rem; }
+            main table.phone-cards,
+            main table.phone-cards tbody,
+            main table.phone-cards tr,
+            main table.phone-cards td { display: block; width: 100%; }
+            main table.phone-cards thead,
+            main table.phone-cards tr.pc-head { display: none; }
+            main table.phone-cards tr {
+                border: 1px solid #334155;
+                border-radius: 0.75rem;
+                margin-bottom: 0.75rem;
+                padding: 0.5rem 0.75rem;
+                background: rgba(15, 23, 42, 0.6);
+            }
+            main table.phone-cards td {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 0.75rem;
+                padding: 0.3rem 0 !important;
+                border: 0 !important;
+                text-align: right;
+                white-space: normal !important;
+                max-width: none !important;
+                overflow-wrap: anywhere;
+                font-size: 0.85rem;
+            }
+            main table.phone-cards td::before {
+                content: attr(data-label);
+                flex-shrink: 0;
+                max-width: 45%;
+                text-align: left;
+                color: #94a3b8;
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+            main table.phone-cards td[data-label=""]::before { content: none; }
+            main table.phone-cards td.pc-block { display: block; text-align: left; }
+            main table.phone-cards td.pc-block::before { display: block; max-width: none; margin-bottom: 0.25rem; }
+            main table.phone-cards td:empty { display: none; }
+            main table.phone-cards tr.pc-kv { display: flex; justify-content: space-between; gap: 0.75rem; }
+            main table.phone-cards tr.pc-kv td { width: auto; display: block; }
+            main table.phone-cards tr.pc-kv td:first-child { text-align: left; color: #94a3b8; }
+        }
+        /* Markdown & Table Styling for Chat Bubbles */
+        #chat-messages table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 0.78rem;
+            background: rgba(15, 23, 42, 0.75);
+            border-radius: 6px;
+            overflow: hidden;
+            display: block;
+            overflow-x: auto;
+        }
+        #chat-messages th, #chat-messages td {
+            border: 1px solid #334155;
+            padding: 5px 8px;
+            text-align: left;
+        }
+        #chat-messages th {
+            background: rgba(51, 65, 85, 0.85);
+            color: #38bdf8;
+            font-weight: 700;
+        }
+        #chat-messages p {
+            margin-bottom: 0.5rem;
+        }
+        #chat-messages p:last-child {
+            margin-bottom: 0;
+        }
+        #chat-messages ul, #chat-messages ol {
+            margin: 0.4rem 0 0.5rem 1.25rem;
+            list-style-type: disc;
+        }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+
+    <!-- Floating Exit Broadcast Button (Only visible in Broadcast Mode) -->
+    <button id="exit-broadcast-btn" onclick="toggleBroadcastMode()" class="hidden fixed bottom-4 right-4 z-50 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl border border-rose-400 transition">
+        📺 Exit StreamYard Broadcast Mode
+    </button>
+
+    <div>
+        <!-- Navigation Header -->
+        <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
+                <div class="flex flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🏈</span>
+                        <div>
+                            <h1 class="text-base sm:text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
+                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; Active Dynasty Leagues</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyDeepLink()" id="copy-link-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            🔗<span class="hidden sm:inline"> Copy View Link</span>
+                        </button>
+                        <button onclick="openShowNotes()" id="show-notes-btn" title="Podcast show notes: talking points from every league" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            🎧 <span class="sm:hidden">Notes</span><span class="hidden sm:inline">Show Notes</span>
+                        </button>
+                        <button onclick="toggleBroadcastMode()" class="hidden sm:inline-block bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            📺 Broadcast Mode
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <!-- Phones: a button that opens every tab as a two-column menu. Wrapped rows from the sm breakpoint up -->
+                <button id="nav-menu-btn" onclick="toggleNavMenu()" class="sm:hidden bg-slate-800 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-semibold flex items-center justify-between">
+                    <span id="nav-menu-label">Dashboard</span>
+                    <span>▼</span>
+                </button>
+                <nav id="main-nav" class="hidden sm:flex flex-wrap gap-1.5">
+                    <!-- Tabs will be populated by JS -->
+                </nav>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+            <!-- Tab content containers will be here -->
+            <div id="tab-content">
+                <!-- Populated by JS -->
+            </div>
+        </main>
+    </div>
+
+    <footer class="bg-cardbg border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Multi-League Dynasty Hub &bull; Data synced from Sleeper & Fleaflicker
+    </footer>
+
+    <!-- JavaScript Engine -->
+    <script src="app.js"></script>
+
+</body>
+</html>

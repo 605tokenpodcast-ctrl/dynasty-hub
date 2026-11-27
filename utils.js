@@ -1,5 +1,5 @@
-// utils.js — Pure utility functions for Dynasty Hub
-// Loaded before app.js. These have no side effects and can be used anywhere.
+// utils.js — Pure, side-effect-free helpers
+// These functions do not reference any variables defined in app.js
 
 function normalizePlayerName(name) {
     return String(name || '')
@@ -8,49 +8,6 @@ function normalizePlayerName(name) {
         .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '')
         .replace(/\s+/g, ' ')
         .trim();
-}
-
-const PICK_KEY_RE = /^(20\d\d) (\d+)(?:st|nd|rd|th)(?: \((Early|Mid|Late)\))?$/;
-
-function buildValueFormat(players) {
-    const norm = {};
-    const picks = {}; // round -> year -> { Early, Mid, Late, base }
-    Object.keys(players || {}).forEach(k => {
-        const pm = k.match(PICK_KEY_RE);
-        if (pm) {
-            const byYear = picks[pm[2]] = picks[pm[2]] || {};
-            const slot = byYear[pm[1]] = byYear[pm[1]] || {};
-            slot[pm[3] || 'base'] = players[k];
-            return;
-        }
-        norm[normalizePlayerName(k)] = players[k];
-    });
-    return { players: players || {}, norm, picks };
-}
-
-function getValueFormat(leagueName) {
-    const key = leagueValueFormats[String(leagueName || '').trim().toLowerCase()];
-    return valueFormats[key] || valueFormats[defaultValueFormat];
-}
-
-function getMasterOwner(teamString) {
-    const trimmed = String(teamString || '').trim();
-    if (!trimmed) return '';
-    const lowerTrimmed = trimmed.toLowerCase();
-    
-    for (let key in aliasOverrides) {
-        if (lowerTrimmed.includes(key)) {
-            return aliasOverrides[key];
-        }
-    }
-
-    const match = trimmed.match(/\(([^)]+)\)\s*$/);
-    const username = (match && match[1]) ? match[1].trim() : trimmed;
-    const lowerUser = username.toLowerCase();
-    if (aliasOverrides[lowerUser]) return aliasOverrides[lowerUser];
-    // Exact (case-insensitive) username matches, e.g. Fleaflicker -> Sleeper identities
-    if (exactAliases[lowerUser]) return exactAliases[lowerUser];
-    return username;
 }
 
 function getSectionType(col0) {

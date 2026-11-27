@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-League Dynasty Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#0f172a">
+    <!-- Built from styles/tailwind.css by `npm run build:css` (the build-css workflow keeps it current) -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Markdown for the Gazette and chat replies; deferred so they never hold up the page (chatFormat has a fallback) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <style>
+        body.broadcast-mode header,
+        body.broadcast-mode footer,
+        body.broadcast-mode .hide-on-broadcast {
+            display: none !important;
+        }
+        body.broadcast-mode main {
+            max-width: 1600px !important;
+            padding-top: 1.5rem !important;
+        }
+        /* Phones: tab menu behind a button, wide tables as stacked cards */
+        @media (max-width: 639px) {
+            #main-nav { display: none; }
+            #main-nav.open {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            #main-nav.open button { white-space: normal; text-align: left; padding: 0.6rem; font-size: 0.8rem; }
+            main table.phone-cards,
+            main table.phone-cards tbody,
+            main table.phone-cards tr,
+            main table.phone-cards td { display: block; width: 100%; }
+            main table.phone-cards thead,
+            main table.phone-cards tr.pc-head { display: none; }
+            main table.phone-cards tr {
+                border: 1px solid #334155;
+                border-radius: 0.75rem;
+                margin-bottom: 0.75rem;
+                padding: 0.5rem 0.75rem;
+                background: rgba(15, 23, 42, 0.6);
+            }
+            main table.phone-cards td {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 0.75rem;
+                padding: 0.3rem 0 !important;
+                border: 0 !important;
+                text-align: right;
+                white-space: normal !important;
+                max-width: none !important;
+                overflow-wrap: anywhere;
+                font-size: 0.85rem;
+            }
+            main table.phone-cards td::before {
+                content: attr(data-label);
+                flex-shrink: 0;
+                max-width: 45%;
+                text-align: left;
+                color: #94a3b8;
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+            main table.phone-cards td[data-label=""]::before { content: none; }
+            main table.phone-cards td.pc-block { display: block; text-align: left; }
+            main table.phone-cards td.pc-block::before { display: block; max-width: none; margin-bottom: 0.25rem; }
+            main table.phone-cards td:empty { display: none; }
+            main table.phone-cards tr.pc-kv { display: flex; justify-content: space-between; gap: 0.75rem; }
+            main table.phone-cards tr.pc-kv td { width: auto; display: block; }
+            main table.phone-cards tr.pc-kv td:first-child { text-align: left; color: #94a3b8; }
+        }
+        /* Markdown & Table Styling for Chat Bubbles */
+        #chat-messages table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 0.78rem;
+            background: rgba(15, 23, 42, 0.75);
+            border-radius: 6px;
+            overflow: hidden;
+            display: block;
+            overflow-x: auto;
+        }
+        #chat-messages th, #chat-messages td {
+            border: 1px solid #334155;
+            padding: 5px 8px;
+            text-align: left;
+        }
+        #chat-messages th {
+            background: rgba(51, 65, 85, 0.85);
+            color: #38bdf8;
+            font-weight: 700;
+        }
+        #chat-messages p {
+            margin-bottom: 0.5rem;
+        }
+        #chat-messages p:last-child {
+            margin-bottom: 0;
+        }
+        #chat-messages ul, #chat-messages ol {
+            margin: 0.4rem 0 0.5rem 1.25rem;
+            list-style-type: disc;
+        }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+
+    <!-- Floating Exit Broadcast Button (Only visible in Broadcast Mode) -->
+    <button id="exit-broadcast-btn" onclick="toggleBroadcastMode()" class="hidden fixed bottom-4 right-4 z-50 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl border border-rose-400 transition">
+        📺 Exit StreamYard Broadcast Mode
+    </button>
+
+    <div>
+        <!-- Navigation Header -->
+        <header class="bg-cardbg border-b border-slate-800 sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
+                <div class="flex flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🏈</span>
+                        <div>
+                            <h1 class="text-base sm:text-xl font-bold tracking-wide leading-tight">Multi-League Dynasty Hub</h1>
+                            <p id="sync-banner" class="text-[11px] text-slate-400">Synced with Sleeper Master JSON &bull; Active Dynasty Leagues</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyDeepLink()" id="copy-link-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            🔗<span class="hidden sm:inline"> Copy View Link</span>
+                        </button>
+                        <button onclick="openShowNotes()" id="show-notes-btn" title="Podcast show notes: talking points from every league" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            🎧 <span class="sm:hidden">Notes</span><span class="hidden sm:inline">Show Notes</span>
+                        </button>
+                        <button onclick="toggleBroadcastMode()" class="hidden sm:inline-block bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            📺 Broadcast Mode
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <!-- Phones: a button that opens every tab as a two-column menu. Wrapped rows from the sm breakpoint up -->
+                <button type="button" id="nav-toggle" onclick="toggleNavMenu()" aria-expanded="false" class="sm:hidden flex justify-between items-center w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm font-semibold text-white">
+                    <span id="nav-current">🏆 Trophy Room</span><span class="text-slate-400 text-xs">☰ All tabs</span>
+                </button>
+                <nav id="main-nav" class="flex flex-wrap gap-1 bg-slate-900 p-1.5 rounded-lg border border-slate-700 text-xs">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium bg-accent text-white transition">🏆 Trophy Room</button>
+                    <button onclick="switchTab('power')" id="nav-power" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📈 Power Rankings</button>
+                    <button onclick="switchTab('owners')" id="nav-owners" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">👔 Managers</button>
+                    <button onclick="switchTab('exposure')" id="nav-exposure" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🧬 Player Exposure</button>
+                    <button onclick="switchTab('journey')" id="nav-journey" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔎 Player Journey</button>
+                    <button onclick="switchTab('awards')" id="nav-awards" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🔥 Bench & Awards</button>
+                    <button onclick="switchTab('awardcenter')" id="nav-awardcenter" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎖️ Awards Center</button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📊 Analytics</button>
+                    <button onclick="switchTab('review')" id="nav-review" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📰 Season Review</button>
+                    <button onclick="switchTab('wrapped')" id="nav-wrapped" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎁 Season Wrapped</button>
+                    <button onclick="switchTab('records')" id="nav-records" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏅 Hall of Records</button>
+                    <button onclick="switchTab('luck')" id="nav-luck" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🍀 Luck & All-Play</button>
+                    <button onclick="switchTab('picks')" id="nav-picks" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎯 Draft Picks</button>
+                    <button onclick="switchTab('drafts')" id="nav-drafts" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📋 Draft History</button>
+                    <button onclick="switchTab('trades')" id="nav-trades" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">📜 Trade Log</button>
+                    <button onclick="switchTab('h2h')" id="nav-h2h" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">⚔️ H2H Records</button>
+                    <button onclick="switchTab('matchups')" id="nav-matchups" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🏈 Matchups</button>
+                    <button onclick="switchTab('playoffs')" id="nav-playoffs" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🎲 Playoff Odds</button>
+                    <button onclick="switchTab('synergy')" id="nav-synergy" class="whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🤝 Trade Partners</button>
+                    <!-- Raw Sheets is a data-checking view: kept out of the menu, opened from the footer link or ?tab=leagues -->
+                    <button onclick="switchTab('leagues')" id="nav-leagues" class="hidden whitespace-nowrap px-2.5 py-1.5 rounded-md font-medium hover:bg-slate-800 transition">🗂️ Raw Sheets</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+
+            <!-- LOADING SCREEN -->
+            <div id="upload-screen" class="bg-cardbg border border-slate-700 rounded-xl p-8 max-w-xl mx-auto text-center shadow-xl my-12">
+                <div class="text-4xl mb-4 animate-bounce">🏈</div>
+                <h2 id="loading-title" class="text-2xl font-bold mb-2">Loading League Data...</h2>
+                <p id="loading-desc" class="text-slate-400 text-sm mb-6">Fetching your latest master JSON data automatically.</p>
+                
+                <div class="mt-4 pt-4 border-t border-slate-800">
+                    <p class="text-xs text-slate-500 mb-2">Or upload manually if offline:</p>
+                    <input type="file" id="json-file-input" accept=".json" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer">
+                </div>
+            </div>
+
+            <!-- APP CONTAINER -->
+            <div id="app-container" class="hidden space-y-8">
+                
+                <!-- TAB 1: TROPHY ROOM -->
+                <div id="tab-dashboard" class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">🏆 All-Time Trophy Room & Dominance Leaderboard</h2>
+                        <p class="text-slate-400 text-sm">Aggregating championships, podium finishes, and records across your entire multi-league history.</p>
+                    </div>
+                    <div id="trophy-room-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <h3 class="text-lg font-bold text-amber-300">🥊 The Title Belt</h3>
+                        <p class="text-slate-400 text-xs">One belt per league, passed down since the league's first game. Beat the holder head to head and it's yours.</p>
+                        <details class="bg-cardbg border border-slate-700 rounded-xl p-3 text-xs text-slate-400">
+                            <summary class="cursor-pointer font-semibold text-slate-300">How the belt works</summary>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li>It starts with the top scorer of Week 1 in the league's first season.</li>
+                                <li>The holder defends it in every head-to-head game: regular season, playoffs and consolation games.</li>
+                                <li>Lose and the winner takes it. A win or a tie keeps it, and a bye week leaves it alone.</li>
+                                <li>It carries over to next season. If the holder leaves the league, it goes to the defending champion (or the top Week 1 scorer if they're gone too).</li>
+                                <li>This week's games count once they're final.</li>
+                            </ul>
+                        </details>
+                        <div id="title-belt-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <h3 class="text-lg font-bold text-rose-300">💩 The Sacko Hall of Shame</h3>
+                        <p class="text-slate-400 text-xs">Last place in the regular season of a finished league season.</p>
+                        <div id="sacko-wall" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                    </div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <h3 class="text-lg font-bold text-slate-200">🚀 Active League Portals</h3>
+                        <div id="dashboard-leagues-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: KTC POWER RANKINGS -->
+                <div id="tab-power" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 id="power-title" class="text-2xl font-bold">📈 Weekly Power Rankings</h2>
+                            <p id="power-subtitle" class="text-slate-400 text-sm">Who is actually the best team right now: all-play record, scoring, recent form, record and roster value.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <select id="power-mode" onchange="onPowerModeChange()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                                <option value="weekly">This Week's Power Rankings</option>
+                                <option value="value">Dynasty Value (Roster + Picks)</option>
+                                <option value="trend">Value Stock Chart (Risers & Fallers)</option>
+                            </select>
+                            <select id="power-league-selector" onchange="renderPowerRankings()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                                <option value="ALL">All Leagues</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="power-rankings-container" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 3: UNIFIED MANAGERS -->
+                <div id="tab-owners" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">👔 Unified Owner Profiles & Empire Valuation</h2>
+                        <p class="text-slate-400 text-sm">Aggregating all-time records, podium finishes, roster KTC value, and future draft pick capital.</p>
+                    </div>
+                    <details class="bg-cardbg border border-slate-700 rounded-xl p-4 text-xs text-slate-400">
+                        <summary class="cursor-pointer font-semibold text-slate-300">🎖️ How badges are earned (and who has them)</summary>
+                        <p class="mt-2">Badges come from finished games and final standings in every league, plus trades and the Title Belt. Gold badges are the big ones, red ones are the shame badges.</p>
+                        <ul id="badge-legend-list" class="mt-2"></ul>
+                    </details>
+                    <div id="owners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- TAB 4: PLAYER EXPOSURE MATRIX -->
+                <div id="tab-exposure" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🧬 Multi-League Player Exposure ("My Guys" Tracker)</h2>
+                            <p class="text-slate-400 text-sm">Search any NFL player to see who owns them across every league, or filter by manager to see their highest-owned players.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <select id="exposure-mgr-filter" onchange="renderPlayerExposure()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent">
+                                <option value="ALL">All Managers</option>
+                            </select>
+                            <input type="text" id="exposure-search" placeholder="Search player, pos, NFL team..." onkeyup="renderPlayerExposure()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs w-full sm:w-60 focus:outline-none focus:border-accent">
+                        </div>
+                    </div>
+                    <div id="exposure-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- TAB: PLAYER JOURNEY -->
+                <div id="tab-journey" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🔎 Player Journey</h2>
+                            <p class="text-slate-400 text-sm">Every team that drafted, traded for, picked up, dropped or started a player, in every league, since 2015.</p>
+                        </div>
+                        <div class="w-full sm:w-72">
+                            <input type="search" id="journey-search" list="journey-names" placeholder="Type a player's name..." oninput="renderPlayerJourney()" autocomplete="off" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-accent">
+                            <datalist id="journey-names"></datalist>
+                        </div>
+                    </div>
+                    <div id="journey-content"></div>
+                </div>
+
+                <!-- TAB: SEASON WRAPPED -->
+                <div id="tab-wrapped" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🎁 Season Wrapped</h2>
+                            <p class="text-slate-400 text-sm">One manager's season across every league: best and worst weeks, luck, lineup calls, pickups, trades and rivals. Copy it or share the card.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <select id="wrapped-manager" onchange="renderWrapped()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                            <select id="wrapped-season" onchange="renderWrapped()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                        </div>
+                    </div>
+                    <div id="wrapped-content"></div>
+                </div>
+
+                <!-- TAB 5: THIS SEASON'S BENCH BLUNDERS & WEEKLY AWARDS -->
+                <div id="tab-awards" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🔥 <span class="season-label">This Season's</span> Weekly High-Rollers & Bench Blunders</h2>
+                            <p class="text-slate-400 text-sm">Tracking weekly high-score belts, nuclear starters, and the biggest benchwarmer regrets of <span class="season-label">the season</span>.</p>
+                        </div>
+                        <select id="awards-league-filter" onchange="renderWeeklyAwards()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent">
+                            <option value="ALL">All Leagues</option>
+                        </select>
+                    </div>
+                    <div id="awards-summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
+                            <h3 class="text-lg font-bold text-amber-400">🪑 The <span class="season-label">Season's</span> Benchwarmer Hall of Shame (Biggest Bench Explosions)</h3>
+                            <div id="bench-blunders-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-6 space-y-4">
+                            <h3 class="text-lg font-bold text-emerald-400">🥊 <span class="season-label">Season</span> Weekly High-Roller Belt Winners</h3>
+                            <div id="weekly-highs-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: LUCK & ALL-PLAY STANDINGS -->
+                <div id="tab-luck" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🍀 True All-Play Record & Schedule Luck Index</h2>
+                            <p class="text-slate-400 text-sm">Comparing actual Win % against All-Play Win % (playing every team every week) to expose schedule luck.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="luck-league-filter" onchange="renderLuckIndex()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent">
+                                <option value="ALL">All Leagues Combined</option>
+                            </select>
+                            <select id="luck-season-filter" onchange="renderLuckIndex()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200">
+                                <option value="ALL">All-Time Career</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700 text-xs uppercase">
+                                    <tr>
+                                        <th class="p-4">Manager</th>
+                                        <th class="p-4">Actual Record</th>
+                                        <th class="p-4">All-Play Record</th>
+                                        <th class="p-4">Points For / Against</th>
+                                        <th class="p-4">Luck Variance (Actual vs Expected Wins)</th>
+                                        <th class="p-4">Verdict</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="luck-table-body" class="divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: AWARDS CENTER -->
+                <div id="tab-awardcenter" class="hidden space-y-8">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🎖️ Awards Center</h2>
+                            <p class="text-slate-400 text-sm">Weekly, annual and career awards for every league. Click a card for the full top list.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <select id="awardcenter-league" onchange="onAwardsLeagueChange()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"><option value="ALL">All Leagues</option></select>
+                            <select id="awardcenter-season" onchange="onAwardsSeasonChange()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"></select>
+                            <select id="awardcenter-week" onchange="renderAwardsCenter()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"></select>
+                        </div>
+                    </div>
+                    <section id="sleeper-posts" class="hidden bg-cardbg border border-slate-700 rounded-xl p-4 space-y-3"></section>
+                    <section class="space-y-3">
+                        <h3 id="weekly-awards-title" class="text-lg font-bold text-slate-200">📅 Weekly Awards</h3>
+                        <div id="weekly-awards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </section>
+                    <section class="space-y-3">
+                        <h3 id="annual-awards-title" class="text-lg font-bold text-slate-200">🗓️ Annual Awards</h3>
+                        <div id="annual-awards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </section>
+                    <section class="space-y-3">
+                        <h3 class="text-lg font-bold text-slate-200">🏛️ Career Awards</h3>
+                        <div id="career-awards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </section>
+                </div>
+
+                <!-- TAB: ANALYTICS -->
+                <div id="tab-analytics" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📊 League Analytics Lab</h2>
+                            <p class="text-slate-400 text-sm">Elo ratings, schedule swaps, consistency, contender windows, lineup decisions and the waiver wire.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <select id="analytics-league" onchange="onAnalyticsLeagueChange()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"><option value="ALL">All Leagues</option></select>
+                            <select id="analytics-season" onchange="renderAnalytics()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"></select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div class="lg:col-span-3 bg-cardbg border border-slate-700 rounded-xl p-5 space-y-2">
+                            <h3 class="font-bold text-white">📊 All-Time Elo Ratings</h3>
+                            <p class="text-[11px] text-slate-500">Every game since 2015. Beating strong teams is worth more; ratings drift a quarter of the way back to 1500 each season. Line shows end-of-season rating for the top 8.</p>
+                            <div id="elo-chart"></div>
+                        </div>
+                        <div class="lg:col-span-2 bg-cardbg border border-slate-700 rounded-xl overflow-hidden max-h-[26rem] overflow-y-auto">
+                            <div id="elo-table"></div>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-2">
+                        <h3 class="font-bold text-white">🔀 Schedule Swap</h3>
+                        <div id="schedule-swap" class="overflow-x-auto"></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-2">
+                            <h3 id="consistency-title" class="font-bold text-white">📏 Consistency</h3>
+                            <div id="consistency-chart"></div>
+                            <div id="consistency-list" class="text-xs space-y-1"></div>
+                        </div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-5 space-y-2">
+                            <h3 class="font-bold text-white">🧭 Contender or Rebuilder</h3>
+                            <p class="text-[11px] text-slate-500">Current rosters: total value against how old the 10 most valuable players are.</p>
+                            <div id="contender-chart"></div>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden">
+                        <h3 class="font-bold text-white p-5 pb-1">🧠 Lineup IQ & Team MVPs</h3>
+                        <p class="text-[11px] text-slate-500 px-5 pb-3">Points scored over the best possible lineup from the same roster each week.</p>
+                        <div id="lineup-iq" class="overflow-x-auto"></div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-5 space-y-2">
+                        <h3 class="font-bold text-white">🎱 Best-Ball What If</h3>
+                        <p class="text-[11px] text-slate-500">The standings if every team had started its best possible lineup every week. Shows who lost wins to lineup calls, and who got away with them.</p>
+                        <div id="best-ball"></div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden">
+                        <h3 class="font-bold text-white p-5 pb-1">🎣 Waiver Wire & FAAB Report</h3>
+                        <p class="text-[11px] text-slate-500 px-5 pb-3">Starting points from players each team picked up, what they spent, and how active they were.</p>
+                        <div id="pickup-report" class="overflow-x-auto"></div>
+                    </div>
+                </div>
+
+                <!-- TAB: SEASON IN REVIEW -->
+                <div id="tab-review" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📰 Season in Review</h2>
+                            <p class="text-slate-400 text-sm">The permanent record of every league season: podium, standings, awards, trades and the weekly Gazette.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <select id="review-league" onchange="onReviewLeagueChange()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"></select>
+                            <select id="review-season" onchange="renderSeasonReview()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent focus:outline-none"></select>
+                        </div>
+                    </div>
+                    <div id="review-content" class="space-y-6"></div>
+                </div>
+
+                <!-- TAB: HALL OF RECORDS -->
+                <div id="tab-records" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🏅 All-Time Hall of Records</h2>
+                            <p class="text-slate-400 text-sm">Streaks, single-game freak shows, and season-long feats across your full league history.</p>
+                        </div>
+                        <select id="records-league-filter" onchange="renderRecords()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none">
+                            <option value="ALL">All Leagues</option>
+                        </select>
+                    </div>
+                    <div id="records-watch"></div>
+                    <div id="records-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- TAB 7: DRAFT PICK INVENTORY MATRIX -->
+                <div id="tab-picks" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">🎯 Future Draft Pick Inventory Matrix</h2>
+                        <p class="text-slate-400 text-sm">Live inventory of future draft picks held by each manager across all leagues, weighted by KeepTradeCut pick values.</p>
+                    </div>
+                    <div id="draft-order-section" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+                            <div>
+                                <h3 id="draft-order-title" class="text-xl font-bold">🔮 Projected Rookie Draft Order</h3>
+                                <p class="text-slate-400 text-sm">Where every first-round pick is headed if the season plays out as projected, who holds it after trades, and who is racing for the top pick.</p>
+                            </div>
+                            <div class="space-y-1 w-full sm:w-auto">
+                                <label for="draft-order-league" class="text-xs text-slate-400 font-semibold">League</label>
+                                <select id="draft-order-league" onchange="renderDraftOrder()" class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                        </div>
+                        <div id="tank-watch"></div>
+                        <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                            <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-700 text-xs uppercase tracking-wider text-slate-400 font-semibold">Round 1</div>
+                            <div id="draft-order-list"></div>
+                        </div>
+                        <div id="draft-order-holders"></div>
+                        <p id="draft-order-footnote" class="text-xs text-slate-500"></p>
+                    </div>
+                    <h3 class="text-xl font-bold pt-2">🎯 Pick Inventory by Manager</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="picks-matrix-grid"></div>
+                </div>
+
+                <!-- DRAFT HISTORY & GRADES -->
+                <div id="tab-drafts" class="hidden space-y-6">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📋 Draft History & Draft Grades</h2>
+                            <p class="text-slate-400 text-sm">Every saved draft board. Pick a league and year to see the whole draft, or a manager and year to see all of their drafts that year.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                            <div class="flex bg-slate-900 border border-slate-700 rounded-lg p-1 text-xs">
+                                <button id="drafts-mode-league" onclick="setDraftMode('league')" class="px-3 py-1.5 rounded bg-accent text-white font-medium transition">By League</button>
+                                <button id="drafts-mode-owner" onclick="setDraftMode('owner')" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">By Manager</button>
+                            </div>
+                            <select id="drafts-league" onchange="renderDraftHistory()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                            <select id="drafts-owner" onchange="renderDraftHistory()" class="hidden bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                            <select id="drafts-season" onchange="renderDraftHistory()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200"></select>
+                        </div>
+                    </div>
+                    <div id="drafts-view" class="space-y-6"></div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-200">🧠 Drafting Skill Leaderboard</h3>
+                                <p class="text-slate-400 text-xs">Every graded draft a manager made, in every league, combined.</p>
+                            </div>
+                            <select id="drafts-skill-kind" onchange="renderDraftSkill()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-200">
+                                <option value="ALL">All drafts</option>
+                                <option value="Rookie">Rookie drafts</option>
+                                <option value="Startup">Startup drafts</option>
+                                <option value="Redraft">Redraft drafts</option>
+                            </select>
+                        </div>
+                        <div id="drafts-skill" class="space-y-4"></div>
+                    </div>
+                    <div class="space-y-3 pt-6 border-t border-slate-800">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-200">🎯 Rookie Pick Hit Rates</h3>
+                                <p class="text-slate-400 text-xs">How often each part of your rookie drafts turned into a real starter, from your own leagues' drafts and lineups.</p>
+                            </div>
+                            <select id="drafts-hit-league" onchange="renderDraftHitRates()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-accent"></select>
+                        </div>
+                        <div id="drafts-hit-rates" class="space-y-4"></div>
+                    </div>
+                    <details class="bg-cardbg border border-slate-700 rounded-xl p-4 text-xs text-slate-400">
+                        <summary class="cursor-pointer font-semibold text-slate-200">How draft grades work</summary>
+                        <div class="mt-3 space-y-2">
+                            <p><strong class="text-slate-200">What a pick produced.</strong> Rookie and startup picks: 60% the fantasy points the player scored in this league (for whoever rostered him, starters and bench) in his first 3 seasons, 40% his dynasty value today. Old classes whose players have mostly retired lean on points instead, since today's value says little about them. Redraft picks: his points that season. Both are measured against the average pick in the first 4 rounds of the same draft, so 1.00 is a solid early pick.</p>
+                            <p><strong class="text-slate-200">What the slot should produce.</strong> Each draft gets a smooth curve of how much each pick number returned in that class (early picks are expected to return far more). A pick is graded on what it produced minus what its slot should have, so a 1.01 bust hurts and a late-round hit shines.</p>
+                            <p><strong class="text-slate-200">Draft grade.</strong> Everything a manager's picks produced divided by what their slots should have (1.00× = as expected). Traded picks count for the manager who made the pick. Kickers, defenses and keepers are shown but not graded. The leaderboard combines every graded draft on a tighter scale, since luck evens out over many drafts, and ranks managers with at least 3 of them. Rookie classes younger than 3 seasons get an early grade that leans on today's values and firms up each season.</p>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- TAB 8: TRADES & DRAFT LINEAGE -->
+                <div id="tab-trades" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">📜 All-Time Trade & Draft Pick Lineage Log</h2>
+                            <p class="text-slate-400 text-sm">Complete history of trades with highlighted rookie draft selections. Dynasty trades are graded 3 years after the trade: 60% on the points each side's players scored for their new team in those 3 years, 40% on their dynasty value at the 3-year mark (picks count as the player drafted). Trades of only picks wait for the picks to be made and are graded after the rookies' first 3 seasons. Redraft trades are graded at the end of that season on points alone.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <button onclick="toggleLineageOnly()" id="lineage-filter-btn" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">
+                                🌱 Show Drafted Pick Lineage Only
+                            </button>
+                            <input type="text" id="trade-search" placeholder="Search player, manager, or pick..." oninput="filterTradesSoon()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm w-full sm:w-64 focus:outline-none focus:border-accent">
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-4">Season / Date</th>
+                                        <th class="p-4">League</th>
+                                        <th class="p-4">Teams Involved</th>
+                                        <th class="p-4">Trade Breakdown & Draft Pick Lineage</th>
+                                        <th class="p-4">Trade Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trades-table-body" class="divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700 bg-slate-900/60 p-4">
+                            <p id="trades-count" class="text-xs text-slate-400"></p>
+                            <div class="flex flex-wrap gap-2">
+                                <button id="trades-more-btn" onclick="showMoreTrades()" class="hidden bg-accent/20 border border-accent/30 hover:border-accent text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Show more</button>
+                                <button id="trades-all-btn" onclick="showAllTrades()" class="hidden bg-slate-900 border border-slate-700 hover:border-accent text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition">Show all</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 9: HEAD-TO-HEAD RECORDS -->
+                <div id="tab-h2h" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">⚔️ Tale of the Tape: All-Time Head-to-Head Matrix</h2>
+                            <p class="text-slate-400 text-sm">Select any two managers to inspect their exact head-to-head record, total points scored, and game-by-game log.</p>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm space-y-6">
+                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                            <div class="w-full sm:w-1/2 space-y-1">
+                                <label class="text-xs text-slate-400 font-semibold">Manager A</label>
+                                <select id="h2h-mgr-1" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
+                            </div>
+                            <button onclick="swapH2HManagers()" title="Swap Managers" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg font-bold text-sm mt-4 sm:mt-5 border border-slate-700 transition">
+                                ⇄ VS
+                            </button>
+                            <div class="w-full sm:w-1/2 space-y-1">
+                                <label class="text-xs text-slate-400 font-semibold">Manager B</label>
+                                <select id="h2h-mgr-2" onchange="calculateH2H()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm font-bold text-accent focus:outline-none"></select>
+                            </div>
+                        </div>
+                        <div id="h2h-results-box" class="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center space-y-4"></div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 sm:p-6 shadow-sm space-y-3">
+                        <div>
+                            <h3 class="font-bold text-white">📊 Career Comparison</h3>
+                            <p class="text-[11px] text-slate-500">Everything each manager has done in every league, side by side. The better number in each row is green.</p>
+                        </div>
+                        <div id="h2h-career-box"></div>
+                    </div>
+                </div>
+
+                <!-- TAB: WEEKLY MATCHUPS -->
+                <div id="tab-matchups" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🏈 Weekly Matchup Center</h2>
+                            <p class="text-slate-400 text-sm">Every matchup a manager has this week across all leagues, with records, head-to-head history and win odds. Pick 🔥 Nail-Biters to see every game in every league, closest first.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <div class="space-y-1 flex-1 sm:flex-none">
+                                <label class="text-xs text-slate-400 font-semibold">Manager</label>
+                                <select id="matchups-owner" onchange="renderMatchups()" class="w-full sm:w-56 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                            <div class="space-y-1 flex-1 sm:flex-none">
+                                <label class="text-xs text-slate-400 font-semibold">Week</label>
+                                <select id="matchups-week" onchange="renderMatchups()" class="w-full sm:w-auto bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="matchups-summary"></div>
+                    <div id="matchups-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                    <p id="matchups-footnote" class="text-xs text-slate-500"></p>
+                </div>
+
+                <!-- TAB: PLAYOFF ODDS SIMULATOR -->
+                <div id="tab-playoffs" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">🎲 Playoff Odds Simulator</h2>
+                            <p class="text-slate-400 text-sm">Simulates the rest of the regular season thousands of times to estimate playoff, bye and seed odds.</p>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto items-end">
+                            <div class="space-y-1 flex-1 sm:flex-none">
+                                <label class="text-xs text-slate-400 font-semibold">League</label>
+                                <select id="playoffs-league" onchange="renderPlayoffOdds()" class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent"></select>
+                            </div>
+                            <button onclick="delete playoffSimCache[document.getElementById('playoffs-league').value]; renderPlayoffOdds()" class="bg-slate-900 border border-slate-700 hover:border-accent px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 transition">🔄 Re-run</button>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                        <div id="playoffs-table" class="overflow-x-auto"></div>
+                    </div>
+                    <p id="playoffs-footnote" class="text-xs text-slate-500"></p>
+                </div>
+
+                <!-- TAB 10: TRADE PARTNER SYNERGY -->
+                <div id="tab-synergy" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">🤝 Trade Partner Synergy Matrix</h2>
+                        <p class="text-slate-400 text-sm">Click any trading pair below to drill down and inspect every trade completed between those two managers.</p>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm overflow-x-auto">
+                        <div id="synergy-content"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 11: RAW LEAGUE SHEETS -->
+                <div id="tab-leagues" class="hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <select id="league-selector" onchange="renderSelectedLeague()" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm font-bold text-accent focus:outline-none focus:border-accent">
+                        </select>
+                        <div class="flex flex-wrap gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs">
+                            <button onclick="setLeagueViewFilter('all')" id="lfilter-all" class="px-3 py-1.5 rounded bg-accent text-white font-medium transition">Full Sheet</button>
+                            <button onclick="setLeagueViewFilter('standings')" id="lfilter-standings" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Standings</button>
+                            <button onclick="setLeagueViewFilter('rosters')" id="lfilter-rosters" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Rosters & Picks</button>
+                            <button onclick="setLeagueViewFilter('trades')" id="lfilter-trades" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-300 font-medium transition">Trade History</button>
+                        </div>
+                    </div>
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 shadow-sm">
+                        <div id="league-view-content" class="overflow-x-auto"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- DRILL-DOWN TRADE MODAL -->
+    <div id="trade-modal" onclick="if(event.target === this) closeTradeModal()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-xl">
+                <h3 id="modal-title" class="font-bold text-accent text-lg">Trade Partnership Details</h3>
+                <button onclick="closeTradeModal()" class="text-slate-400 hover:text-white text-2xl font-bold px-2 leading-none">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto space-y-4 text-sm divide-y divide-slate-800"></div>
+        </div>
+    </div>
+
+    <!-- LEAGUE CHATBOT -->
+    <button id="chat-fab" onclick="toggleChat()" class="hide-on-broadcast fixed bottom-4 right-4 z-40 bg-accent hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-full shadow-2xl border border-blue-300/30 text-sm transition">🎙️<span class="hidden sm:inline"> Trash Talk Bot</span></button>
+    <div id="chat-panel" class="hide-on-broadcast hidden fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:w-96 h-[34rem] max-h-[85vh] bg-cardbg border border-slate-700 rounded-xl shadow-2xl flex-col overflow-hidden">
+        <div class="p-3 bg-slate-900 border-b border-slate-800 space-y-2">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-white text-sm">🎙️ League Trash Talk Bot</h3>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-white text-xl font-bold px-1 leading-none">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                <select id="chat-who" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-semibold text-accent focus:outline-none"></select>
+                <select id="chat-mood" title="Choose the bot's attitude" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-semibold text-amber-400 focus:outline-none cursor-pointer">
+                    <option value="default">🎙️ Classic Radio Host</option>
+                    <option value="ruthless">🔥 Ruthless Roast</option>
+                    <option value="hype">🚀 Delusional Hype Man</option>
+                    <option value="detective">🕵️ Conspiracy Detective</option>
+                </select>
+            </div>
+        </div>
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 text-sm"></div>
+        <div id="chat-chips" class="px-3 pb-2 flex flex-wrap gap-1.5"></div>
+        <form onsubmit="event.preventDefault(); sendChat();" class="p-3 border-t border-slate-800 flex gap-2">
+            <input id="chat-input" type="text" autocomplete="off" maxlength="500" placeholder="Ask about matchups, injuries, history..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+            <button type="submit" class="bg-accent hover:bg-blue-500 text-white font-bold px-3 rounded-lg text-sm transition">Send</button>
+        </form>
+    </div>
+
+    <!-- PODCAST SHOW NOTES MODAL -->
+    <div id="notes-modal" onclick="if(event.target === this) closeShowNotes()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 bg-slate-900 rounded-t-xl space-y-3">
+                <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-accent text-lg">🎙️ Podcast Show Notes</h3>
+                        <p id="notes-sub" class="text-xs text-slate-400"></p>
+                    </div>
+                    <button onclick="closeShowNotes()" class="text-slate-400 hover:text-white text-2xl font-bold px-2 leading-none">&times;</button>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <select id="notes-week" onchange="renderShowNotes()" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-accent focus:outline-none"></select>
+                    <button type="button" onclick="copyShowNotes(this)" class="flex-1 sm:flex-none bg-accent hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-bold transition">📋 Copy all</button>
+                </div>
+            </div>
+            <div id="notes-body" class="p-4 sm:p-6 overflow-y-auto space-y-4 text-sm"></div>
+        </div>
+    </div>
+
+    <!-- HALL OF RECORDS TOP-10 MODAL -->
+    <div id="records-modal" onclick="if(event.target === this) closeRecordModal()" class="hidden fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-start bg-slate-900 rounded-t-xl">
+                <div>
+                    <h3 id="records-modal-title" class="font-bold text-accent text-lg">Top 10</h3>
+                    <p id="records-modal-blurb" class="text-xs text-slate-400"></p>
+                </div>
+                <button onclick="closeRecordModal()" class="text-slate-400 hover:text-white text-2xl font-bold px-2 leading-none">&times;</button>
+            </div>
+            <div id="records-modal-body" class="p-6 overflow-y-auto space-y-3 text-sm divide-y divide-slate-800"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-cardbg border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Multi-League Fantasy Command Center &bull; Powered by Sleeper & Fleaflicker
+        &bull; <a href="?tab=leagues" onclick="if (Object.keys(globalMasterData).length) { event.preventDefault(); switchTab('leagues'); window.scrollTo(0, 0); }" class="underline hover:text-slate-300">Raw data sheets</a>
+    </footer>
+
+    <!-- JavaScript Engine -->
+    <script src="app.js"></script>
+
+</body>
+</html>

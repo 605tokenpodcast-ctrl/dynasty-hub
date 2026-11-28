@@ -310,6 +310,11 @@ window.addEventListener('DOMContentLoaded', async () => {
             requestAnimationFrame(() => { phoneTablesQueued = false; labelPhoneTables(); });
         }).observe(document.querySelector('main'), { childList: true, subtree: true });
 
+        // =============================================================================
+        // --- 5. UI HELPERS: tab switching, deep links, broadcast mode, nav ---
+        // switchTab() shows a tab and renders it lazily via TAB_RENDERERS (see "4. TAB RENDERERS").
+        // =============================================================================
+
         function switchTab(tabId, skipUrlUpdate = false) {
             currentActiveTab = tabId;
             // Before rendering: some tabs update the URL while they render, which must not replace this entry
@@ -493,6 +498,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         // Tabs whose content is built the first time they are opened instead of all at page load.
         // A tab's dropdowns re-render it directly, so each one only needs building once per data load.
+        // --- TAB REGISTRY: tab id -> renderer (lazy, rendered once on first visit) ---
+        // dashboard -> renderTrophyRoom / renderDashboardLeagues / renderSackoWall / renderTitleBelt
+        // power -> renderPowerRankings (value rankings, weekly power, value trend)   owners -> renderOwners
+        // exposure -> renderPlayerExposure   awards -> renderWeeklyAwards   luck -> renderLuckIndex
+        // records -> renderRecords   picks -> renderDraftPicksMatrix + renderDraftOrder   drafts -> renderDraftHistory
+        // trades -> renderTrades   synergy -> renderTradeSynergy   leagues -> renderSelectedLeague
+        // journey / wrapped / matchups / playoffs / analytics / awardcenter / review: see their TAB sections below
         const TAB_RENDERERS = {
             dashboard: () => {
                 const names = Object.keys(globalMasterData).filter(k => Array.isArray(globalMasterData[k]));
@@ -522,6 +534,10 @@ window.addEventListener('DOMContentLoaded', async () => {
             renderedTabs.add(tabId);
             TAB_RENDERERS[tabId]();
         }
+
+        // =============================================================================
+        // --- 4. TAB RENDERERS (one section per tab, in roughly nav order) ---
+        // =============================================================================
 
         // --- TAB 1: TROPHY ROOM ---
         function renderTrophyRoom(leagueNames) {
@@ -602,6 +618,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
+        // --- TAB 1 (cont.): DASHBOARD LEAGUE CARDS ---
         function renderDashboardLeagues(leagueNames) {
             const leaguesGrid = document.getElementById('dashboard-leagues-grid');
             leaguesGrid.innerHTML = '';
@@ -796,6 +813,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             return teams;
         }
 
+        // --- TAB 2 (cont.): POWER RANKINGS, "Value" mode (roster trade-value rankings) ---
         function renderValueRankings() {
             const selectedLeague = document.getElementById('power-league-selector').value;
             const container = document.getElementById('power-rankings-container');
@@ -928,6 +946,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         // powerMoveHtml: moved to utils.js
 
+        // --- TAB 2 (cont.): POWER RANKINGS, "Weekly" mode (weekly power index) ---
         let weeklyPowerCache = {};
         function renderWeeklyPower() {
             const selectedLeague = document.getElementById('power-league-selector').value;

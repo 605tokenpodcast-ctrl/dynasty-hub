@@ -4,7 +4,8 @@
   "description": "Builds styles.css and runs the tests. The site itself needs no build step.",
   "scripts": {
     "build:css": "tailwindcss -i styles/tailwind.css -o styles.css --minify",
-    "test:page": "node tests/smoke.mjs"
+    "test:page": "node tests/scripts.mjs && node tests/smoke.mjs",
+    "test:scripts": "node tests/scripts.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0",
